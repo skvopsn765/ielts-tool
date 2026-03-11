@@ -22,6 +22,18 @@ const TEXT_SHORTCUT_HINT = "快捷鍵：Enter 檢查，檢查後 Enter 下一句
 const DOT_COLOR_OK = "#15803d";
 const DOT_COLOR_ERROR = "#b91c1c";
 const DOT_COLOR_MISSING = "#fca5a5";
+const TAG_INPUT = "INPUT";
+const TAG_TEXTAREA = "TEXTAREA";
+const COMPARE_OK = "ok";
+const COMPARE_WRONG = "wrong";
+const COMPARE_MISSING = "missing";
+const COMPARE_EXTRA = "extra";
+const SPACE_CHAR = " ";
+const NON_BREAKING_SPACE = "\u00A0";
+const DISPLAY_MISSING_CHAR = "_";
+const LINE_EXPECTED = "expected";
+const LINE_ACTUAL = "actual";
+const WHITESPACE_CHAR_RE = /\s/;
 
 function normalizeSpaces(text) {
   return text.replace(WHITESPACE_RE, " ").trim();
@@ -48,7 +60,7 @@ function compareAnswer(target, input) {
   const targetChars = Array.from(target);
   const inputChars = Array.from(input);
   const maxLength = Math.max(targetChars.length, inputChars.length);
-  const rows = [];
+  const tokens = [];
   let wrongCount = 0;
 
   for (let index = 0; index < maxLength; index += 1) {
@@ -57,36 +69,40 @@ function compareAnswer(target, input) {
 
     if (targetChar === undefined) {
       wrongCount += 1;
-      rows.push({
+      tokens.push({
         key: `extra-${index}`,
-        className: "char-wrong",
-        value: inputChar ?? EMPTY_STRING,
+        status: COMPARE_EXTRA,
+        expectedChar: EMPTY_STRING,
+        actualChar: inputChar ?? EMPTY_STRING,
       });
       continue;
     }
 
     if (inputChar === undefined) {
       wrongCount += 1;
-      rows.push({
+      tokens.push({
         key: `missing-${index}`,
-        className: "char-missing",
-        value: targetChar,
+        status: COMPARE_MISSING,
+        expectedChar: targetChar,
+        actualChar: EMPTY_STRING,
       });
       continue;
     }
 
     if (inputChar === targetChar) {
-      rows.push({
+      tokens.push({
         key: `ok-${index}`,
-        className: "char-correct",
-        value: inputChar,
+        status: COMPARE_OK,
+        expectedChar: targetChar,
+        actualChar: inputChar,
       });
     } else {
       wrongCount += 1;
-      rows.push({
+      tokens.push({
         key: `wrong-${index}`,
-        className: "char-wrong",
-        value: inputChar,
+        status: COMPARE_WRONG,
+        expectedChar: targetChar,
+        actualChar: inputChar,
       });
     }
   }
@@ -94,8 +110,83 @@ function compareAnswer(target, input) {
   return {
     isCorrect: wrongCount === 0,
     wrongCount,
-    rows,
+    tokens,
   };
+}
+
+function isTypingElement(element) {
+  if (!element) return false;
+  const tagName = element.tagName;
+  const isEditable = element.isContentEditable;
+  return tagName === TAG_INPUT || tagName === TAG_TEXTAREA || isEditable;
+}
+
+function isWhitespaceChar(charValue) {
+  return WHITESPACE_CHAR_RE.test(charValue);
+}
+
+function getLineCharMeta(token, lineType) {
+  if (lineType === LINE_EXPECTED) {
+    if (token.status === COMPARE_EXTRA) return null;
+    if (token.status === COMPARE_OK) {
+      return { value: token.expectedChar, className: "char-correct" };
+    }
+    if (token.status === COMPARE_WRONG) {
+      return { value: token.expectedChar, className: "char-wrong" };
+    }
+    return { value: token.expectedChar, className: "char-missing" };
+  }
+
+  if (token.status === COMPARE_MISSING) {
+    return { value: DISPLAY_MISSING_CHAR, className: "char-missing" };
+  }
+  if (token.status === COMPARE_OK) {
+    return { value: token.actualChar, className: "char-correct" };
+  }
+  if (token.status === COMPARE_WRONG) {
+    return { value: token.actualChar, className: "char-wrong" };
+  }
+  return { value: token.actualChar, className: "char-extra" };
+}
+
+function buildLineGroups(tokens, lineType) {
+  const groups = [];
+  let currentWordChars = [];
+
+  function flushWordGroup() {
+    if (currentWordChars.length === 0) return;
+    groups.push({
+      key: `${lineType}-word-${groups.length}`,
+      type: "word",
+      chars: currentWordChars,
+    });
+    currentWordChars = [];
+  }
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    const charMeta = getLineCharMeta(token, lineType);
+    if (!charMeta || charMeta.value === EMPTY_STRING) continue;
+
+    if (isWhitespaceChar(charMeta.value)) {
+      flushWordGroup();
+      groups.push({
+        key: `${lineType}-space-${groups.length}`,
+        type: "space",
+        value: charMeta.value === SPACE_CHAR ? NON_BREAKING_SPACE : charMeta.value,
+      });
+      continue;
+    }
+
+    currentWordChars.push({
+      key: `${lineType}-char-${index}`,
+      className: charMeta.className,
+      value: charMeta.value,
+    });
+  }
+
+  flushWordGroup();
+  return groups;
 }
 
 export default function HomePage() {
@@ -104,12 +195,13 @@ export default function HomePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerInput, setAnswerInput] = useState(EMPTY_STRING);
   const [resultStatus, setResultStatus] = useState(EMPTY_STRING);
-  const [comparisonRows, setComparisonRows] = useState([]);
+  const [comparisonTokens, setComparisonTokens] = useState([]);
   const [practiceStatus, setPracticeStatus] = useState(STATUS_IDLE);
   const [sentenceStatus, setSentenceStatus] = useState("尚未開始練習");
   const [maskedSentence, setMaskedSentence] = useState("_ _ _ _ _");
 
   const answerInputRef = useRef(null);
+  const ignoreNextGlobalEnterRef = useRef(false);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -123,7 +215,7 @@ export default function HomePage() {
   function clearAnswerArea() {
     setAnswerInput(EMPTY_STRING);
     setResultStatus(EMPTY_STRING);
-    setComparisonRows([]);
+    setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
   }
 
@@ -185,7 +277,7 @@ export default function HomePage() {
       );
     }
 
-    setComparisonRows(result.rows);
+    setComparisonTokens(result.tokens);
     setPracticeStatus(STATUS_READY_NEXT);
     blurAnswerInput();
   }
@@ -211,6 +303,17 @@ export default function HomePage() {
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
+      // 避免同一次 Enter 事件同時觸發「檢查」與「下一句」
+      if (event.key === KEY_ENTER && ignoreNextGlobalEnterRef.current) {
+        ignoreNextGlobalEnterRef.current = false;
+        return;
+      }
+
+      // 輸入欄位聚焦時不要攔截快捷鍵，避免影響正常打字
+      if (isTypingElement(document.activeElement)) {
+        return;
+      }
+
       if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_ENTER) {
         event.preventDefault();
         goToNextSentence();
@@ -227,7 +330,16 @@ export default function HomePage() {
     return () => {
       window.removeEventListener("keydown", onGlobalKeyDown);
     };
-  }, [practiceStatus, currentIndex, sentences, answerInput]);
+  }, [practiceStatus, currentIndex, sentences]);
+
+  const expectedLineGroups = useMemo(
+    () => buildLineGroups(comparisonTokens, LINE_EXPECTED),
+    [comparisonTokens]
+  );
+  const actualLineGroups = useMemo(
+    () => buildLineGroups(comparisonTokens, LINE_ACTUAL),
+    [comparisonTokens]
+  );
 
   return (
     <div className="container">
@@ -240,6 +352,7 @@ export default function HomePage() {
           value={sourceText}
           onChange={(event) => setSourceText(event.target.value)}
           placeholder="請貼上英文文章（以英文句號 . 分句）"
+          spellCheck={false}
         />
         <div className="row">
           <button onClick={startPractice}>開始練習</button>
@@ -258,11 +371,14 @@ export default function HomePage() {
             onKeyDown={(event) => {
               if (event.key === KEY_ENTER) {
                 event.preventDefault();
+                event.stopPropagation();
+                ignoreNextGlobalEnterRef.current = true;
                 checkCurrentAnswer();
               }
             }}
             placeholder="在這裡輸入完整句子，按 Enter 比對"
             disabled={!hasSentence}
+            spellCheck={false}
           />
         </div>
         <div className="row">
@@ -278,12 +394,47 @@ export default function HomePage() {
         </div>
         <div className="status">{resultStatus}</div>
         <div className="status">{TEXT_SHORTCUT_HINT}</div>
-        <div className="comparison" aria-live="polite">
-          {comparisonRows.map((row) => (
-            <span key={row.key} className={row.className}>
-              {row.value}
-            </span>
-          ))}
+        <div className="comparison-panel" aria-live="polite">
+          <div className="comparison-line">
+            <div className="comparison-label">原句</div>
+            <div className="comparison-content">
+              {expectedLineGroups.map((group) => (
+                group.type === "space" ? (
+                  <span key={group.key} className="word-gap">
+                    {group.value}
+                  </span>
+                ) : (
+                  <span key={group.key} className="word-chip">
+                    {group.chars.map((charItem) => (
+                      <span key={charItem.key} className={charItem.className}>
+                        {charItem.value}
+                      </span>
+                    ))}
+                  </span>
+                )
+              ))}
+            </div>
+          </div>
+          <div className="comparison-line">
+            <div className="comparison-label">你的輸入</div>
+            <div className="comparison-content">
+              {actualLineGroups.map((group) => (
+                group.type === "space" ? (
+                  <span key={group.key} className="word-gap">
+                    {group.value}
+                  </span>
+                ) : (
+                  <span key={group.key} className="word-chip">
+                    {group.chars.map((charItem) => (
+                      <span key={charItem.key} className={charItem.className}>
+                        {charItem.value}
+                      </span>
+                    ))}
+                  </span>
+                )
+              ))}
+            </div>
+          </div>
         </div>
         <div className="legend">
           <span>

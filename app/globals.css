@@ -12,11 +12,15 @@
   --error: #b91c1c;
   --error-bg: #fee2e2;
   --surface: #f9fafb;
+  --surface-strong: #eef2ff;
   --container-max-width: 900px;
   --space-page: 24px;
   --space-card: 16px;
+  --space-small: 8px;
+  --space-xsmall: 4px;
   --radius-card: 12px;
   --radius-control: 8px;
+  --radius-pill: 6px;
   --font-title: 24px;
   --font-base: 16px;
   --font-small: 14px;
@@ -26,6 +30,15 @@
   --letter-mask: 0.5px;
   --textarea-min-height: 150px;
   --dot-size: 10px;
+  --token-min-width: 18px;
+  --token-padding-y: 2px;
+  --token-padding-x: 4px;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ok-bg: #dcfce7;
+  --warn-bg: #fee2e2;
+  --missing-bg: #ffedd5;
+  --extra-bg: #f3e8ff;
+  --neutral-bg: #e5e7eb;
 }
 
 * {
@@ -121,15 +134,54 @@ button.secondary:hover {
   word-break: break-word;
 }
 
-.comparison {
+.comparison-panel {
   margin-top: 12px;
-  padding: 10px;
+  padding: 12px;
   border-radius: var(--radius-control);
   background: var(--surface);
   border: 1px dashed var(--border);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+}
+
+.comparison-line {
+  display: flex;
+  gap: var(--space-small);
+  align-items: flex-start;
+}
+
+.comparison-line + .comparison-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.comparison-label {
+  width: 64px;
+  flex-shrink: 0;
+  font-size: var(--font-tiny);
+  color: var(--muted);
+  padding-top: 4px;
+}
+
+.comparison-content {
+  flex: 1;
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.8;
+}
+
+.word-chip {
+  display: inline-block;
+  padding: var(--token-padding-y) 6px;
+  margin-right: 2px;
+  margin-bottom: var(--space-xsmall);
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.word-gap {
+  display: inline;
 }
 
 .char-correct {
@@ -138,12 +190,15 @@ button.secondary:hover {
 
 .char-wrong {
   color: var(--error);
-  background: var(--error-bg);
 }
 
 .char-missing {
-  color: var(--error);
-  text-decoration: underline wavy var(--error);
+  color: #9a3412;
+  text-decoration: underline wavy #ea580c;
+}
+
+.char-extra {
+  color: #6b21a8;
 }
 
 .legend {
