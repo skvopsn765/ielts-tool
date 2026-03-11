@@ -190,15 +190,23 @@ button.secondary:hover {
 
 .char-wrong {
   color: var(--error);
+  background: #fee2e2;
+  border-radius: 4px;
+  padding: 0 1px;
 }
 
 .char-missing {
-  color: #9a3412;
-  text-decoration: underline wavy #ea580c;
+  color: #b45309;
+  background: #ffedd5;
+  border-radius: 4px;
+  padding: 0 1px;
 }
 
 .char-extra {
   color: #6b21a8;
+  background: #f3e8ff;
+  border-radius: 4px;
+  padding: 0 1px;
 }
 
 .legend {

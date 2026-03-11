@@ -30,10 +30,11 @@ const COMPARE_MISSING = "missing";
 const COMPARE_EXTRA = "extra";
 const SPACE_CHAR = " ";
 const NON_BREAKING_SPACE = "\u00A0";
-const DISPLAY_MISSING_CHAR = "_";
 const LINE_EXPECTED = "expected";
 const LINE_ACTUAL = "actual";
 const WHITESPACE_CHAR_RE = /\s/;
+const COST_SAME = 0;
+const COST_EDIT = 1;
 
 function normalizeSpaces(text) {
   return text.replace(WHITESPACE_RE, " ").trim();
@@ -59,53 +60,88 @@ function maskSentence(sentence) {
 function compareAnswer(target, input) {
   const targetChars = Array.from(target);
   const inputChars = Array.from(input);
-  const maxLength = Math.max(targetChars.length, inputChars.length);
+  const targetLength = targetChars.length;
+  const inputLength = inputChars.length;
+  const distanceTable = Array.from({ length: targetLength + 1 }, () =>
+    Array(inputLength + 1).fill(0)
+  );
   const tokens = [];
-  let wrongCount = 0;
+  for (let row = 0; row <= targetLength; row += 1) {
+    distanceTable[row][0] = row;
+  }
+  for (let column = 0; column <= inputLength; column += 1) {
+    distanceTable[0][column] = column;
+  }
 
-  for (let index = 0; index < maxLength; index += 1) {
-    const targetChar = targetChars[index];
-    const inputChar = inputChars[index];
-
-    if (targetChar === undefined) {
-      wrongCount += 1;
-      tokens.push({
-        key: `extra-${index}`,
-        status: COMPARE_EXTRA,
-        expectedChar: EMPTY_STRING,
-        actualChar: inputChar ?? EMPTY_STRING,
-      });
-      continue;
-    }
-
-    if (inputChar === undefined) {
-      wrongCount += 1;
-      tokens.push({
-        key: `missing-${index}`,
-        status: COMPARE_MISSING,
-        expectedChar: targetChar,
-        actualChar: EMPTY_STRING,
-      });
-      continue;
-    }
-
-    if (inputChar === targetChar) {
-      tokens.push({
-        key: `ok-${index}`,
-        status: COMPARE_OK,
-        expectedChar: targetChar,
-        actualChar: inputChar,
-      });
-    } else {
-      wrongCount += 1;
-      tokens.push({
-        key: `wrong-${index}`,
-        status: COMPARE_WRONG,
-        expectedChar: targetChar,
-        actualChar: inputChar,
-      });
+  for (let row = 1; row <= targetLength; row += 1) {
+    for (let column = 1; column <= inputLength; column += 1) {
+      const isSameChar = targetChars[row - 1] === inputChars[column - 1];
+      const substitutionCost = isSameChar ? COST_SAME : COST_EDIT;
+      const substitution = distanceTable[row - 1][column - 1] + substitutionCost;
+      const deletion = distanceTable[row - 1][column] + COST_EDIT;
+      const insertion = distanceTable[row][column - 1] + COST_EDIT;
+      distanceTable[row][column] = Math.min(substitution, deletion, insertion);
     }
   }
+
+  let row = targetLength;
+  let column = inputLength;
+  while (row > 0 || column > 0) {
+    if (
+      row > 0 &&
+      column > 0 &&
+      targetChars[row - 1] === inputChars[column - 1] &&
+      distanceTable[row][column] === distanceTable[row - 1][column - 1]
+    ) {
+      tokens.push({
+        key: `ok-${row}-${column}`,
+        status: COMPARE_OK,
+        expectedChar: targetChars[row - 1],
+        actualChar: inputChars[column - 1],
+      });
+      row -= 1;
+      column -= 1;
+      continue;
+    }
+
+    if (
+      row > 0 &&
+      column > 0 &&
+      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_EDIT
+    ) {
+      tokens.push({
+        key: `wrong-${row}-${column}`,
+        status: COMPARE_WRONG,
+        expectedChar: targetChars[row - 1],
+        actualChar: inputChars[column - 1],
+      });
+      row -= 1;
+      column -= 1;
+      continue;
+    }
+
+    if (row > 0 && distanceTable[row][column] === distanceTable[row - 1][column] + COST_EDIT) {
+      tokens.push({
+        key: `missing-${row}-${column}`,
+        status: COMPARE_MISSING,
+        expectedChar: targetChars[row - 1],
+        actualChar: EMPTY_STRING,
+      });
+      row -= 1;
+      continue;
+    }
+
+    tokens.push({
+      key: `extra-${row}-${column}`,
+      status: COMPARE_EXTRA,
+      expectedChar: EMPTY_STRING,
+      actualChar: inputChars[column - 1],
+    });
+    column -= 1;
+  }
+
+  tokens.reverse();
+  const wrongCount = tokens.filter((token) => token.status !== COMPARE_OK).length;
 
   return {
     isCorrect: wrongCount === 0,
@@ -137,9 +173,7 @@ function getLineCharMeta(token, lineType) {
     return { value: token.expectedChar, className: "char-missing" };
   }
 
-  if (token.status === COMPARE_MISSING) {
-    return { value: DISPLAY_MISSING_CHAR, className: "char-missing" };
-  }
+  if (token.status === COMPARE_MISSING) return null;
   if (token.status === COMPARE_OK) {
     return { value: token.actualChar, className: "char-correct" };
   }
@@ -201,7 +235,6 @@ export default function HomePage() {
   const [maskedSentence, setMaskedSentence] = useState("_ _ _ _ _");
 
   const answerInputRef = useRef(null);
-  const ignoreNextGlobalEnterRef = useRef(false);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -303,12 +336,6 @@ export default function HomePage() {
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
-      // 避免同一次 Enter 事件同時觸發「檢查」與「下一句」
-      if (event.key === KEY_ENTER && ignoreNextGlobalEnterRef.current) {
-        ignoreNextGlobalEnterRef.current = false;
-        return;
-      }
-
       // 輸入欄位聚焦時不要攔截快捷鍵，避免影響正常打字
       if (isTypingElement(document.activeElement)) {
         return;
@@ -372,7 +399,6 @@ export default function HomePage() {
               if (event.key === KEY_ENTER) {
                 event.preventDefault();
                 event.stopPropagation();
-                ignoreNextGlobalEnterRef.current = true;
                 checkCurrentAnswer();
               }
             }}
