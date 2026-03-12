@@ -39,6 +39,9 @@
   --upload-zone-border-width: 2px;
   --upload-preview-max-height: 420px;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-compare: "Inter", "Noto Sans TC", "Segoe UI", sans-serif;
+  --font-compare-size: 20px;
+  --font-compare-weight: 500;
   --ok-bg: #dcfce7;
   --warn-bg: #fee2e2;
   --missing-bg: #ffedd5;
@@ -247,7 +250,7 @@ button.compact {
   border-radius: var(--radius-control);
   background: #f3f4f6;
   border: 1px solid #d1d5db;
-  font-family: var(--font-mono);
+  font-family: var(--font-compare);
 }
 
 .comparison-title {
@@ -279,7 +282,8 @@ button.compact {
 }
 
 .anki-line {
-  font-size: 40px;
+  font-size: var(--font-compare-size);
+  font-weight: var(--font-compare-weight);
 }
 
 .anki-line span {

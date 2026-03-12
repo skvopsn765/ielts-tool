@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY_ENTER = "Enter";
 const KEY_TAB = "Tab";
+const KEY_F2 = "F2";
 const KEY_RETRY_SENTENCE = "1";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
@@ -390,6 +391,12 @@ export default function HomePage() {
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
+      if (event.key === KEY_F2) {
+        event.preventDefault();
+        setShowHintMask((previousValue) => !previousValue);
+        return;
+      }
+
       // 輸入欄位聚焦時不要攔截快捷鍵，避免影響正常打字
       if (isTypingElement(document.activeElement)) {
         return;
@@ -534,7 +541,7 @@ export default function HomePage() {
               checked={showHintMask}
               onChange={(event) => setShowHintMask(event.target.checked)}
             />
-            顯示提示
+            顯示提示 (F2)
           </label>
         </div>
         {showHintMask && <div className="masked">{maskedSentence}</div>}
