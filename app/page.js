@@ -40,6 +40,7 @@ const LINE_TYPE_ACTUAL = "actual";
 const DISPLAY_MISSING_MARK = "·";
 const COST_SAME = 0;
 const COST_EDIT = 1;
+const MAX_ALIGNMENT_SHIFT = 3;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
@@ -101,7 +102,10 @@ function compareAnswer(target, input) {
   for (let row = 1; row <= targetLength; row += 1) {
     for (let column = 1; column <= inputLength; column += 1) {
       const isSameChar = targetChars[row - 1] === inputChars[column - 1];
-      const substitutionCost = isSameChar ? COST_SAME : COST_EDIT;
+      const alignmentShift = Math.abs(row - column);
+      // 限制可對齊的位移量，避免把前段輸入錯配到句尾相同字母
+      const canUseExactMatch = isSameChar && alignmentShift <= MAX_ALIGNMENT_SHIFT;
+      const substitutionCost = canUseExactMatch ? COST_SAME : COST_EDIT;
       const substitution = distanceTable[row - 1][column - 1] + substitutionCost;
       const deletion = distanceTable[row - 1][column] + COST_EDIT;
       const insertion = distanceTable[row][column - 1] + COST_EDIT;
@@ -112,10 +116,12 @@ function compareAnswer(target, input) {
   let row = targetLength;
   let column = inputLength;
   while (row > 0 || column > 0) {
+    const alignmentShift = Math.abs(row - column);
     if (
       row > 0 &&
       column > 0 &&
       targetChars[row - 1] === inputChars[column - 1] &&
+      alignmentShift <= MAX_ALIGNMENT_SHIFT &&
       distanceTable[row][column] === distanceTable[row - 1][column - 1]
     ) {
       tokens.push({
