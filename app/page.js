@@ -34,9 +34,9 @@ const COMPARE_MISSING = "missing";
 const COMPARE_EXTRA = "extra";
 const SPACE_CHAR = " ";
 const NON_BREAKING_SPACE = "\u00A0";
-const LINE_EXPECTED = "expected";
-const LINE_ACTUAL = "actual";
-const WHITESPACE_CHAR_RE = /\s/;
+const LINE_TYPE_EXPECTED = "expected";
+const LINE_TYPE_ACTUAL = "actual";
+const DISPLAY_MISSING_MARK = "·";
 const COST_SAME = 0;
 const COST_EDIT = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
@@ -58,6 +58,7 @@ After slight increases, hydropower has fallen back to the 1980 figure.
 It is expected to maintain this level until 2030, while the others should rise slightly after 2025.
 
 Overall, the US will continue to rely on fossil fuels, with sustainable and nuclear energy sources remaining relatively insignificant.`;
+const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
   return text.replace(WHITESPACE_RE, " ").trim();
@@ -180,70 +181,33 @@ function isTypingElement(element) {
   return tagName === TAG_INPUT || tagName === TAG_TEXTAREA || isEditable;
 }
 
-function isWhitespaceChar(charValue) {
-  return WHITESPACE_CHAR_RE.test(charValue);
+function toDisplayChar(charValue) {
+  if (charValue === SPACE_CHAR) return NON_BREAKING_SPACE;
+  return charValue;
 }
 
-function getLineCharMeta(token, lineType) {
-  if (lineType === LINE_EXPECTED) {
+function toLineToken(token, lineType) {
+  if (lineType === LINE_TYPE_EXPECTED) {
     if (token.status === COMPARE_EXTRA) return null;
     if (token.status === COMPARE_OK) {
-      return { value: token.expectedChar, className: "char-correct" };
+      return { text: toDisplayChar(token.expectedChar), className: "token-expected-ok" };
     }
     if (token.status === COMPARE_WRONG) {
-      return { value: token.expectedChar, className: "char-wrong" };
+      return { text: toDisplayChar(token.expectedChar), className: "token-expected-wrong" };
     }
-    return { value: token.expectedChar, className: "char-missing" };
+    return { text: toDisplayChar(token.expectedChar), className: "token-expected-missing" };
   }
 
-  if (token.status === COMPARE_MISSING) return null;
+  if (token.status === COMPARE_MISSING) {
+    return { text: DISPLAY_MISSING_MARK, className: "token-actual-missing" };
+  }
   if (token.status === COMPARE_OK) {
-    return { value: token.actualChar, className: "char-correct" };
+    return { text: toDisplayChar(token.actualChar), className: "token-actual-ok" };
   }
   if (token.status === COMPARE_WRONG) {
-    return { value: token.actualChar, className: "char-wrong" };
+    return { text: toDisplayChar(token.actualChar), className: "token-actual-wrong" };
   }
-  return { value: token.actualChar, className: "char-extra" };
-}
-
-function buildLineGroups(tokens, lineType) {
-  const groups = [];
-  let currentWordChars = [];
-
-  function flushWordGroup() {
-    if (currentWordChars.length === 0) return;
-    groups.push({
-      key: `${lineType}-word-${groups.length}`,
-      type: "word",
-      chars: currentWordChars,
-    });
-    currentWordChars = [];
-  }
-
-  for (let index = 0; index < tokens.length; index += 1) {
-    const token = tokens[index];
-    const charMeta = getLineCharMeta(token, lineType);
-    if (!charMeta || charMeta.value === EMPTY_STRING) continue;
-
-    if (isWhitespaceChar(charMeta.value)) {
-      flushWordGroup();
-      groups.push({
-        key: `${lineType}-space-${groups.length}`,
-        type: "space",
-        value: charMeta.value === SPACE_CHAR ? NON_BREAKING_SPACE : charMeta.value,
-      });
-      continue;
-    }
-
-    currentWordChars.push({
-      key: `${lineType}-char-${index}`,
-      className: charMeta.className,
-      value: charMeta.value,
-    });
-  }
-
-  flushWordGroup();
-  return groups;
+  return { text: toDisplayChar(token.actualChar), className: "token-actual-extra" };
 }
 
 export default function HomePage() {
@@ -472,12 +436,15 @@ export default function HomePage() {
     };
   }, [practiceStatus, currentIndex, sentences]);
 
-  const expectedLineGroups = useMemo(
-    () => buildLineGroups(comparisonTokens, LINE_EXPECTED),
+  const expectedLineTokens = useMemo(
+    () =>
+      comparisonTokens
+        .map((token) => toLineToken(token, LINE_TYPE_EXPECTED))
+        .filter((token) => token !== null),
     [comparisonTokens]
   );
-  const actualLineGroups = useMemo(
-    () => buildLineGroups(comparisonTokens, LINE_ACTUAL),
+  const actualLineTokens = useMemo(
+    () => comparisonTokens.map((token) => toLineToken(token, LINE_TYPE_ACTUAL)),
     [comparisonTokens]
   );
 
@@ -603,43 +570,23 @@ export default function HomePage() {
         <div className="status">{resultStatus}</div>
         <div className="status">{TEXT_SHORTCUT_HINT}</div>
         <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
+          <div className="comparison-title">你的輸入</div>
           <div className="comparison-line">
-            <div className="comparison-label">原句</div>
-            <div className="comparison-content">
-              {expectedLineGroups.map((group) => (
-                group.type === "space" ? (
-                  <span key={group.key} className="word-gap">
-                    {group.value}
-                  </span>
-                ) : (
-                  <span key={group.key} className="word-chip">
-                    {group.chars.map((charItem) => (
-                      <span key={charItem.key} className={charItem.className}>
-                        {charItem.value}
-                      </span>
-                    ))}
-                  </span>
-                )
+            <div className="comparison-content anki-line">
+              {actualLineTokens.map((token, index) => (
+                <span key={`actual-${index}`} className={token.className}>
+                  {token.text}
+                </span>
               ))}
             </div>
           </div>
+          <div className="comparison-separator">↓</div>
           <div className="comparison-line">
-            <div className="comparison-label">你的輸入</div>
-            <div className="comparison-content">
-              {actualLineGroups.map((group) => (
-                group.type === "space" ? (
-                  <span key={group.key} className="word-gap">
-                    {group.value}
-                  </span>
-                ) : (
-                  <span key={group.key} className="word-chip">
-                    {group.chars.map((charItem) => (
-                      <span key={charItem.key} className={charItem.className}>
-                        {charItem.value}
-                      </span>
-                    ))}
-                  </span>
-                )
+            <div className="comparison-content anki-line">
+              {expectedLineTokens.map((token, index) => (
+                <span key={`expected-${index}`} className={token.className}>
+                  {token.text}
+                </span>
               ))}
             </div>
           </div>
@@ -655,7 +602,11 @@ export default function HomePage() {
           </span>
           <span>
             <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-            遺漏字元
+            少打字元
+          </span>
+          <span>
+            <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
+            多打字元
           </span>
         </div>
       </div>

@@ -245,75 +245,76 @@ button.compact {
   margin-top: 12px;
   padding: 12px;
   border-radius: var(--radius-control);
-  background: var(--surface);
-  border: 1px dashed var(--border);
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
   font-family: var(--font-mono);
 }
 
+.comparison-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 8px;
+}
+
 .comparison-line {
-  display: flex;
-  gap: var(--space-small);
-  align-items: flex-start;
+  display: block;
 }
 
 .comparison-line + .comparison-line {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  margin-top: 8px;
 }
 
-.comparison-label {
-  width: 64px;
-  flex-shrink: 0;
-  font-size: var(--font-tiny);
-  color: var(--muted);
-  padding-top: 4px;
+.comparison-separator {
+  margin: 10px 0;
+  color: #64748b;
+  font-size: 24px;
+  line-height: 1;
 }
 
 .comparison-content {
-  flex: 1;
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
-.word-chip {
-  display: inline-block;
-  padding: var(--token-padding-y) 6px;
-  margin-right: 2px;
-  margin-bottom: var(--space-xsmall);
-  border-radius: var(--radius-pill);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+.anki-line {
+  font-size: 40px;
 }
 
-.word-gap {
-  display: inline;
-}
-
-.char-correct {
-  color: var(--ok);
-}
-
-.char-wrong {
-  color: var(--error);
-  background: #fee2e2;
-  border-radius: 4px;
+.anki-line span {
   padding: 0 1px;
 }
 
-.char-missing {
-  color: #b45309;
-  background: #ffedd5;
-  border-radius: 4px;
-  padding: 0 1px;
+.token-actual-ok,
+.token-expected-ok {
+  background: #9ef3a5;
+  color: #0f5132;
 }
 
-.char-extra {
-  color: #6b21a8;
-  background: #f3e8ff;
-  border-radius: 4px;
-  padding: 0 1px;
+.token-actual-wrong {
+  background: #fca5a5;
+  color: #7f1d1d;
+}
+
+.token-expected-wrong {
+  background: #fde68a;
+  color: #854d0e;
+}
+
+.token-actual-missing {
+  background: #d1d5db;
+  color: #374151;
+}
+
+.token-expected-missing {
+  background: #fdba74;
+  color: #9a3412;
+}
+
+.token-actual-extra {
+  background: #c4b5fd;
+  color: #4c1d95;
 }
 
 .legend {
