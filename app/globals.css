@@ -7,6 +7,8 @@
   --primary-hover: #1d4ed8;
   --secondary: #4b5563;
   --secondary-hover: #374151;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
   --border: #d1d5db;
   --ok: #15803d;
   --error: #b91c1c;
@@ -33,6 +35,9 @@
   --token-min-width: 18px;
   --token-padding-y: 2px;
   --token-padding-x: 4px;
+  --upload-zone-height: 120px;
+  --upload-zone-border-width: 2px;
+  --upload-preview-max-height: 420px;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --ok-bg: #dcfce7;
   --warn-bg: #fee2e2;
@@ -91,6 +96,59 @@ textarea {
   line-height: 1.5;
 }
 
+.upload-zone {
+  margin-top: 12px;
+  min-height: var(--upload-zone-height);
+  border: var(--upload-zone-border-width) dashed #cbd5e1;
+  border-radius: var(--radius-control);
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.upload-zone:hover,
+.upload-zone.is-drag-over {
+  border-color: var(--primary);
+  background: #eff6ff;
+}
+
+.upload-input-hidden {
+  display: none;
+}
+
+.upload-title {
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.upload-description {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: var(--font-tiny);
+}
+
+.uploaded-image-card {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: #fff;
+  overflow: hidden;
+}
+
+.uploaded-image-preview {
+  display: block;
+  width: 100%;
+  max-height: var(--upload-preview-max-height);
+  object-fit: contain;
+  background: #fff;
+}
+
 .row {
   display: flex;
   gap: 8px;
@@ -120,10 +178,44 @@ button.secondary:hover {
   background: var(--secondary-hover);
 }
 
+button.danger {
+  background: var(--danger);
+}
+
+button.danger:hover {
+  background: var(--danger-hover);
+}
+
 .status {
   margin-top: 10px;
   color: var(--muted);
   font-size: var(--font-small);
+}
+
+.sentence-header {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sentence-status {
+  margin-top: 0;
+}
+
+.hint-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--font-small);
+  white-space: nowrap;
+}
+
+.hint-toggle input {
+  width: auto;
+  margin: 0;
 }
 
 .masked {

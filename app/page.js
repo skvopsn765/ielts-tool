@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY_ENTER = "Enter";
-const KEY_R_LOWER = "r";
-const KEY_R_UPPER = "R";
+const KEY_NEXT_SENTENCE = "1";
+const KEY_RETRY_SENTENCE = "2";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
 const MASK_CHAR = "_";
@@ -18,7 +18,9 @@ const TEXT_NO_DOT = "沒有抓到句子，請確認有英文句號 .";
 const TEXT_REPASTE = "請重新貼上內容";
 const TEXT_LAST_SENTENCE = "已經是最後一句。";
 const TEXT_CORRECT = "完全正確！";
-const TEXT_SHORTCUT_HINT = "快捷鍵：Enter 檢查，檢查後 Enter 下一句，R 重練本句";
+const TEXT_SHORTCUT_HINT = "快捷鍵：Enter 檢查，檢查後按 1 下一句，按 2 重練本句";
+const TEXT_IDLE_STATUS = "尚未開始練習";
+const TEXT_IDLE_MASK = "_ _ _ _ _";
 const DOT_COLOR_OK = "#15803d";
 const DOT_COLOR_ERROR = "#b91c1c";
 const DOT_COLOR_MISSING = "#fca5a5";
@@ -35,6 +37,23 @@ const LINE_ACTUAL = "actual";
 const WHITESPACE_CHAR_RE = /\s/;
 const COST_SAME = 0;
 const COST_EDIT = 1;
+const IMAGE_MIME_PREFIX = "image/";
+const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
+const SAMPLE_ARTICLE = `The graph shows energy consumption in the US from 1980 to 2012, and projected consumption to 2030.
+
+Petrol and oil are the dominant fuel sources throughout this period, with 35 quadrillion (35q) units used in 1980, rising to 42q in 2012.
+
+Despite some initial fluctuation, from 1995 there was a steady increase. This is expected to continue, reaching 47q in 2030.
+
+In 1980, energy from nuclear, hydro and solar/wind power was equal at only 4q.
+
+Nuclear has risen by 3q, and solar/wind by 2.
+
+After slight increases, hydropower has fallen back to the 1980 figure.
+
+It is expected to maintain this level until 2030, while the others should rise slightly after 2025.
+
+Overall, the US will continue to rely on fossil fuels, with sustainable and nuclear energy sources remaining relatively insignificant.`;
 
 function normalizeSpaces(text) {
   return text.replace(WHITESPACE_RE, " ").trim();
@@ -231,10 +250,14 @@ export default function HomePage() {
   const [resultStatus, setResultStatus] = useState(EMPTY_STRING);
   const [comparisonTokens, setComparisonTokens] = useState([]);
   const [practiceStatus, setPracticeStatus] = useState(STATUS_IDLE);
-  const [sentenceStatus, setSentenceStatus] = useState("尚未開始練習");
-  const [maskedSentence, setMaskedSentence] = useState("_ _ _ _ _");
+  const [sentenceStatus, setSentenceStatus] = useState(TEXT_IDLE_STATUS);
+  const [maskedSentence, setMaskedSentence] = useState(TEXT_IDLE_MASK);
+  const [showHintMask, setShowHintMask] = useState(true);
+  const [uploadedImageSrc, setUploadedImageSrc] = useState(EMPTY_STRING);
+  const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
 
   const answerInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -275,8 +298,8 @@ export default function HomePage() {
     setMaskedSentence(maskSentence(sentence));
   }
 
-  function startPractice() {
-    const nextSentences = splitSentences(sourceText);
+  function startPractice(textOverride = sourceText) {
+    const nextSentences = splitSentences(textOverride);
     if (nextSentences.length === 0) {
       setSentenceStatus(TEXT_NO_DOT);
       setMaskedSentence(TEXT_REPASTE);
@@ -291,6 +314,44 @@ export default function HomePage() {
     focusAnswerInput();
   }
 
+  function loadSampleAndStartPractice() {
+    setSourceText(SAMPLE_ARTICLE);
+    setUploadedImageSrc(SAMPLE_ARTICLE_IMAGE_PATH);
+    startPractice(SAMPLE_ARTICLE);
+  }
+
+  function clearAllData() {
+    const FIRST_INDEX = 0;
+    setSourceText(EMPTY_STRING);
+    setUploadedImageSrc(EMPTY_STRING);
+    setSentences([]);
+    setCurrentIndex(FIRST_INDEX);
+    setSentenceStatus(TEXT_IDLE_STATUS);
+    setMaskedSentence(TEXT_IDLE_MASK);
+    setShowHintMask(true);
+    clearAnswerArea();
+  }
+
+  function isImageFile(file) {
+    return Boolean(file?.type?.startsWith(IMAGE_MIME_PREFIX));
+  }
+
+  function setImageFromFile(file) {
+    if (!isImageFile(file)) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string") {
+        setUploadedImageSrc(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openImagePicker() {
+    imageInputRef.current?.click();
+  }
+
   function checkCurrentAnswer() {
     if (!hasSentence) return;
 
@@ -299,14 +360,14 @@ export default function HomePage() {
     const result = compareAnswer(target, normalizedInput);
 
     if (result.isCorrect) {
-      setResultStatus(`${TEXT_CORRECT}（再按 Enter 可下一句）`);
+      setResultStatus(`${TEXT_CORRECT}（再按 1 可下一句）`);
     } else {
       const targetLength = Array.from(target).length;
       const accuracyPercent = Math.round(
         ((targetLength - result.wrongCount) / targetLength) * 100
       );
       setResultStatus(
-        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 R 可重練）`
+        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 1 可下一句，按 2 可重練）`
       );
     }
 
@@ -341,21 +402,38 @@ export default function HomePage() {
         return;
       }
 
-      if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_ENTER) {
+      if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_NEXT_SENTENCE) {
         event.preventDefault();
         goToNextSentence();
         return;
       }
 
-      if (event.key === KEY_R_LOWER || event.key === KEY_R_UPPER) {
+      if (event.key === KEY_RETRY_SENTENCE) {
         event.preventDefault();
         retryCurrentSentence();
       }
     }
 
+    function onGlobalPaste(event) {
+      const clipboardItems = event.clipboardData?.items;
+      if (!clipboardItems) return;
+
+      for (let index = 0; index < clipboardItems.length; index += 1) {
+        const item = clipboardItems[index];
+        if (!item.type.startsWith(IMAGE_MIME_PREFIX)) continue;
+        const imageFile = item.getAsFile();
+        if (!imageFile) continue;
+        event.preventDefault();
+        setImageFromFile(imageFile);
+        return;
+      }
+    }
+
     window.addEventListener("keydown", onGlobalKeyDown);
+    window.addEventListener("paste", onGlobalPaste);
     return () => {
       window.removeEventListener("keydown", onGlobalKeyDown);
+      window.removeEventListener("paste", onGlobalPaste);
     };
   }, [practiceStatus, currentIndex, sentences]);
 
@@ -381,14 +459,75 @@ export default function HomePage() {
           placeholder="請貼上英文文章（以英文句號 . 分句）"
           spellCheck={false}
         />
+        {!uploadedImageSrc && (
+          <div
+            className={`upload-zone ${isDragOverUploadZone ? "is-drag-over" : EMPTY_STRING}`}
+            onClick={openImagePicker}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragOverUploadZone(true);
+            }}
+            onDragLeave={() => setIsDragOverUploadZone(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragOverUploadZone(false);
+              const droppedFile = event.dataTransfer.files?.[0];
+              if (!droppedFile) return;
+              setImageFromFile(droppedFile);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === KEY_ENTER) {
+                openImagePicker();
+              }
+            }}
+          >
+            <div className="upload-title">圖片上傳區</div>
+            <div className="upload-description">點擊選檔、拖曳圖片到此處，或直接 Ctrl+V 貼上圖片</div>
+          </div>
+        )}
+        <input
+          ref={imageInputRef}
+          className="upload-input-hidden"
+          type="file"
+          accept="image/*"
+          onChange={(event) => {
+            const selectedFile = event.target.files?.[0];
+            if (!selectedFile) return;
+            setImageFromFile(selectedFile);
+            event.target.value = EMPTY_STRING;
+          }}
+        />
+        {uploadedImageSrc && (
+          <div className="uploaded-image-card">
+            <img src={uploadedImageSrc} alt="上傳圖片預覽" className="uploaded-image-preview" />
+          </div>
+        )}
         <div className="row">
           <button onClick={startPractice}>開始練習</button>
+          <button className="secondary" onClick={loadSampleAndStartPractice}>
+            範例文章
+          </button>
+          <button className="danger" onClick={clearAllData}>
+            清空
+          </button>
         </div>
       </div>
 
       <div className="card">
-        <div className="status">{sentenceStatus}</div>
-        <div className="masked">{maskedSentence}</div>
+        <div className="sentence-header">
+          <div className="status sentence-status">{sentenceStatus}</div>
+          <label className="hint-toggle">
+            <input
+              type="checkbox"
+              checked={showHintMask}
+              onChange={(event) => setShowHintMask(event.target.checked)}
+            />
+            顯示提示
+          </label>
+        </div>
+        {showHintMask && <div className="masked">{maskedSentence}</div>}
         <div className="row">
           <input
             ref={answerInputRef}
