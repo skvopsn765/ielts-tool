@@ -441,6 +441,13 @@ button.compact {
   padding: 0 1px;
 }
 
+.token-line-break {
+  display: block;
+  line-height: 1;
+  height: 14px;
+  padding: 0;
+}
+
 .token-actual-ok,
 .token-expected-ok {
   background: #9ef3a5;

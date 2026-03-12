@@ -39,6 +39,7 @@ const COMPARE_OK = "ok";
 const COMPARE_WRONG = "wrong";
 const COMPARE_MISSING = "missing";
 const COMPARE_EXTRA = "extra";
+const COMPARE_BREAK = "break";
 const SPACE_CHAR = " ";
 const NON_BREAKING_SPACE = "\u00A0";
 const LINE_TYPE_EXPECTED = "expected";
@@ -91,7 +92,7 @@ function maskSentence(sentence) {
     .join(EMPTY_STRING);
 }
 
-function compareAnswer(target, input) {
+function compareSingleSentence(target, input) {
   const targetChars = Array.from(target);
   const inputChars = Array.from(input);
   const targetLength = targetChars.length;
@@ -189,6 +190,44 @@ function compareAnswer(target, input) {
   };
 }
 
+function compareAnswer(target, input) {
+  const targetSentences = splitSentences(target);
+  const inputSentences = splitSentences(input);
+  const sentenceCount = Math.max(targetSentences.length, inputSentences.length);
+  const mergedTokens = [];
+  let totalWrongCount = 0;
+
+  for (let sentenceIndex = 0; sentenceIndex < sentenceCount; sentenceIndex += 1) {
+    const targetSentence = targetSentences[sentenceIndex] ?? EMPTY_STRING;
+    const inputSentence = inputSentences[sentenceIndex] ?? EMPTY_STRING;
+    const sentenceResult = compareSingleSentence(targetSentence, inputSentence);
+
+    totalWrongCount += sentenceResult.wrongCount;
+    sentenceResult.tokens.forEach((token, tokenIndex) => {
+      mergedTokens.push({
+        ...token,
+        key: `s${sentenceIndex}-${tokenIndex}-${token.key}`,
+      });
+    });
+
+    const hasNextSentence = sentenceIndex < sentenceCount - 1;
+    if (hasNextSentence) {
+      mergedTokens.push({
+        key: `s${sentenceIndex}-break`,
+        status: COMPARE_BREAK,
+        expectedChar: "\n",
+        actualChar: "\n",
+      });
+    }
+  }
+
+  return {
+    isCorrect: totalWrongCount === 0,
+    wrongCount: totalWrongCount,
+    tokens: mergedTokens,
+  };
+}
+
 function isTypingElement(element) {
   if (!element) return false;
   const tagName = element.tagName;
@@ -202,6 +241,10 @@ function toDisplayChar(charValue) {
 }
 
 function toLineToken(token, lineType) {
+  if (token.status === COMPARE_BREAK) {
+    return { text: "\n", className: "token-line-break" };
+  }
+
   if (lineType === LINE_TYPE_EXPECTED) {
     if (token.status === COMPARE_EXTRA) return null;
     if (token.status === COMPARE_OK) {
