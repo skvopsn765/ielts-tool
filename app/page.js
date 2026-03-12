@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY_ENTER = "Enter";
 const KEY_TAB = "Tab";
-const KEY_NEXT_SENTENCE = "1";
-const KEY_RETRY_SENTENCE = "2";
+const KEY_RETRY_SENTENCE = "1";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
 const MASK_CHAR = "_";
@@ -21,7 +20,7 @@ const TEXT_LAST_SENTENCE = "已經是最後一句。";
 const TEXT_FIRST_SENTENCE = "已經是第一句。";
 const TEXT_CORRECT = "完全正確！";
 const TEXT_SHORTCUT_HINT =
-  "快捷鍵：Enter 檢查，檢查後按 1 或 Enter 下一句，按 2 重練本句，非輸入時 Tab 上一句";
+  "快捷鍵：Enter 檢查，檢查後按 Enter 下一句，按 1 重練本句，非輸入時 Tab 上一句";
 const TEXT_IDLE_STATUS = "尚未開始練習";
 const TEXT_IDLE_MASK = "_ _ _ _ _";
 const DOT_COLOR_OK = "#15803d";
@@ -375,14 +374,14 @@ export default function HomePage() {
     const result = compareAnswer(target, normalizedInput);
 
     if (result.isCorrect) {
-      setResultStatus(`${TEXT_CORRECT}（再按 1 或 Enter 可下一句）`);
+      setResultStatus(`${TEXT_CORRECT}（再按 Enter 可下一句）`);
     } else {
       const targetLength = Array.from(target).length;
       const accuracyPercent = Math.round(
         ((targetLength - result.wrongCount) / targetLength) * 100
       );
       setResultStatus(
-        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 1 或 Enter 可下一句，按 2 可重練）`
+        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 1 可重練）`
       );
     }
 
@@ -438,8 +437,7 @@ export default function HomePage() {
         return;
       }
 
-      const isNextSentenceKey = event.key === KEY_NEXT_SENTENCE || event.key === KEY_ENTER;
-      if (practiceStatus === STATUS_READY_NEXT && isNextSentenceKey) {
+      if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_ENTER) {
         event.preventDefault();
         goToNextSentence();
         return;
