@@ -45,6 +45,8 @@ const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
+const PRACTICE_TAB_SINGLE = "single";
+const PRACTICE_TAB_MULTI = "multi";
 const SAMPLE_ARTICLE = `The graph shows energy consumption in the US from 1980 to 2012, and projected consumption to 2030.
 
 Petrol and oil are the dominant fuel sources throughout this period, with 35 quadrillion (35q) units used in 1980, rising to 42q in 2012.
@@ -230,6 +232,7 @@ export default function HomePage() {
   const [showHintMask, setShowHintMask] = useState(true);
   const [uploadedImageSrc, setUploadedImageSrc] = useState(EMPTY_STRING);
   const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
+  const [activePracticeTab, setActivePracticeTab] = useState(PRACTICE_TAB_SINGLE);
 
   const answerInputRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -531,97 +534,124 @@ export default function HomePage() {
       </div>
 
       <div className="card">
-        <div className="sentence-header">
-          <div className="sentence-nav">
-            <div className="status sentence-status">{sentenceStatus}</div>
-            <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
-              上一句
-            </button>
-            <button className="secondary compact" onClick={goToNextSentence} disabled={!hasSentence}>
-              下一句
-            </button>
-          </div>
-          <label className="hint-toggle">
-            <input
-              type="checkbox"
-              checked={showHintMask}
-              onChange={(event) => setShowHintMask(event.target.checked)}
-            />
-            顯示提示 (F2)
-          </label>
-        </div>
-        {showHintMask && <div className="masked">{maskedSentence}</div>}
-        <div className="row">
-          <input
-            ref={answerInputRef}
-            type="text"
-            value={answerInput}
-            onChange={(event) => setAnswerInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === KEY_ENTER) {
-                event.preventDefault();
-                event.stopPropagation();
-                checkCurrentAnswer();
-              }
-            }}
-            placeholder="在這裡輸入完整句子，按 Enter 比對"
-            disabled={!hasSentence}
-            spellCheck={false}
-          />
-        </div>
-        <div className="row">
-          <button onClick={checkCurrentAnswer} disabled={!hasSentence}>
-            檢查答案
+        <div className="practice-tab-bar">
+          <button
+            className={`practice-tab-button ${
+              activePracticeTab === PRACTICE_TAB_SINGLE ? "active" : EMPTY_STRING
+            }`}
+            onClick={() => setActivePracticeTab(PRACTICE_TAB_SINGLE)}
+          >
+            單句練習
           </button>
-          <button className="secondary" onClick={retryCurrentSentence} disabled={!hasSentence}>
-            重練這一句
-          </button>
-          <button className="secondary" onClick={goToNextSentence} disabled={!hasSentence}>
-            下一句
+          <button
+            className={`practice-tab-button ${
+              activePracticeTab === PRACTICE_TAB_MULTI ? "active" : EMPTY_STRING
+            }`}
+            onClick={() => setActivePracticeTab(PRACTICE_TAB_MULTI)}
+          >
+            多句練習
           </button>
         </div>
-        <div className="status">{resultStatus}</div>
-        <div className="status">{TEXT_SHORTCUT_HINT}</div>
-        <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
-          <div className="comparison-title">你的輸入</div>
-          <div className="comparison-line">
-            <div className="comparison-content anki-line">
-              {actualLineTokens.map((token, index) => (
-                <span key={`actual-${index}`} className={token.className}>
-                  {token.text}
-                </span>
-              ))}
+
+        {activePracticeTab === PRACTICE_TAB_SINGLE ? (
+          <>
+            <div className="sentence-header">
+              <div className="sentence-nav">
+                <div className="status sentence-status">{sentenceStatus}</div>
+                <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
+                  上一句
+                </button>
+                <button className="secondary compact" onClick={goToNextSentence} disabled={!hasSentence}>
+                  下一句
+                </button>
+              </div>
+              <label className="hint-toggle">
+                <input
+                  type="checkbox"
+                  checked={showHintMask}
+                  onChange={(event) => setShowHintMask(event.target.checked)}
+                />
+                顯示提示 (F2)
+              </label>
             </div>
-          </div>
-          <div className="comparison-separator">↓</div>
-          <div className="comparison-line">
-            <div className="comparison-content anki-line">
-              {expectedLineTokens.map((token, index) => (
-                <span key={`expected-${index}`} className={token.className}>
-                  {token.text}
-                </span>
-              ))}
+            {showHintMask && <div className="masked">{maskedSentence}</div>}
+            <div className="row">
+              <input
+                ref={answerInputRef}
+                type="text"
+                value={answerInput}
+                onChange={(event) => setAnswerInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === KEY_ENTER) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    checkCurrentAnswer();
+                  }
+                }}
+                placeholder="在這裡輸入完整句子，按 Enter 比對"
+                disabled={!hasSentence}
+                spellCheck={false}
+              />
             </div>
+            <div className="row">
+              <button onClick={checkCurrentAnswer} disabled={!hasSentence}>
+                檢查答案
+              </button>
+              <button className="secondary" onClick={retryCurrentSentence} disabled={!hasSentence}>
+                重練這一句
+              </button>
+              <button className="secondary" onClick={goToNextSentence} disabled={!hasSentence}>
+                下一句
+              </button>
+            </div>
+            <div className="status">{resultStatus}</div>
+            <div className="status">{TEXT_SHORTCUT_HINT}</div>
+            <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
+              <div className="comparison-title">你的輸入</div>
+              <div className="comparison-line">
+                <div className="comparison-content anki-line">
+                  {actualLineTokens.map((token, index) => (
+                    <span key={`actual-${index}`} className={token.className}>
+                      {token.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="comparison-separator">↓</div>
+              <div className="comparison-line">
+                <div className="comparison-content anki-line">
+                  {expectedLineTokens.map((token, index) => (
+                    <span key={`expected-${index}`} className={token.className}>
+                      {token.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="legend">
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_OK }} />
+                正確字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
+                錯誤字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
+                少打字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
+                多打字元
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="multi-practice-placeholder">
+            多句練習模式開發中，下一步會在這個分頁放入多句背誦流程。
           </div>
-        </div>
-        <div className="legend">
-          <span>
-            <i className="dot" style={{ background: DOT_COLOR_OK }} />
-            正確字元
-          </span>
-          <span>
-            <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
-            錯誤字元
-          </span>
-          <span>
-            <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-            少打字元
-          </span>
-          <span>
-            <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
-            多打字元
-          </span>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -47,6 +47,12 @@
   --missing-bg: #ffedd5;
   --extra-bg: #f3e8ff;
   --neutral-bg: #e5e7eb;
+  --tab-strip-bg: #eef2ff;
+  --tab-strip-border: #c7d2fe;
+  --tab-inactive-text: #64748b;
+  --tab-inactive-hover-text: #334155;
+  --tab-active-text: #2563eb;
+  --tab-active-indicator: #2563eb;
 }
 
 * {
@@ -208,11 +214,68 @@ button.compact {
   gap: 12px;
 }
 
+.practice-tab-bar {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 14px 0 14px;
+  border-radius: 12px 12px 0 0;
+  background: var(--tab-strip-bg);
+  border-bottom: 1px solid var(--tab-strip-border);
+}
+
+.practice-tab-button {
+  background: transparent;
+  color: var(--tab-inactive-text);
+  border: none;
+  border-radius: 0;
+  padding: 10px 2px 12px 2px;
+  min-width: auto;
+  position: relative;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: color 0.18s ease;
+}
+
+.practice-tab-button:hover {
+  background: transparent;
+  color: var(--tab-inactive-hover-text);
+  transform: none;
+}
+
+.practice-tab-button.active {
+  color: var(--tab-active-text);
+  background: transparent;
+}
+
+.practice-tab-button.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--tab-active-indicator);
+}
+
 .sentence-nav {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.multi-practice-placeholder {
+  margin-top: 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-control);
+  background: #f8fafc;
+  color: var(--muted);
+  padding: 18px;
+  font-size: var(--font-small);
 }
 
 .sentence-status {
