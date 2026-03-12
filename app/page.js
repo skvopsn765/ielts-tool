@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const KEY_ENTER = "Enter";
+const KEY_TAB = "Tab";
 const KEY_NEXT_SENTENCE = "1";
 const KEY_RETRY_SENTENCE = "2";
 const EMPTY_STRING = "";
@@ -17,8 +18,10 @@ const TEXT_PASTE_FIRST = "請先貼上文章並開始練習";
 const TEXT_NO_DOT = "沒有抓到句子，請確認有英文句號 .";
 const TEXT_REPASTE = "請重新貼上內容";
 const TEXT_LAST_SENTENCE = "已經是最後一句。";
+const TEXT_FIRST_SENTENCE = "已經是第一句。";
 const TEXT_CORRECT = "完全正確！";
-const TEXT_SHORTCUT_HINT = "快捷鍵：Enter 檢查，檢查後按 1 下一句，按 2 重練本句";
+const TEXT_SHORTCUT_HINT =
+  "快捷鍵：Enter 檢查，檢查後按 1 或 Enter 下一句，按 2 重練本句，非輸入時 Tab 上一句";
 const TEXT_IDLE_STATUS = "尚未開始練習";
 const TEXT_IDLE_MASK = "_ _ _ _ _";
 const DOT_COLOR_OK = "#15803d";
@@ -37,6 +40,8 @@ const LINE_ACTUAL = "actual";
 const WHITESPACE_CHAR_RE = /\s/;
 const COST_SAME = 0;
 const COST_EDIT = 1;
+const SCROLL_BEHAVIOR_SMOOTH = "smooth";
+const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
 const SAMPLE_ARTICLE = `The graph shows energy consumption in the US from 1980 to 2012, and projected consumption to 2030.
@@ -258,6 +263,7 @@ export default function HomePage() {
 
   const answerInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const comparisonPanelRef = useRef(null);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -352,6 +358,15 @@ export default function HomePage() {
     imageInputRef.current?.click();
   }
 
+  function scrollToPracticeResultArea() {
+    requestAnimationFrame(() => {
+      comparisonPanelRef.current?.scrollIntoView({
+        behavior: SCROLL_BEHAVIOR_SMOOTH,
+        block: SCROLL_BLOCK_START,
+      });
+    });
+  }
+
   function checkCurrentAnswer() {
     if (!hasSentence) return;
 
@@ -360,20 +375,21 @@ export default function HomePage() {
     const result = compareAnswer(target, normalizedInput);
 
     if (result.isCorrect) {
-      setResultStatus(`${TEXT_CORRECT}（再按 1 可下一句）`);
+      setResultStatus(`${TEXT_CORRECT}（再按 1 或 Enter 可下一句）`);
     } else {
       const targetLength = Array.from(target).length;
       const accuracyPercent = Math.round(
         ((targetLength - result.wrongCount) / targetLength) * 100
       );
       setResultStatus(
-        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 1 可下一句，按 2 可重練）`
+        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 1 或 Enter 可下一句，按 2 可重練）`
       );
     }
 
     setComparisonTokens(result.tokens);
     setPracticeStatus(STATUS_READY_NEXT);
     blurAnswerInput();
+    scrollToPracticeResultArea();
   }
 
   function retryCurrentSentence() {
@@ -395,6 +411,20 @@ export default function HomePage() {
     focusAnswerInput();
   }
 
+  function goToPreviousSentence() {
+    const previousIndex = currentIndex - 1;
+    if (previousIndex < 0) {
+      setResultStatus(TEXT_FIRST_SENTENCE);
+      setPracticeStatus(STATUS_IDLE);
+      return;
+    }
+
+    setCurrentIndex(previousIndex);
+    clearAnswerArea();
+    renderCurrentSentence(sentences, previousIndex);
+    focusAnswerInput();
+  }
+
   useEffect(() => {
     function onGlobalKeyDown(event) {
       // 輸入欄位聚焦時不要攔截快捷鍵，避免影響正常打字
@@ -402,7 +432,14 @@ export default function HomePage() {
         return;
       }
 
-      if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_NEXT_SENTENCE) {
+      if (event.key === KEY_TAB) {
+        event.preventDefault();
+        goToPreviousSentence();
+        return;
+      }
+
+      const isNextSentenceKey = event.key === KEY_NEXT_SENTENCE || event.key === KEY_ENTER;
+      if (practiceStatus === STATUS_READY_NEXT && isNextSentenceKey) {
         event.preventDefault();
         goToNextSentence();
         return;
@@ -517,7 +554,15 @@ export default function HomePage() {
 
       <div className="card">
         <div className="sentence-header">
-          <div className="status sentence-status">{sentenceStatus}</div>
+          <div className="sentence-nav">
+            <div className="status sentence-status">{sentenceStatus}</div>
+            <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
+              上一句
+            </button>
+            <button className="secondary compact" onClick={goToNextSentence} disabled={!hasSentence}>
+              下一句
+            </button>
+          </div>
           <label className="hint-toggle">
             <input
               type="checkbox"
@@ -559,7 +604,7 @@ export default function HomePage() {
         </div>
         <div className="status">{resultStatus}</div>
         <div className="status">{TEXT_SHORTCUT_HINT}</div>
-        <div className="comparison-panel" aria-live="polite">
+        <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
           <div className="comparison-line">
             <div className="comparison-label">原句</div>
             <div className="comparison-content">

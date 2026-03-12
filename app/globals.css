@@ -186,6 +186,11 @@ button.danger:hover {
   background: var(--danger-hover);
 }
 
+button.compact {
+  padding: 6px 10px;
+  font-size: var(--font-tiny);
+}
+
 .status {
   margin-top: 10px;
   color: var(--muted);
@@ -200,6 +205,13 @@ button.danger:hover {
   gap: 12px;
 }
 
+.sentence-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .sentence-status {
   margin-top: 0;
 }
@@ -211,6 +223,9 @@ button.danger:hover {
   color: var(--muted);
   font-size: var(--font-small);
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hint-toggle input {
