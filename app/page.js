@@ -20,6 +20,9 @@ const TEXT_REPASTE = "請重新貼上內容";
 const TEXT_LAST_SENTENCE = "已經是最後一句。";
 const TEXT_FIRST_SENTENCE = "已經是第一句。";
 const TEXT_CORRECT = "完全正確！";
+const TEXT_SELECT_SENTENCE_FIRST = "請至少勾選一句再開始多句練習。";
+const TEXT_MULTI_SHORTCUT_HINT = "快捷鍵：按 1 重練本組，F2 顯示提示";
+const TEXT_MULTI_PASSED = "完全正確！多句已一次通過。";
 const TEXT_SHORTCUT_HINT =
   "快捷鍵：Enter 檢查，檢查後按 Enter 下一句，按 1 重練本句，非輸入時 Tab 上一句";
 const TEXT_IDLE_STATUS = "尚未開始練習";
@@ -233,8 +236,13 @@ export default function HomePage() {
   const [uploadedImageSrc, setUploadedImageSrc] = useState(EMPTY_STRING);
   const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
   const [activePracticeTab, setActivePracticeTab] = useState(PRACTICE_TAB_SINGLE);
+  const [isMultiPracticeStarted, setIsMultiPracticeStarted] = useState(false);
+  const [selectedSentenceMap, setSelectedSentenceMap] = useState({});
+  const [multiTargetText, setMultiTargetText] = useState(EMPTY_STRING);
+  const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
 
   const answerInputRef = useRef(null);
+  const multiAnswerInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
 
@@ -242,6 +250,9 @@ export default function HomePage() {
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
     [currentIndex, sentences]
   );
+  const sourceSentenceList = useMemo(() => splitSentences(sourceText), [sourceText]);
+  const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
+  const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
 
   function getCurrentSentence() {
     return sentences[currentIndex] ?? EMPTY_STRING;
@@ -308,7 +319,50 @@ export default function HomePage() {
     setSentenceStatus(TEXT_IDLE_STATUS);
     setMaskedSentence(TEXT_IDLE_MASK);
     setShowHintMask(true);
+    setIsMultiPracticeStarted(false);
+    setSelectedSentenceMap({});
+    setMultiTargetText(EMPTY_STRING);
+    setMultiAnswerInput(EMPTY_STRING);
     clearAnswerArea();
+  }
+
+  function toggleSentenceSelection(index) {
+    setSelectedSentenceMap((previousMap) => ({
+      ...previousMap,
+      [index]: !previousMap[index],
+    }));
+  }
+
+  function startMultiPracticeBySelection() {
+    const selectedSentences = sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index]);
+    if (selectedSentences.length === 0) {
+      setResultStatus(TEXT_SELECT_SENTENCE_FIRST);
+      return;
+    }
+
+    const combinedSentenceText = normalizeSpaces(selectedSentences.join(" "));
+    setMultiTargetText(combinedSentenceText);
+    setMultiAnswerInput(EMPTY_STRING);
+    setSentenceStatus(`多句練習：共 ${selectedSentences.length} 句`);
+    setMaskedSentence(maskSentence(combinedSentenceText));
+    setResultStatus(EMPTY_STRING);
+    setComparisonTokens([]);
+    setPracticeStatus(STATUS_IDLE);
+    setIsMultiPracticeStarted(true);
+    requestAnimationFrame(() => {
+      multiAnswerInputRef.current?.focus();
+    });
+  }
+
+  function backToMultiSelection() {
+    setIsMultiPracticeStarted(false);
+    setMultiTargetText(EMPTY_STRING);
+    setMultiAnswerInput(EMPTY_STRING);
+    setSentenceStatus(TEXT_IDLE_STATUS);
+    setMaskedSentence(TEXT_IDLE_MASK);
+    setResultStatus(EMPTY_STRING);
+    setComparisonTokens([]);
+    setPracticeStatus(STATUS_IDLE);
   }
 
   function isImageFile(file) {
@@ -365,9 +419,37 @@ export default function HomePage() {
     scrollToPracticeResultArea();
   }
 
+  function checkMultiAnswer() {
+    if (!isMultiPracticeStarted || !multiTargetText) return;
+
+    const normalizedInput = normalizeSpaces(multiAnswerInput);
+    const result = compareAnswer(multiTargetText, normalizedInput);
+    if (result.isCorrect) {
+      setResultStatus(TEXT_MULTI_PASSED);
+    } else {
+      const targetLength = Array.from(multiTargetText).length;
+      const accuracyPercent = Math.round(
+        ((targetLength - result.wrongCount) / targetLength) * 100
+      );
+      setResultStatus(`尚未全對：有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%`);
+    }
+
+    setComparisonTokens(result.tokens);
+    setPracticeStatus(STATUS_IDLE);
+    scrollToPracticeResultArea();
+  }
+
   function retryCurrentSentence() {
     clearAnswerArea();
     focusAnswerInput();
+  }
+
+  function retryMultiPractice() {
+    setMultiAnswerInput(EMPTY_STRING);
+    setResultStatus(EMPTY_STRING);
+    setComparisonTokens([]);
+    setPracticeStatus(STATUS_IDLE);
+    multiAnswerInputRef.current?.focus();
   }
 
   function goToNextSentence() {
@@ -411,21 +493,31 @@ export default function HomePage() {
         return;
       }
 
-      if (event.key === KEY_TAB) {
-        event.preventDefault();
-        goToPreviousSentence();
+      if (isSinglePracticeTab) {
+        if (!hasSentence) return;
+
+        if (event.key === KEY_TAB) {
+          event.preventDefault();
+          goToPreviousSentence();
+          return;
+        }
+
+        if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_ENTER) {
+          event.preventDefault();
+          goToNextSentence();
+          return;
+        }
+
+        if (event.key === KEY_RETRY_SENTENCE) {
+          event.preventDefault();
+          retryCurrentSentence();
+        }
         return;
       }
 
-      if (practiceStatus === STATUS_READY_NEXT && event.key === KEY_ENTER) {
+      if (isMultiPracticeTab && isMultiPracticeStarted && event.key === KEY_RETRY_SENTENCE) {
         event.preventDefault();
-        goToNextSentence();
-        return;
-      }
-
-      if (event.key === KEY_RETRY_SENTENCE) {
-        event.preventDefault();
-        retryCurrentSentence();
+        retryMultiPractice();
       }
     }
 
@@ -450,7 +542,14 @@ export default function HomePage() {
       window.removeEventListener("keydown", onGlobalKeyDown);
       window.removeEventListener("paste", onGlobalPaste);
     };
-  }, [practiceStatus, currentIndex, sentences]);
+  }, [practiceStatus, currentIndex, sentences, hasSentence, isSinglePracticeTab, isMultiPracticeTab, isMultiPracticeStarted]);
+
+  useEffect(() => {
+    setSelectedSentenceMap({});
+    setIsMultiPracticeStarted(false);
+    setMultiTargetText(EMPTY_STRING);
+    setMultiAnswerInput(EMPTY_STRING);
+  }, [sourceText]);
 
   const expectedLineTokens = useMemo(
     () =>
@@ -553,7 +652,7 @@ export default function HomePage() {
           </button>
         </div>
 
-        {activePracticeTab === PRACTICE_TAB_SINGLE ? (
+        {isSinglePracticeTab ? (
           <>
             <div className="sentence-header">
               <div className="sentence-nav">
@@ -647,9 +746,114 @@ export default function HomePage() {
               </span>
             </div>
           </>
+        ) : isMultiPracticeStarted ? (
+          <>
+            <div className="sentence-header">
+              <div className="sentence-nav">
+                <div className="status sentence-status">{sentenceStatus}</div>
+                <button className="secondary compact" onClick={backToMultiSelection}>
+                  重新選句
+                </button>
+              </div>
+              <label className="hint-toggle">
+                <input
+                  type="checkbox"
+                  checked={showHintMask}
+                  onChange={(event) => setShowHintMask(event.target.checked)}
+                />
+                顯示提示 (F2)
+              </label>
+            </div>
+            {showHintMask && <div className="masked">{maskedSentence}</div>}
+            <div className="row">
+              <textarea
+                ref={multiAnswerInputRef}
+                value={multiAnswerInput}
+                onChange={(event) => setMultiAnswerInput(event.target.value)}
+                placeholder="一次輸入勾選的所有句子（可換行）"
+                className="multi-answer-input"
+                spellCheck={false}
+              />
+            </div>
+            <div className="row">
+              <button onClick={checkMultiAnswer}>檢查答案</button>
+              <button className="secondary" onClick={retryMultiPractice}>
+                重練這組
+              </button>
+            </div>
+            <div className="status">{resultStatus}</div>
+            <div className="status">{TEXT_MULTI_SHORTCUT_HINT}</div>
+            <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
+              <div className="comparison-title">你的輸入</div>
+              <div className="comparison-line">
+                <div className="comparison-content anki-line">
+                  {actualLineTokens.map((token, index) => (
+                    <span key={`actual-${index}`} className={token.className}>
+                      {token.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="comparison-separator">↓</div>
+              <div className="comparison-line">
+                <div className="comparison-content anki-line">
+                  {expectedLineTokens.map((token, index) => (
+                    <span key={`expected-${index}`} className={token.className}>
+                      {token.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="legend">
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_OK }} />
+                正確字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
+                錯誤字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
+                少打字元
+              </span>
+              <span>
+                <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
+                多打字元
+              </span>
+            </div>
+          </>
         ) : (
-          <div className="multi-practice-placeholder">
-            多句練習模式開發中，下一步會在這個分頁放入多句背誦流程。
+          <div className="multi-practice-selector">
+            <div className="status multi-practice-title">請勾選要背誦的句子</div>
+            {sourceSentenceList.length === 0 ? (
+              <div className="multi-practice-placeholder">請先在上方貼入文章，再到這裡勾選句子。</div>
+            ) : (
+              <>
+                <div className="multi-sentence-list">
+                  {sourceSentenceList.map((sentence, index) => {
+                    const isChecked = Boolean(selectedSentenceMap[index]);
+                    const displayIndex = index + 1;
+                    return (
+                      <label key={`multi-${index}`} className="multi-sentence-item">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSentenceSelection(index)}
+                        />
+                        <span className="multi-sentence-index">{displayIndex}.</span>
+                        <span className="multi-sentence-text">{sentence}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="row">
+                  <button onClick={startMultiPracticeBySelection}>確認並開始背誦</button>
+                </div>
+                <div className="status">{resultStatus}</div>
+              </>
+            )}
           </div>
         )}
       </div>
