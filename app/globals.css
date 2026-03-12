@@ -53,6 +53,8 @@
   --tab-inactive-hover-text: #334155;
   --tab-active-text: #2563eb;
   --tab-active-indicator: #2563eb;
+  --collapse-max-height: 360px;
+  --collapse-transition-ms: 220ms;
 }
 
 * {
@@ -282,6 +284,24 @@ button.compact {
 
 .multi-practice-selector {
   margin-top: 8px;
+}
+
+.multi-selector-collapse {
+  max-height: 0;
+  overflow: hidden;
+  transform: scaleY(0.96);
+  transform-origin: top;
+  opacity: 0;
+  transition:
+    max-height var(--collapse-transition-ms) ease,
+    transform var(--collapse-transition-ms) ease,
+    opacity var(--collapse-transition-ms) ease;
+}
+
+.multi-selector-collapse.expanded {
+  max-height: var(--collapse-max-height);
+  transform: scaleY(1);
+  opacity: 1;
 }
 
 .multi-practice-title {

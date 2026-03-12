@@ -23,6 +23,9 @@ const TEXT_CORRECT = "完全正確！";
 const TEXT_SELECT_SENTENCE_FIRST = "請至少勾選一句再開始多句練習。";
 const TEXT_MULTI_SHORTCUT_HINT = "快捷鍵：按 1 重練本組，F2 顯示提示";
 const TEXT_MULTI_PASSED = "完全正確！多句已一次通過。";
+const TEXT_MULTI_NOT_STARTED = "多句練習：尚未開始";
+const TEXT_MULTI_SELECTOR_OPEN = "收合選句";
+const TEXT_MULTI_SELECTOR_CLOSED = "重新選句";
 const TEXT_SHORTCUT_HINT =
   "快捷鍵：Enter 檢查，檢查後按 Enter 下一句，按 1 重練本句，非輸入時 Tab 上一句";
 const TEXT_IDLE_STATUS = "尚未開始練習";
@@ -237,9 +240,11 @@ export default function HomePage() {
   const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
   const [activePracticeTab, setActivePracticeTab] = useState(PRACTICE_TAB_SINGLE);
   const [isMultiPracticeStarted, setIsMultiPracticeStarted] = useState(false);
+  const [isMultiSelectorExpanded, setIsMultiSelectorExpanded] = useState(true);
   const [selectedSentenceMap, setSelectedSentenceMap] = useState({});
   const [multiTargetText, setMultiTargetText] = useState(EMPTY_STRING);
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
+  const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -320,9 +325,11 @@ export default function HomePage() {
     setMaskedSentence(TEXT_IDLE_MASK);
     setShowHintMask(true);
     setIsMultiPracticeStarted(false);
+    setIsMultiSelectorExpanded(true);
     setSelectedSentenceMap({});
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
+    setMultiSelectionStatus(EMPTY_STRING);
     clearAnswerArea();
   }
 
@@ -336,7 +343,7 @@ export default function HomePage() {
   function startMultiPracticeBySelection() {
     const selectedSentences = sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index]);
     if (selectedSentences.length === 0) {
-      setResultStatus(TEXT_SELECT_SENTENCE_FIRST);
+      setMultiSelectionStatus(TEXT_SELECT_SENTENCE_FIRST);
       return;
     }
 
@@ -346,23 +353,18 @@ export default function HomePage() {
     setSentenceStatus(`多句練習：共 ${selectedSentences.length} 句`);
     setMaskedSentence(maskSentence(combinedSentenceText));
     setResultStatus(EMPTY_STRING);
+    setMultiSelectionStatus(EMPTY_STRING);
     setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
     setIsMultiPracticeStarted(true);
+    setIsMultiSelectorExpanded(false);
     requestAnimationFrame(() => {
       multiAnswerInputRef.current?.focus();
     });
   }
 
-  function backToMultiSelection() {
-    setIsMultiPracticeStarted(false);
-    setMultiTargetText(EMPTY_STRING);
-    setMultiAnswerInput(EMPTY_STRING);
-    setSentenceStatus(TEXT_IDLE_STATUS);
-    setMaskedSentence(TEXT_IDLE_MASK);
-    setResultStatus(EMPTY_STRING);
-    setComparisonTokens([]);
-    setPracticeStatus(STATUS_IDLE);
+  function toggleMultiSelectorPanel() {
+    setIsMultiSelectorExpanded((previousValue) => !previousValue);
   }
 
   function isImageFile(file) {
@@ -547,8 +549,10 @@ export default function HomePage() {
   useEffect(() => {
     setSelectedSentenceMap({});
     setIsMultiPracticeStarted(false);
+    setIsMultiSelectorExpanded(true);
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
+    setMultiSelectionStatus(EMPTY_STRING);
   }, [sourceText]);
 
   const expectedLineTokens = useMemo(
@@ -751,8 +755,8 @@ export default function HomePage() {
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
-                <button className="secondary compact" onClick={backToMultiSelection}>
-                  重新選句
+                <button className="secondary compact" onClick={toggleMultiSelectorPanel}>
+                  {isMultiSelectorExpanded ? TEXT_MULTI_SELECTOR_OPEN : TEXT_MULTI_SELECTOR_CLOSED}
                 </button>
               </div>
               <label className="hint-toggle">
@@ -763,6 +767,36 @@ export default function HomePage() {
                 />
                 顯示提示 (F2)
               </label>
+            </div>
+            <div
+              className={`multi-selector-collapse ${
+                isMultiSelectorExpanded ? "expanded" : EMPTY_STRING
+              }`}
+            >
+              <div className="multi-practice-selector">
+                <div className="status multi-practice-title">請勾選要背誦的句子</div>
+                <div className="multi-sentence-list">
+                  {sourceSentenceList.map((sentence, index) => {
+                    const isChecked = Boolean(selectedSentenceMap[index]);
+                    const displayIndex = index + 1;
+                    return (
+                      <label key={`multi-reselect-${index}`} className="multi-sentence-item">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSentenceSelection(index)}
+                        />
+                        <span className="multi-sentence-index">{displayIndex}.</span>
+                        <span className="multi-sentence-text">{sentence}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="row">
+                  <button onClick={startMultiPracticeBySelection}>確認並開始背誦</button>
+                </div>
+                <div className="status">{multiSelectionStatus}</div>
+              </div>
             </div>
             {showHintMask && <div className="masked">{maskedSentence}</div>}
             <div className="row">
@@ -826,7 +860,7 @@ export default function HomePage() {
           </>
         ) : (
           <div className="multi-practice-selector">
-            <div className="status multi-practice-title">請勾選要背誦的句子</div>
+            <div className="status multi-practice-title">{TEXT_MULTI_NOT_STARTED}</div>
             {sourceSentenceList.length === 0 ? (
               <div className="multi-practice-placeholder">請先在上方貼入文章，再到這裡勾選句子。</div>
             ) : (
@@ -851,7 +885,7 @@ export default function HomePage() {
                 <div className="row">
                   <button onClick={startMultiPracticeBySelection}>確認並開始背誦</button>
                 </div>
-                <div className="status">{resultStatus}</div>
+                <div className="status">{multiSelectionStatus}</div>
               </>
             )}
           </div>
