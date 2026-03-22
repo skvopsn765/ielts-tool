@@ -47,7 +47,8 @@ const LINE_TYPE_EXPECTED = "expected";
 const LINE_TYPE_ACTUAL = "actual";
 const DISPLAY_MISSING_MARK = "-";
 const COST_SAME = 0;
-const COST_EDIT = 1;
+const COST_INSERT_OR_DELETE = 1;
+const COST_REPLACE = 2;
 const MAX_ALIGNMENT_SHIFT = 24;
 const LENGTH_DIFF_BALANCED = 0;
 const LENGTH_DIFF_STEP = 1;
@@ -114,10 +115,10 @@ function compareSingleSentence(target, input) {
       const alignmentShift = Math.abs(row - column);
       // 限制可對齊的位移量，避免把前段輸入錯配到句尾相同字母
       const canUseExactMatch = isSameChar && alignmentShift <= MAX_ALIGNMENT_SHIFT;
-      const substitutionCost = canUseExactMatch ? COST_SAME : COST_EDIT;
+      const substitutionCost = canUseExactMatch ? COST_SAME : COST_REPLACE;
       const substitution = distanceTable[row - 1][column - 1] + substitutionCost;
-      const deletion = distanceTable[row - 1][column] + COST_EDIT;
-      const insertion = distanceTable[row][column - 1] + COST_EDIT;
+      const deletion = distanceTable[row - 1][column] + COST_INSERT_OR_DELETE;
+      const insertion = distanceTable[row][column - 1] + COST_INSERT_OR_DELETE;
       distanceTable[row][column] = Math.min(substitution, deletion, insertion);
     }
   }
@@ -148,11 +149,13 @@ function compareSingleSentence(target, input) {
     const canUseWrong =
       row > 0 &&
       column > 0 &&
-      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_EDIT;
+      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_REPLACE;
     const canUseMissing =
-      row > 0 && distanceTable[row][column] === distanceTable[row - 1][column] + COST_EDIT;
+      row > 0 &&
+      distanceTable[row][column] === distanceTable[row - 1][column] + COST_INSERT_OR_DELETE;
     const canUseExtra =
-      column > 0 && distanceTable[row][column] === distanceTable[row][column - 1] + COST_EDIT;
+      column > 0 &&
+      distanceTable[row][column] === distanceTable[row][column - 1] + COST_INSERT_OR_DELETE;
 
     // 長度有落差時，優先用少打／多打來對齊，避免大量誤判成替換字元
     if (lengthDiff > LENGTH_DIFF_BALANCED && canUseMissing) {
