@@ -54,21 +54,15 @@ const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
-const SAMPLE_ARTICLE = `The graph shows energy consumption in the US from 1980 to 2012, and projected consumption to 2030.
+const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
 
-Petrol and oil are the dominant fuel sources throughout this period, with 35 quadrillion (35q) units used in 1980, rising to 42q in 2012.
+Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
 
-Despite some initial fluctuation, from 1995 there was a steady increase. This is expected to continue, reaching 47q in 2030.
+In 1980, petrol and oil consumption stood at around 35 quadrillion units, significantly higher than other fuels. Although there was a slight decline in the mid-1980s, it then increased steadily, reaching approximately 40 units in 2005 and is forecast to climb to nearly 50 units by 2030.
 
-In 1980, energy from nuclear, hydro and solar/wind power was equal at only 4q.
+Coal and natural gas displayed similar levels at the beginning, at about 16 and 20 units respectively. Natural gas fluctuated over time and is predicted to stabilize at around 25 units from 2015 onwards. Meanwhile, coal consumption rose gradually and is expected to surpass natural gas, reaching roughly 30 units by 2030.
 
-Nuclear has risen by 3q, and solar/wind by 2.
-
-After slight increases, hydropower has fallen back to the 1980 figure.
-
-It is expected to maintain this level until 2030, while the others should rise slightly after 2025.
-
-Overall, the US will continue to rely on fossil fuels, with sustainable and nuclear energy sources remaining relatively insignificant.`;
+The remaining energy sources were used far less. Nuclear energy increased slightly from about 4 to around 7 units, while solar and wind are projected to grow steadily to approximately 6 units. In contrast, hydropower remains relatively stable at just above 3 units throughout the period.`;
 const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
