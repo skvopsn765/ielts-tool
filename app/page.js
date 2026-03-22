@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const KEY_ENTER = "Enter";
 const KEY_TAB = "Tab";
 const KEY_F2 = "F2";
+const KEY_V = "v";
 const KEY_RETRY_SENTENCE = "1";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
@@ -48,12 +49,17 @@ const DISPLAY_MISSING_MARK = "-";
 const COST_SAME = 0;
 const COST_EDIT = 1;
 const MAX_ALIGNMENT_SHIFT = 24;
+const LENGTH_DIFF_BALANCED = 0;
+const LENGTH_DIFF_STEP = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
+const CSS_HEIGHT_AUTO = "auto";
+const CSS_UNIT_PX = "px";
+const CSS_OVERFLOW_HIDDEN = "hidden";
 const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
 
 Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
@@ -120,6 +126,7 @@ function compareSingleSentence(target, input) {
   let column = inputLength;
   while (row > 0 || column > 0) {
     const alignmentShift = Math.abs(row - column);
+    const lengthDiff = row - column;
     if (
       row > 0 &&
       column > 0 &&
@@ -138,40 +145,69 @@ function compareSingleSentence(target, input) {
       continue;
     }
 
-    if (
+    const canUseWrong =
       row > 0 &&
       column > 0 &&
-      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_EDIT
-    ) {
-      tokens.push({
-        key: `wrong-${row}-${column}`,
-        status: COMPARE_WRONG,
-        expectedChar: targetChars[row - 1],
-        actualChar: inputChars[column - 1],
-      });
-      row -= 1;
-      column -= 1;
-      continue;
-    }
+      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_EDIT;
+    const canUseMissing =
+      row > 0 && distanceTable[row][column] === distanceTable[row - 1][column] + COST_EDIT;
+    const canUseExtra =
+      column > 0 && distanceTable[row][column] === distanceTable[row][column - 1] + COST_EDIT;
 
-    if (row > 0 && distanceTable[row][column] === distanceTable[row - 1][column] + COST_EDIT) {
+    // 長度有落差時，優先用少打／多打來對齊，避免大量誤判成替換字元
+    if (lengthDiff > LENGTH_DIFF_BALANCED && canUseMissing) {
       tokens.push({
         key: `missing-${row}-${column}`,
         status: COMPARE_MISSING,
         expectedChar: targetChars[row - 1],
         actualChar: EMPTY_STRING,
       });
-      row -= 1;
+      row -= LENGTH_DIFF_STEP;
+      continue;
+    }
+    if (lengthDiff < LENGTH_DIFF_BALANCED && canUseExtra) {
+      tokens.push({
+        key: `extra-${row}-${column}`,
+        status: COMPARE_EXTRA,
+        expectedChar: EMPTY_STRING,
+        actualChar: inputChars[column - 1],
+      });
+      column -= LENGTH_DIFF_STEP;
+      continue;
+    }
+    if (canUseWrong) {
+      tokens.push({
+        key: `wrong-${row}-${column}`,
+        status: COMPARE_WRONG,
+        expectedChar: targetChars[row - 1],
+        actualChar: inputChars[column - 1],
+      });
+      row -= LENGTH_DIFF_STEP;
+      column -= LENGTH_DIFF_STEP;
+      continue;
+    }
+    if (canUseMissing) {
+      tokens.push({
+        key: `missing-${row}-${column}`,
+        status: COMPARE_MISSING,
+        expectedChar: targetChars[row - 1],
+        actualChar: EMPTY_STRING,
+      });
+      row -= LENGTH_DIFF_STEP;
+      continue;
+    }
+    if (canUseExtra) {
+      tokens.push({
+        key: `extra-${row}-${column}`,
+        status: COMPARE_EXTRA,
+        expectedChar: EMPTY_STRING,
+        actualChar: inputChars[column - 1],
+      });
+      column -= LENGTH_DIFF_STEP;
       continue;
     }
 
-    tokens.push({
-      key: `extra-${row}-${column}`,
-      status: COMPARE_EXTRA,
-      expectedChar: EMPTY_STRING,
-      actualChar: inputChars[column - 1],
-    });
-    column -= 1;
+    break;
   }
 
   tokens.reverse();
@@ -287,6 +323,8 @@ export default function HomePage() {
   const multiAnswerInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
+  const sourceTextareaRef = useRef(null);
+  const isSourceCtrlVPasteRef = useRef(false);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -305,6 +343,21 @@ export default function HomePage() {
     setResultStatus(EMPTY_STRING);
     setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
+  }
+
+  function autoResizeSourceTextarea() {
+    const sourceTextareaElement = sourceTextareaRef.current;
+    if (!sourceTextareaElement) return;
+
+    const computedStyle = window.getComputedStyle(sourceTextareaElement);
+    const borderTopWidth = Number.parseFloat(computedStyle.borderTopWidth) || 0;
+    const borderBottomWidth = Number.parseFloat(computedStyle.borderBottomWidth) || 0;
+    const verticalBorderWidth = borderTopWidth + borderBottomWidth;
+
+    sourceTextareaElement.style.overflowY = CSS_OVERFLOW_HIDDEN;
+    sourceTextareaElement.style.height = CSS_HEIGHT_AUTO;
+    const autoHeight = Math.ceil(sourceTextareaElement.scrollHeight + verticalBorderWidth);
+    sourceTextareaElement.style.height = `${autoHeight}${CSS_UNIT_PX}`;
   }
 
   function focusAnswerInput() {
@@ -349,6 +402,9 @@ export default function HomePage() {
   function loadSampleAndStartPractice() {
     setSourceText(SAMPLE_ARTICLE);
     setUploadedImageSrc(SAMPLE_ARTICLE_IMAGE_PATH);
+    requestAnimationFrame(() => {
+      autoResizeSourceTextarea();
+    });
     startPractice(SAMPLE_ARTICLE);
   }
 
@@ -612,8 +668,20 @@ export default function HomePage() {
           1) 先貼上文章。2) 按「開始練習」。3) 每次輸入一個句子，按 Enter 進行比對。
         </p>
         <textarea
+          ref={sourceTextareaRef}
           value={sourceText}
           onChange={(event) => setSourceText(event.target.value)}
+          onKeyDown={(event) => {
+            const normalizedKey = event.key.toLowerCase();
+            isSourceCtrlVPasteRef.current = (event.ctrlKey || event.metaKey) && normalizedKey === KEY_V;
+          }}
+          onPaste={() => {
+            if (!isSourceCtrlVPasteRef.current) return;
+            requestAnimationFrame(() => {
+              autoResizeSourceTextarea();
+              isSourceCtrlVPasteRef.current = false;
+            });
+          }}
           placeholder="請貼上英文文章（以英文句號 . 分句）"
           spellCheck={false}
         />
