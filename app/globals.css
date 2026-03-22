@@ -299,7 +299,7 @@ button.compact {
 }
 
 .multi-selector-collapse.expanded {
-  max-height: var(--collapse-max-height);
+  max-height: none;
   transform: scaleY(1);
   opacity: 1;
 }
@@ -309,8 +309,7 @@ button.compact {
 }
 
 .multi-sentence-list {
-  max-height: 320px;
-  overflow: auto;
+  overflow: visible;
   border: 1px solid #dbe2ea;
   border-radius: var(--radius-control);
   background: #f8fafc;
