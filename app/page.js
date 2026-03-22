@@ -46,12 +46,12 @@ const NON_BREAKING_SPACE = "\u00A0";
 const LINE_TYPE_EXPECTED = "expected";
 const LINE_TYPE_ACTUAL = "actual";
 const DISPLAY_MISSING_MARK = "-";
-const COST_SAME = 0;
-const COST_INSERT_OR_DELETE = 1;
-const COST_REPLACE = 2;
-const MAX_ALIGNMENT_SHIFT = 24;
-const LENGTH_DIFF_BALANCED = 0;
-const LENGTH_DIFF_STEP = 1;
+const WORD_OR_NON_WORD_RE = /[A-Za-z]+|[^A-Za-z]/g;
+const WORD_ONLY_RE = /^[A-Za-z]+$/;
+const TOKEN_COST_SAME = 0;
+const TOKEN_COST_EDIT = 1;
+const TOKEN_COST_REPLACE_HIGH = 3;
+const WORD_REPLACE_ALLOWED_DISTANCE = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
@@ -93,15 +93,111 @@ function maskSentence(sentence) {
     .join(EMPTY_STRING);
 }
 
+function splitCompareUnits(text) {
+  const units = text.match(WORD_OR_NON_WORD_RE);
+  return units ?? [];
+}
+
+function isWordUnit(unitText) {
+  return WORD_ONLY_RE.test(unitText);
+}
+
+function buildEditDistanceTable(expectedChars, actualChars) {
+  const expectedLength = expectedChars.length;
+  const actualLength = actualChars.length;
+  const table = Array.from({ length: expectedLength + 1 }, () => Array(actualLength + 1).fill(0));
+
+  for (let row = 0; row <= expectedLength; row += 1) {
+    table[row][0] = row;
+  }
+  for (let column = 0; column <= actualLength; column += 1) {
+    table[0][column] = column;
+  }
+
+  for (let row = 1; row <= expectedLength; row += 1) {
+    for (let column = 1; column <= actualLength; column += 1) {
+      const isSameChar = expectedChars[row - 1] === actualChars[column - 1];
+      const substitutionCost = isSameChar ? TOKEN_COST_SAME : TOKEN_COST_EDIT;
+      const substitution = table[row - 1][column - 1] + substitutionCost;
+      const deletion = table[row - 1][column] + TOKEN_COST_EDIT;
+      const insertion = table[row][column - 1] + TOKEN_COST_EDIT;
+      table[row][column] = Math.min(substitution, deletion, insertion);
+    }
+  }
+
+  return table;
+}
+
+function getWordUnitDistance(expectedWord, actualWord) {
+  const expectedChars = Array.from(expectedWord);
+  const actualChars = Array.from(actualWord);
+  const table = buildEditDistanceTable(expectedChars, actualChars);
+  return table[expectedChars.length][actualChars.length];
+}
+
+function compareWordOrSymbolUnit(expectedText, actualText, keyPrefix) {
+  const expectedChars = Array.from(expectedText);
+  const actualChars = Array.from(actualText);
+  const table = buildEditDistanceTable(expectedChars, actualChars);
+  const unitTokens = [];
+  let row = expectedChars.length;
+  let column = actualChars.length;
+
+  while (row > 0 || column > 0) {
+    if (
+      row > 0 &&
+      column > 0 &&
+      table[row][column] ===
+        table[row - 1][column - 1] +
+          (expectedChars[row - 1] === actualChars[column - 1] ? TOKEN_COST_SAME : TOKEN_COST_EDIT)
+    ) {
+      const isSameChar = expectedChars[row - 1] === actualChars[column - 1];
+      unitTokens.push({
+        key: `${keyPrefix}-${isSameChar ? COMPARE_OK : COMPARE_WRONG}-${row}-${column}`,
+        status: isSameChar ? COMPARE_OK : COMPARE_WRONG,
+        expectedChar: expectedChars[row - 1],
+        actualChar: actualChars[column - 1],
+      });
+      row -= 1;
+      column -= 1;
+      continue;
+    }
+
+    if (row > 0 && table[row][column] === table[row - 1][column] + TOKEN_COST_EDIT) {
+      unitTokens.push({
+        key: `${keyPrefix}-${COMPARE_MISSING}-${row}-${column}`,
+        status: COMPARE_MISSING,
+        expectedChar: expectedChars[row - 1],
+        actualChar: EMPTY_STRING,
+      });
+      row -= 1;
+      continue;
+    }
+
+    unitTokens.push({
+      key: `${keyPrefix}-${COMPARE_EXTRA}-${row}-${column}`,
+      status: COMPARE_EXTRA,
+      expectedChar: EMPTY_STRING,
+      actualChar: actualChars[column - 1],
+    });
+    column -= 1;
+  }
+
+  unitTokens.reverse();
+  return unitTokens;
+}
+
 function compareSingleSentence(target, input) {
-  const targetChars = Array.from(target);
-  const inputChars = Array.from(input);
-  const targetLength = targetChars.length;
-  const inputLength = inputChars.length;
+  const targetUnits = splitCompareUnits(target);
+  const inputUnits = splitCompareUnits(input);
+  const targetLength = targetUnits.length;
+  const inputLength = inputUnits.length;
   const distanceTable = Array.from({ length: targetLength + 1 }, () =>
     Array(inputLength + 1).fill(0)
   );
   const tokens = [];
+  let tokenIndex = 0;
+
   for (let row = 0; row <= targetLength; row += 1) {
     distanceTable[row][0] = row;
   }
@@ -109,108 +205,89 @@ function compareSingleSentence(target, input) {
     distanceTable[0][column] = column;
   }
 
+  function getReplaceCost(expectedUnit, actualUnit) {
+    if (expectedUnit === actualUnit) return TOKEN_COST_SAME;
+
+    const isWordPair = isWordUnit(expectedUnit) && isWordUnit(actualUnit);
+    if (!isWordPair) return TOKEN_COST_REPLACE_HIGH;
+
+    const wordDistance = getWordUnitDistance(expectedUnit, actualUnit);
+    if (wordDistance <= WORD_REPLACE_ALLOWED_DISTANCE) {
+      return TOKEN_COST_EDIT;
+    }
+
+    return TOKEN_COST_REPLACE_HIGH;
+  }
+
   for (let row = 1; row <= targetLength; row += 1) {
     for (let column = 1; column <= inputLength; column += 1) {
-      const isSameChar = targetChars[row - 1] === inputChars[column - 1];
-      const alignmentShift = Math.abs(row - column);
-      // 限制可對齊的位移量，避免把前段輸入錯配到句尾相同字母
-      const canUseExactMatch = isSameChar && alignmentShift <= MAX_ALIGNMENT_SHIFT;
-      const substitutionCost = canUseExactMatch ? COST_SAME : COST_REPLACE;
-      const substitution = distanceTable[row - 1][column - 1] + substitutionCost;
-      const deletion = distanceTable[row - 1][column] + COST_INSERT_OR_DELETE;
-      const insertion = distanceTable[row][column - 1] + COST_INSERT_OR_DELETE;
+      const replaceCost = getReplaceCost(targetUnits[row - 1], inputUnits[column - 1]);
+      const substitution = distanceTable[row - 1][column - 1] + replaceCost;
+      const deletion = distanceTable[row - 1][column] + TOKEN_COST_EDIT;
+      const insertion = distanceTable[row][column - 1] + TOKEN_COST_EDIT;
       distanceTable[row][column] = Math.min(substitution, deletion, insertion);
+    }
+  }
+
+  function pushCharsAsStatus(status, expectedUnit, actualUnit, keyPrefix) {
+    if (status === COMPARE_OK || status === COMPARE_WRONG) {
+      const comparedTokens = compareWordOrSymbolUnit(expectedUnit, actualUnit, keyPrefix);
+      for (let index = comparedTokens.length - 1; index >= 0; index -= 1) {
+        const token = comparedTokens[index];
+        tokens.push({
+          ...token,
+          key: `${token.key}-${tokenIndex}`,
+        });
+        tokenIndex += 1;
+      }
+      return;
+    }
+
+    const sourceChars = Array.from(status === COMPARE_MISSING ? expectedUnit : actualUnit);
+    for (let unitCharIndex = sourceChars.length - 1; unitCharIndex >= 0; unitCharIndex -= 1) {
+      const charValue = sourceChars[unitCharIndex];
+      tokens.push({
+        key: `${keyPrefix}-${unitCharIndex}-${tokenIndex}`,
+        status,
+        expectedChar: status === COMPARE_MISSING ? charValue : EMPTY_STRING,
+        actualChar: status === COMPARE_EXTRA ? charValue : EMPTY_STRING,
+      });
+      tokenIndex += 1;
     }
   }
 
   let row = targetLength;
   let column = inputLength;
   while (row > 0 || column > 0) {
-    const alignmentShift = Math.abs(row - column);
-    const lengthDiff = row - column;
+    const expectedUnit = targetUnits[row - 1];
+    const actualUnit = inputUnits[column - 1];
+
     if (
       row > 0 &&
       column > 0 &&
-      targetChars[row - 1] === inputChars[column - 1] &&
-      alignmentShift <= MAX_ALIGNMENT_SHIFT &&
-      distanceTable[row][column] === distanceTable[row - 1][column - 1]
+      distanceTable[row][column] ===
+        distanceTable[row - 1][column - 1] + getReplaceCost(expectedUnit, actualUnit)
     ) {
-      tokens.push({
-        key: `ok-${row}-${column}`,
-        status: COMPARE_OK,
-        expectedChar: targetChars[row - 1],
-        actualChar: inputChars[column - 1],
-      });
+      const isSameUnit = expectedUnit === actualUnit;
+      pushCharsAsStatus(
+        isSameUnit ? COMPARE_OK : COMPARE_WRONG,
+        expectedUnit,
+        actualUnit,
+        `unit-${row - 1}-${column - 1}`
+      );
       row -= 1;
       column -= 1;
       continue;
     }
 
-    const canUseWrong =
-      row > 0 &&
-      column > 0 &&
-      distanceTable[row][column] === distanceTable[row - 1][column - 1] + COST_REPLACE;
-    const canUseMissing =
-      row > 0 &&
-      distanceTable[row][column] === distanceTable[row - 1][column] + COST_INSERT_OR_DELETE;
-    const canUseExtra =
-      column > 0 &&
-      distanceTable[row][column] === distanceTable[row][column - 1] + COST_INSERT_OR_DELETE;
-
-    // 長度有落差時，優先用少打／多打來對齊，避免大量誤判成替換字元
-    if (lengthDiff > LENGTH_DIFF_BALANCED && canUseMissing) {
-      tokens.push({
-        key: `missing-${row}-${column}`,
-        status: COMPARE_MISSING,
-        expectedChar: targetChars[row - 1],
-        actualChar: EMPTY_STRING,
-      });
-      row -= LENGTH_DIFF_STEP;
-      continue;
-    }
-    if (lengthDiff < LENGTH_DIFF_BALANCED && canUseExtra) {
-      tokens.push({
-        key: `extra-${row}-${column}`,
-        status: COMPARE_EXTRA,
-        expectedChar: EMPTY_STRING,
-        actualChar: inputChars[column - 1],
-      });
-      column -= LENGTH_DIFF_STEP;
-      continue;
-    }
-    if (canUseWrong) {
-      tokens.push({
-        key: `wrong-${row}-${column}`,
-        status: COMPARE_WRONG,
-        expectedChar: targetChars[row - 1],
-        actualChar: inputChars[column - 1],
-      });
-      row -= LENGTH_DIFF_STEP;
-      column -= LENGTH_DIFF_STEP;
-      continue;
-    }
-    if (canUseMissing) {
-      tokens.push({
-        key: `missing-${row}-${column}`,
-        status: COMPARE_MISSING,
-        expectedChar: targetChars[row - 1],
-        actualChar: EMPTY_STRING,
-      });
-      row -= LENGTH_DIFF_STEP;
-      continue;
-    }
-    if (canUseExtra) {
-      tokens.push({
-        key: `extra-${row}-${column}`,
-        status: COMPARE_EXTRA,
-        expectedChar: EMPTY_STRING,
-        actualChar: inputChars[column - 1],
-      });
-      column -= LENGTH_DIFF_STEP;
+    if (row > 0 && distanceTable[row][column] === distanceTable[row - 1][column] + TOKEN_COST_EDIT) {
+      pushCharsAsStatus(COMPARE_MISSING, expectedUnit, EMPTY_STRING, `missing-${row - 1}-${column}`);
+      row -= 1;
       continue;
     }
 
-    break;
+    pushCharsAsStatus(COMPARE_EXTRA, EMPTY_STRING, actualUnit, `extra-${row}-${column - 1}`);
+    column -= 1;
   }
 
   tokens.reverse();
