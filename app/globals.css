@@ -110,7 +110,14 @@ body {
 
 .card-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-small);
+  flex-wrap: wrap;
+}
+
+.app-title {
+  margin: 0;
 }
 
 .language-switch {

@@ -891,8 +891,10 @@ export default function HomePage() {
   return (
     <div className="container">
       <div className="card">
-        <div className="card-header">{renderLanguageSwitch()}</div>
-        <h1>{t.appTitle}</h1>
+        <div className="card-header">
+          <h1 className="app-title">{t.appTitle}</h1>
+          {renderLanguageSwitch()}
+        </div>
         <p className="hint">
           {t.introHint}
         </p>
@@ -991,7 +993,6 @@ export default function HomePage() {
       </div>
 
       <div className="card">
-        <div className="card-header">{renderLanguageSwitch()}</div>
         <div className="practice-tab-bar">
           <button
             className={`practice-tab-button ${

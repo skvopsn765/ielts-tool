@@ -9,7 +9,7 @@ export const LANGUAGES = [
 export const UI_TEXTS = {
   [LANG_TW]: {
     languageSwitchAria: "語言切換",
-    appTitle: "英文句子背誦練習",
+    appTitle: "IELTS Writing Task 1 必背7篇範文",
     introHint: "1) 先貼上文章。2) 按「開始練習」。3) 每次輸入一個句子，按 Enter 進行比對。",
     sourcePlaceholder: "請貼上英文文章（以英文句號 . 分句）",
     uploadTitle: "圖片上傳區",
@@ -79,7 +79,7 @@ export const UI_TEXTS = {
   },
   [LANG_EN]: {
     languageSwitchAria: "Language switch",
-    appTitle: "English Sentence Memorization Practice",
+    appTitle: "IELTS Writing Task 1: 7 Must-Memorize Sample Essays",
     introHint: "1) Paste an article. 2) Click Start Practice. 3) Type one sentence each time and press Enter to compare.",
     sourcePlaceholder: "Paste an English article here (split by English period .)",
     uploadTitle: "Image Upload Area",
