@@ -35,9 +35,6 @@
   --token-min-width: 18px;
   --token-padding-y: 2px;
   --token-padding-x: 4px;
-  --upload-zone-height: 120px;
-  --upload-zone-border-width: 2px;
-  --upload-preview-max-height: 420px;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-compare: "Inter", "Noto Sans TC", "Segoe UI", sans-serif;
   --font-compare-size: 20px;
@@ -64,8 +61,6 @@
   --article-active-bg: #dbeafe;
   --article-active-border: #60a5fa;
   --article-active-text: #1d4ed8;
-  --article-coming-soon-bg: #f1f5f9;
-  --article-coming-soon-text: #64748b;
   --single-sentence-grid-min-width: 220px;
   --single-sentence-grid-gap: 8px;
   --single-selector-border: #dbe2ea;
@@ -177,59 +172,6 @@ textarea {
   line-height: 1.5;
 }
 
-.upload-zone {
-  margin-top: 12px;
-  min-height: var(--upload-zone-height);
-  border: var(--upload-zone-border-width) dashed #cbd5e1;
-  border-radius: var(--radius-control);
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 12px;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.upload-zone:hover,
-.upload-zone.is-drag-over {
-  border-color: var(--primary);
-  background: #eff6ff;
-}
-
-.upload-input-hidden {
-  display: none;
-}
-
-.upload-title {
-  font-size: var(--font-small);
-  font-weight: 600;
-}
-
-.upload-description {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: var(--font-tiny);
-}
-
-.uploaded-image-card {
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-control);
-  background: #fff;
-  overflow: hidden;
-}
-
-.uploaded-image-preview {
-  display: block;
-  width: 100%;
-  max-height: var(--upload-preview-max-height);
-  object-fit: contain;
-  background: #fff;
-}
-
 .row {
   display: flex;
   gap: 8px;
@@ -292,15 +234,6 @@ textarea {
   background: var(--article-active-bg);
   border-color: var(--article-active-border);
   color: var(--article-active-text);
-}
-
-.article-button.coming-soon,
-.article-button:disabled {
-  background: var(--article-coming-soon-bg);
-  color: var(--article-coming-soon-text);
-  border-color: #cbd5e1;
-  cursor: not-allowed;
-  opacity: 1;
 }
 
 button {
@@ -397,6 +330,16 @@ button.compact {
   height: 3px;
   border-radius: 999px;
   background: var(--tab-active-indicator);
+}
+
+.practice-empty-state {
+  margin-top: 8px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius-control);
+  background: #f8fafc;
+  color: var(--muted);
+  padding: 18px;
+  font-size: var(--font-small);
 }
 
 .sentence-nav {

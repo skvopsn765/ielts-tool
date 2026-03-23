@@ -6,7 +6,6 @@ import { LANG_TW, LANGUAGES, UI_TEXTS } from "./i18n";
 const KEY_ENTER = "Enter";
 const KEY_TAB = "Tab";
 const KEY_F2 = "F2";
-const KEY_V = "v";
 const KEY_RETRY_SENTENCE = "1";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
@@ -40,44 +39,11 @@ const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BEHAVIOR_AUTO = "auto";
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
-const IMAGE_MIME_PREFIX = "image/";
+const NO_ACTIVE_ARTICLE_ID = null;
 const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
 const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-year-stage";
-const MEMORIZATION_ARTICLE_BUTTONS = [
-  {
-    id: SAMPLE_ARTICLE_ID,
-    isEnabled: true,
-  },
-  {
-    id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID,
-    isEnabled: true,
-  },
-  {
-    id: "pie-chart-stable-structure-by-category",
-    isEnabled: false,
-  },
-  {
-    id: "static-comparison-table-bar-by-category-group",
-    isEnabled: false,
-  },
-  {
-    id: "map-static",
-    isEnabled: false,
-  },
-  {
-    id: "map-dynamic-before-after-now-future",
-    isEnabled: false,
-  },
-  {
-    id: "process-diagram",
-    isEnabled: false,
-  },
-];
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
-const CSS_HEIGHT_AUTO = "auto";
-const CSS_UNIT_PX = "px";
-const CSS_OVERFLOW_HIDDEN = "hidden";
 const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
 
 Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
@@ -102,6 +68,7 @@ const PRACTICE_ARTICLE_LIBRARY = {
     text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
   },
 };
+const AVAILABLE_PRACTICE_ARTICLE_IDS = Object.keys(PRACTICE_ARTICLE_LIBRARY);
 const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
@@ -416,18 +383,15 @@ function toLineToken(token, lineType) {
 export default function HomePage() {
   const [language, setLanguage] = useState(LANG_TW);
   const t = UI_TEXTS[language];
-  const [sourceText, setSourceText] = useState(EMPTY_STRING);
   const [sentences, setSentences] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answerInput, setAnswerInput] = useState(EMPTY_STRING);
   const [resultStatus, setResultStatus] = useState(EMPTY_STRING);
   const [comparisonTokens, setComparisonTokens] = useState([]);
   const [practiceStatus, setPracticeStatus] = useState(STATUS_IDLE);
-  const [sentenceStatus, setSentenceStatus] = useState(UI_TEXTS[LANG_TW].idleStatus);
+  const [sentenceStatus, setSentenceStatus] = useState(UI_TEXTS[LANG_TW].selectArticleFirst);
   const [maskedSentence, setMaskedSentence] = useState(UI_TEXTS[LANG_TW].idleMask);
   const [showHintMask, setShowHintMask] = useState(true);
-  const [uploadedImageSrc, setUploadedImageSrc] = useState(EMPTY_STRING);
-  const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
   const [activePracticeTab, setActivePracticeTab] = useState(PRACTICE_TAB_SINGLE);
   const [isMultiPracticeStarted, setIsMultiPracticeStarted] = useState(false);
   const [isMultiSelectorExpanded, setIsMultiSelectorExpanded] = useState(true);
@@ -436,14 +400,11 @@ export default function HomePage() {
   const [multiTargetText, setMultiTargetText] = useState(EMPTY_STRING);
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
   const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
-  const [activeArticleId, setActiveArticleId] = useState(SAMPLE_ARTICLE_ID);
+  const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
-  const imageInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
-  const sourceTextareaRef = useRef(null);
-  const isSourceCtrlVPasteRef = useRef(false);
   const singleSelectorToggleButtonRef = useRef(null);
   const multiSelectorToggleButtonRef = useRef(null);
 
@@ -451,7 +412,12 @@ export default function HomePage() {
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
     [currentIndex, sentences]
   );
-  const sourceSentenceList = useMemo(() => splitSentences(sourceText), [sourceText]);
+  const activeArticleText = useMemo(() => {
+    if (!activeArticleId) return EMPTY_STRING;
+    return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.text ?? EMPTY_STRING;
+  }, [activeArticleId]);
+  const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
+  const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
 
@@ -487,21 +453,6 @@ export default function HomePage() {
     setPracticeStatus(STATUS_IDLE);
   }
 
-  function autoResizeSourceTextarea() {
-    const sourceTextareaElement = sourceTextareaRef.current;
-    if (!sourceTextareaElement) return;
-
-    const computedStyle = window.getComputedStyle(sourceTextareaElement);
-    const borderTopWidth = Number.parseFloat(computedStyle.borderTopWidth) || 0;
-    const borderBottomWidth = Number.parseFloat(computedStyle.borderBottomWidth) || 0;
-    const verticalBorderWidth = borderTopWidth + borderBottomWidth;
-
-    sourceTextareaElement.style.overflowY = CSS_OVERFLOW_HIDDEN;
-    sourceTextareaElement.style.height = CSS_HEIGHT_AUTO;
-    const autoHeight = Math.ceil(sourceTextareaElement.scrollHeight + verticalBorderWidth);
-    sourceTextareaElement.style.height = `${autoHeight}${CSS_UNIT_PX}`;
-  }
-
   function focusAnswerInput() {
     const answerInputElement = answerInputRef.current;
     if (!answerInputElement) return;
@@ -518,7 +469,7 @@ export default function HomePage() {
 
     if (!sentence) {
       setSentenceStatus(t.noSentence);
-      setMaskedSentence(t.pasteFirst);
+      setMaskedSentence(t.idleMask);
       return;
     }
 
@@ -527,11 +478,11 @@ export default function HomePage() {
     setMaskedSentence(maskSentence(sentence));
   }
 
-  function startPractice(textOverride = sourceText) {
-    const nextSentences = splitSentences(textOverride);
+  function startPractice(articleText) {
+    const nextSentences = splitSentences(articleText);
     if (nextSentences.length === 0) {
       setSentenceStatus(t.noDot);
-      setMaskedSentence(t.repaste);
+      setMaskedSentence(t.idleMask);
       return;
     }
 
@@ -548,32 +499,7 @@ export default function HomePage() {
     if (!targetArticle) return;
 
     setActiveArticleId(articleId);
-    setSourceText(targetArticle.text);
     startPractice(targetArticle.text);
-  }
-
-  function loadSampleAndStartPractice() {
-    loadArticleAndStartPractice(SAMPLE_ARTICLE_ID);
-  }
-
-  function clearAllData() {
-    const FIRST_INDEX = 0;
-    setSourceText(EMPTY_STRING);
-    setUploadedImageSrc(EMPTY_STRING);
-    setSentences([]);
-    setCurrentIndex(FIRST_INDEX);
-    setSentenceStatus(t.idleStatus);
-    setMaskedSentence(t.idleMask);
-    setShowHintMask(true);
-    setIsMultiPracticeStarted(false);
-    setIsMultiSelectorExpanded(true);
-    setIsSingleSelectorExpanded(true);
-    setSelectedSentenceMap({});
-    setMultiTargetText(EMPTY_STRING);
-    setMultiAnswerInput(EMPTY_STRING);
-    setMultiSelectionStatus(EMPTY_STRING);
-    setActiveArticleId(SAMPLE_ARTICLE_ID);
-    clearAnswerArea();
   }
 
   function handleArticleSelection(articleId) {
@@ -657,26 +583,6 @@ export default function HomePage() {
     clearAnswerArea();
     renderCurrentSentence(sentences, targetIndex);
     focusAnswerInput();
-  }
-
-  function isImageFile(file) {
-    return Boolean(file?.type?.startsWith(IMAGE_MIME_PREFIX));
-  }
-
-  function setImageFromFile(file) {
-    if (!isImageFile(file)) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") {
-        setUploadedImageSrc(result);
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function openImagePicker() {
-    imageInputRef.current?.click();
   }
 
   function scrollToPracticeResultArea() {
@@ -813,26 +719,9 @@ export default function HomePage() {
       }
     }
 
-    function onGlobalPaste(event) {
-      const clipboardItems = event.clipboardData?.items;
-      if (!clipboardItems) return;
-
-      for (let index = 0; index < clipboardItems.length; index += 1) {
-        const item = clipboardItems[index];
-        if (!item.type.startsWith(IMAGE_MIME_PREFIX)) continue;
-        const imageFile = item.getAsFile();
-        if (!imageFile) continue;
-        event.preventDefault();
-        setImageFromFile(imageFile);
-        return;
-      }
-    }
-
     window.addEventListener("keydown", onGlobalKeyDown);
-    window.addEventListener("paste", onGlobalPaste);
     return () => {
       window.removeEventListener("keydown", onGlobalKeyDown);
-      window.removeEventListener("paste", onGlobalPaste);
     };
   }, [practiceStatus, currentIndex, sentences, hasSentence, isSinglePracticeTab, isMultiPracticeTab, isMultiPracticeStarted]);
 
@@ -844,7 +733,7 @@ export default function HomePage() {
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
-  }, [sourceText]);
+  }, [activeArticleId]);
 
   useEffect(() => {
     if (isMultiPracticeStarted) {
@@ -863,9 +752,16 @@ export default function HomePage() {
       return;
     }
 
+    if (!hasActiveArticle) {
+      setSentenceStatus(t.selectArticleFirst);
+      setMaskedSentence(t.idleMask);
+      return;
+    }
+
     setSentenceStatus(t.idleStatus);
     setMaskedSentence(t.idleMask);
   }, [
+    hasActiveArticle,
     language,
     isMultiPracticeStarted,
     sourceSentenceList,
@@ -898,69 +794,6 @@ export default function HomePage() {
         <p className="hint">
           {t.introHint}
         </p>
-        <textarea
-          ref={sourceTextareaRef}
-          value={sourceText}
-          onChange={(event) => setSourceText(event.target.value)}
-          onKeyDown={(event) => {
-            const normalizedKey = event.key.toLowerCase();
-            isSourceCtrlVPasteRef.current = (event.ctrlKey || event.metaKey) && normalizedKey === KEY_V;
-          }}
-          onPaste={() => {
-            if (!isSourceCtrlVPasteRef.current) return;
-            requestAnimationFrame(() => {
-              autoResizeSourceTextarea();
-              isSourceCtrlVPasteRef.current = false;
-            });
-          }}
-          placeholder={t.sourcePlaceholder}
-          spellCheck={false}
-        />
-        {!uploadedImageSrc && (
-          <div
-            className={`upload-zone ${isDragOverUploadZone ? "is-drag-over" : EMPTY_STRING}`}
-            onClick={openImagePicker}
-            onDragOver={(event) => {
-              event.preventDefault();
-              setIsDragOverUploadZone(true);
-            }}
-            onDragLeave={() => setIsDragOverUploadZone(false)}
-            onDrop={(event) => {
-              event.preventDefault();
-              setIsDragOverUploadZone(false);
-              const droppedFile = event.dataTransfer.files?.[0];
-              if (!droppedFile) return;
-              setImageFromFile(droppedFile);
-            }}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === KEY_ENTER) {
-                openImagePicker();
-              }
-            }}
-          >
-            <div className="upload-title">{t.uploadTitle}</div>
-            <div className="upload-description">{t.uploadDescription}</div>
-          </div>
-        )}
-        <input
-          ref={imageInputRef}
-          className="upload-input-hidden"
-          type="file"
-          accept="image/*"
-          onChange={(event) => {
-            const selectedFile = event.target.files?.[0];
-            if (!selectedFile) return;
-            setImageFromFile(selectedFile);
-            event.target.value = EMPTY_STRING;
-          }}
-        />
-        {uploadedImageSrc && (
-          <div className="uploaded-image-card">
-            <img src={uploadedImageSrc} alt={t.uploadedImageAlt} className="uploaded-image-preview" />
-          </div>
-        )}
         <div className="article-library">
           <div className="article-library-header">
             <div className="article-library-title">{t.articleLibraryTitle}</div>
@@ -969,28 +802,17 @@ export default function HomePage() {
             ) : null}
           </div>
           <div className="article-button-grid">
-            {MEMORIZATION_ARTICLE_BUTTONS.map((articleButton) => (
+            {AVAILABLE_PRACTICE_ARTICLE_IDS.map((articleId) => (
               <button
-                key={articleButton.id}
-                className={`article-button ${
-                  activeArticleId === articleButton.id ? "active" : EMPTY_STRING
-                } ${articleButton.isEnabled ? EMPTY_STRING : "coming-soon"}`}
-                onClick={() => handleArticleSelection(articleButton.id)}
-                disabled={!articleButton.isEnabled}
-                title={
-                  articleButton.isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
-                }
+                key={articleId}
+                className={`article-button ${activeArticleId === articleId ? "active" : EMPTY_STRING}`}
+                onClick={() => handleArticleSelection(articleId)}
+                title={t.articleButtonTitleEnabled}
               >
-                {getArticleLabel(articleButton.id)}
+                {getArticleLabel(articleId)}
               </button>
             ))}
           </div>
-        </div>
-        <div className="row">
-          <button onClick={() => startPractice()}>{t.startPractice}</button>
-          <button className="danger" onClick={clearAllData}>
-            {t.clearAll}
-          </button>
         </div>
       </div>
 
@@ -1014,7 +836,9 @@ export default function HomePage() {
           </button>
         </div>
 
-        {isSinglePracticeTab ? (
+        {!hasActiveArticle ? (
+          <div className="practice-empty-state">{t.selectArticleFirst}</div>
+        ) : isSinglePracticeTab ? (
           <>
             <div className="sentence-header">
               <div className="sentence-nav">
