@@ -27,6 +27,9 @@ const TEXT_MULTI_PASSED = "完全正確！多句已一次通過。";
 const TEXT_MULTI_NOT_STARTED = "多句練習：尚未開始";
 const TEXT_MULTI_SELECTOR_OPEN = "收合選句";
 const TEXT_MULTI_SELECTOR_CLOSED = "重新選句";
+const TEXT_SINGLE_SELECTOR_OPEN = "收合句子清單";
+const TEXT_SINGLE_SELECTOR_CLOSED = "展開句子清單";
+const TEXT_SINGLE_SELECTOR_PLACEHOLDER = "請先按「開始練習」，這裡會顯示所有句子供你快速切換。";
 const TEXT_SHORTCUT_HINT =
   "快捷鍵：Enter 檢查，檢查後按 Enter 下一句，按 1 重練本句，非輸入時 Tab 上一句";
 const TEXT_IDLE_STATUS = "尚未開始練習";
@@ -432,6 +435,7 @@ export default function HomePage() {
   const [activePracticeTab, setActivePracticeTab] = useState(PRACTICE_TAB_SINGLE);
   const [isMultiPracticeStarted, setIsMultiPracticeStarted] = useState(false);
   const [isMultiSelectorExpanded, setIsMultiSelectorExpanded] = useState(true);
+  const [isSingleSelectorExpanded, setIsSingleSelectorExpanded] = useState(true);
   const [selectedSentenceMap, setSelectedSentenceMap] = useState({});
   const [multiTargetText, setMultiTargetText] = useState(EMPTY_STRING);
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
@@ -539,6 +543,7 @@ export default function HomePage() {
     setShowHintMask(true);
     setIsMultiPracticeStarted(false);
     setIsMultiSelectorExpanded(true);
+    setIsSingleSelectorExpanded(true);
     setSelectedSentenceMap({});
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
@@ -584,6 +589,18 @@ export default function HomePage() {
 
   function toggleMultiSelectorPanel() {
     setIsMultiSelectorExpanded((previousValue) => !previousValue);
+  }
+
+  function toggleSingleSelectorPanel() {
+    setIsSingleSelectorExpanded((previousValue) => !previousValue);
+  }
+
+  function goToSentenceByIndex(targetIndex) {
+    if (targetIndex < 0 || targetIndex >= sentences.length) return;
+    setCurrentIndex(targetIndex);
+    clearAnswerArea();
+    renderCurrentSentence(sentences, targetIndex);
+    focusAnswerInput();
   }
 
   function isImageFile(file) {
@@ -769,6 +786,7 @@ export default function HomePage() {
     setSelectedSentenceMap({});
     setIsMultiPracticeStarted(false);
     setIsMultiSelectorExpanded(true);
+    setIsSingleSelectorExpanded(true);
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
@@ -910,6 +928,9 @@ export default function HomePage() {
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
+                <button className="secondary compact" onClick={toggleSingleSelectorPanel}>
+                  {isSingleSelectorExpanded ? TEXT_SINGLE_SELECTOR_OPEN : TEXT_SINGLE_SELECTOR_CLOSED}
+                </button>
                 <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
                   上一句
                 </button>
@@ -925,6 +946,32 @@ export default function HomePage() {
                 />
                 顯示提示 (F2)
               </label>
+            </div>
+            <div
+              className={`single-selector-collapse ${
+                isSingleSelectorExpanded ? "expanded" : EMPTY_STRING
+              }`}
+            >
+              {sentences.length === 0 ? (
+                <div className="single-selector-placeholder">{TEXT_SINGLE_SELECTOR_PLACEHOLDER}</div>
+              ) : (
+                <div className="single-sentence-grid">
+                  {sentences.map((sentence, index) => {
+                    const isActiveSentence = index === currentIndex;
+                    const displayIndex = index + 1;
+                    return (
+                      <button
+                        key={`single-sentence-${index}`}
+                        className={`single-sentence-button ${isActiveSentence ? "active" : EMPTY_STRING}`}
+                        onClick={() => goToSentenceByIndex(index)}
+                      >
+                        <span className="single-sentence-index">第 {displayIndex} 句</span>
+                        <span className="single-sentence-preview">{sentence}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             {showHintMask && <div className="masked">{maskedSentence}</div>}
             <div className="row">

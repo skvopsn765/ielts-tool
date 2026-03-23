@@ -64,6 +64,13 @@
   --article-active-text: #1d4ed8;
   --article-coming-soon-bg: #f1f5f9;
   --article-coming-soon-text: #64748b;
+  --single-sentence-grid-min-width: 220px;
+  --single-sentence-grid-gap: 8px;
+  --single-selector-border: #dbe2ea;
+  --single-selector-bg: #f8fafc;
+  --single-selector-active-bg: #dbeafe;
+  --single-selector-active-border: #60a5fa;
+  --single-selector-active-text: #1d4ed8;
 }
 
 * {
@@ -377,6 +384,76 @@ button.compact {
   max-height: none;
   transform: scaleY(1);
   opacity: 1;
+}
+
+.single-selector-collapse {
+  max-height: 0;
+  overflow: hidden;
+  transform: scaleY(0.96);
+  transform-origin: top;
+  opacity: 0;
+  transition:
+    max-height var(--collapse-transition-ms) ease,
+    transform var(--collapse-transition-ms) ease,
+    opacity var(--collapse-transition-ms) ease;
+}
+
+.single-selector-collapse.expanded {
+  max-height: none;
+  transform: scaleY(1);
+  opacity: 1;
+}
+
+.single-selector-placeholder {
+  margin-top: 8px;
+  border: 1px dashed var(--single-selector-border);
+  border-radius: var(--radius-control);
+  background: var(--single-selector-bg);
+  color: var(--muted);
+  padding: 12px;
+  font-size: var(--font-small);
+}
+
+.single-sentence-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--single-sentence-grid-min-width), 1fr));
+  gap: var(--single-sentence-grid-gap);
+}
+
+.single-sentence-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 70px;
+  text-align: left;
+  border: 1px solid var(--single-selector-border);
+  background: #ffffff;
+  color: var(--secondary);
+  line-height: 1.4;
+}
+
+.single-sentence-button:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.single-sentence-button.active {
+  background: var(--single-selector-active-bg);
+  border-color: var(--single-selector-active-border);
+  color: var(--single-selector-active-text);
+}
+
+.single-sentence-index {
+  font-size: var(--font-tiny);
+  font-weight: 700;
+}
+
+.single-sentence-preview {
+  font-size: var(--font-tiny);
+  color: inherit;
 }
 
 .multi-practice-title {
