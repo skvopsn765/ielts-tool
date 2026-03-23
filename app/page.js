@@ -56,6 +56,44 @@ const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BLOCK_START = "start";
 const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
+const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
+const MEMORIZATION_ARTICLE_BUTTONS = [
+  {
+    id: SAMPLE_ARTICLE_ID,
+    label: "動態圖（同趨勢）—by category",
+    isEnabled: true,
+  },
+  {
+    id: "dynamic-chart-different-trend-by-year-stage",
+    label: "動態圖（不同趨勢）—by year / by stage",
+    isEnabled: false,
+  },
+  {
+    id: "pie-chart-stable-structure-by-category",
+    label: "餅圖（結構穩定）—by category（最大占比變化小）",
+    isEnabled: false,
+  },
+  {
+    id: "static-comparison-table-bar-by-category-group",
+    label: "靜態比較（Table/Bar 靜態）—by category / by group",
+    isEnabled: false,
+  },
+  {
+    id: "map-static",
+    label: "地圖（靜態）",
+    isEnabled: false,
+  },
+  {
+    id: "map-dynamic-before-after-now-future",
+    label: "地圖（動態：before vs after / now vs future）",
+    isEnabled: false,
+  },
+  {
+    id: "process-diagram",
+    label: "流程圖（Process）",
+    isEnabled: false,
+  },
+];
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const CSS_HEIGHT_AUTO = "auto";
@@ -398,6 +436,7 @@ export default function HomePage() {
   const [multiTargetText, setMultiTargetText] = useState(EMPTY_STRING);
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
   const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
+  const [activeArticleId, setActiveArticleId] = useState(SAMPLE_ARTICLE_ID);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -480,6 +519,7 @@ export default function HomePage() {
   }
 
   function loadSampleAndStartPractice() {
+    setActiveArticleId(SAMPLE_ARTICLE_ID);
     setSourceText(SAMPLE_ARTICLE);
     setUploadedImageSrc(SAMPLE_ARTICLE_IMAGE_PATH);
     requestAnimationFrame(() => {
@@ -503,7 +543,13 @@ export default function HomePage() {
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
+    setActiveArticleId(SAMPLE_ARTICLE_ID);
     clearAnswerArea();
+  }
+
+  function handleArticleSelection(articleId) {
+    if (articleId !== SAMPLE_ARTICLE_ID) return;
+    loadSampleAndStartPractice();
   }
 
   function toggleSentenceSelection(index) {
@@ -810,11 +856,29 @@ export default function HomePage() {
             <img src={uploadedImageSrc} alt="上傳圖片預覽" className="uploaded-image-preview" />
           </div>
         )}
+        <div className="article-library">
+          <div className="article-library-header">
+            <div className="article-library-title">背誦文章（共 7 篇）</div>
+            <div className="article-library-subtitle">先練第一篇，其餘六篇按鈕先保留版位</div>
+          </div>
+          <div className="article-button-grid">
+            {MEMORIZATION_ARTICLE_BUTTONS.map((articleButton) => (
+              <button
+                key={articleButton.id}
+                className={`article-button ${
+                  activeArticleId === articleButton.id ? "active" : EMPTY_STRING
+                } ${articleButton.isEnabled ? EMPTY_STRING : "coming-soon"}`}
+                onClick={() => handleArticleSelection(articleButton.id)}
+                disabled={!articleButton.isEnabled}
+                title={articleButton.isEnabled ? "載入這篇文章" : "此按鈕目前僅為預留版位"}
+              >
+                {articleButton.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="row">
           <button onClick={startPractice}>開始練習</button>
-          <button className="secondary" onClick={loadSampleAndStartPractice}>
-            範例文章
-          </button>
           <button className="danger" onClick={clearAllData}>
             清空
           </button>
