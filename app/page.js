@@ -56,10 +56,13 @@ const TOKEN_COST_EDIT = 1;
 const TOKEN_COST_REPLACE_HIGH = 3;
 const WORD_REPLACE_ALLOWED_DISTANCE = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
+const SCROLL_BEHAVIOR_AUTO = "auto";
 const SCROLL_BLOCK_START = "start";
+const SCROLL_OFFSET_NONE = 0;
 const IMAGE_MIME_PREFIX = "image/";
 const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
 const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
+const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-year-stage";
 const MEMORIZATION_ARTICLE_BUTTONS = [
   {
     id: SAMPLE_ARTICLE_ID,
@@ -67,9 +70,9 @@ const MEMORIZATION_ARTICLE_BUTTONS = [
     isEnabled: true,
   },
   {
-    id: "dynamic-chart-different-trend-by-year-stage",
+    id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID,
     label: "動態圖（不同趨勢）—by year / by stage",
-    isEnabled: false,
+    isEnabled: true,
   },
   {
     id: "pie-chart-stable-structure-by-category",
@@ -111,9 +114,33 @@ In 1980, petrol and oil consumption stood at around 35 quadrillion units, signif
 Coal and natural gas displayed similar levels at the beginning, at about 16 and 20 units respectively. Natural gas fluctuated over time and is predicted to stabilize at around 25 units from 2015 onwards. Meanwhile, coal consumption rose gradually and is expected to surpass natural gas, reaching roughly 30 units by 2030.
 
 The remaining energy sources were used far less. Nuclear energy increased slightly from about 4 to around 7 units, while solar and wind are projected to grow steadily to approximately 6 units. In contrast, hydropower remains relatively stable at just above 3 units throughout the period.`;
+const DYNAMIC_DIFFERENT_TREND_ARTICLE = `The graph shows the increase in the ageing population in Japan, Sweden and the USA.
+
+It indicates that the percentage of elderly people in all three countries is expected to increase to almost 25% of the respective populations by the year 2040.
+
+In 1940 the proportion of people aged 65 or more stood at only 5% in Japan, approximately 7% in Sweden and 9% in the US.
+
+However, while the figures for the Western countries grew to about 15% in around 1990, the figure for Japan dipped to only 2.5% for much of this period, before rising to almost 5% again at the present time.
+
+In spite of some fluctuation in the expected percentages, the proportion of older people will probably continue to increase in the next two decades in the three countries.
+
+A more dramatic rise is predicted between 2030 and 2040 in Japan, by which time it is thought that the proportion of elderly people will be similar in the three countries.`;
+const PRACTICE_ARTICLE_LIBRARY = {
+  [SAMPLE_ARTICLE_ID]: {
+    text: SAMPLE_ARTICLE,
+    imagePath: SAMPLE_ARTICLE_IMAGE_PATH,
+  },
+  [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: {
+    text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
+    imagePath: EMPTY_STRING,
+  },
+};
 const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
+  if (typeof text !== "string") {
+    return EMPTY_STRING;
+  }
   return text.replace(WHITESPACE_RE, " ").trim();
 }
 
@@ -448,6 +475,8 @@ export default function HomePage() {
   const comparisonPanelRef = useRef(null);
   const sourceTextareaRef = useRef(null);
   const isSourceCtrlVPasteRef = useRef(false);
+  const singleSelectorToggleButtonRef = useRef(null);
+  const multiSelectorToggleButtonRef = useRef(null);
 
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
@@ -522,14 +551,21 @@ export default function HomePage() {
     focusAnswerInput();
   }
 
-  function loadSampleAndStartPractice() {
-    setActiveArticleId(SAMPLE_ARTICLE_ID);
-    setSourceText(SAMPLE_ARTICLE);
-    setUploadedImageSrc(SAMPLE_ARTICLE_IMAGE_PATH);
+  function loadArticleAndStartPractice(articleId) {
+    const targetArticle = PRACTICE_ARTICLE_LIBRARY[articleId];
+    if (!targetArticle) return;
+
+    setActiveArticleId(articleId);
+    setSourceText(targetArticle.text);
+    setUploadedImageSrc(targetArticle.imagePath);
     requestAnimationFrame(() => {
       autoResizeSourceTextarea();
     });
-    startPractice(SAMPLE_ARTICLE);
+    startPractice(targetArticle.text);
+  }
+
+  function loadSampleAndStartPractice() {
+    loadArticleAndStartPractice(SAMPLE_ARTICLE_ID);
   }
 
   function clearAllData() {
@@ -553,8 +589,7 @@ export default function HomePage() {
   }
 
   function handleArticleSelection(articleId) {
-    if (articleId !== SAMPLE_ARTICLE_ID) return;
-    loadSampleAndStartPractice();
+    loadArticleAndStartPractice(articleId);
   }
 
   function toggleSentenceSelection(index) {
@@ -588,11 +623,44 @@ export default function HomePage() {
   }
 
   function toggleMultiSelectorPanel() {
-    setIsMultiSelectorExpanded((previousValue) => !previousValue);
+    togglePanelAndKeepViewport(setIsMultiSelectorExpanded, multiSelectorToggleButtonRef);
   }
 
   function toggleSingleSelectorPanel() {
-    setIsSingleSelectorExpanded((previousValue) => !previousValue);
+    togglePanelAndKeepViewport(setIsSingleSelectorExpanded, singleSelectorToggleButtonRef);
+  }
+
+  function togglePanelAndKeepViewport(setExpandedState, toggleButtonRef) {
+    const toggleButtonElement = toggleButtonRef.current;
+    const buttonTopBeforeToggle = toggleButtonElement?.getBoundingClientRect().top;
+    const scrollYBeforeToggle = window.scrollY;
+    const scrollXBeforeToggle = window.scrollX;
+
+    setExpandedState((previousValue) => !previousValue);
+
+    requestAnimationFrame(() => {
+      const buttonTopAfterToggle = toggleButtonElement?.getBoundingClientRect().top;
+      const hasButtonTopData =
+        typeof buttonTopBeforeToggle === "number" && typeof buttonTopAfterToggle === "number";
+
+      if (hasButtonTopData) {
+        const verticalOffset = buttonTopAfterToggle - buttonTopBeforeToggle;
+        if (verticalOffset !== SCROLL_OFFSET_NONE) {
+          window.scrollBy({
+            top: verticalOffset,
+            left: SCROLL_OFFSET_NONE,
+            behavior: SCROLL_BEHAVIOR_AUTO,
+          });
+        }
+        return;
+      }
+
+      window.scrollTo({
+        top: scrollYBeforeToggle,
+        left: scrollXBeforeToggle,
+        behavior: SCROLL_BEHAVIOR_AUTO,
+      });
+    });
   }
 
   function goToSentenceByIndex(targetIndex) {
@@ -896,7 +964,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="row">
-          <button onClick={startPractice}>開始練習</button>
+          <button onClick={() => startPractice()}>開始練習</button>
           <button className="danger" onClick={clearAllData}>
             清空
           </button>
@@ -928,7 +996,11 @@ export default function HomePage() {
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
-                <button className="secondary compact" onClick={toggleSingleSelectorPanel}>
+                <button
+                  ref={singleSelectorToggleButtonRef}
+                  className="secondary compact"
+                  onClick={toggleSingleSelectorPanel}
+                >
                   {isSingleSelectorExpanded ? TEXT_SINGLE_SELECTOR_OPEN : TEXT_SINGLE_SELECTOR_CLOSED}
                 </button>
                 <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
@@ -1051,7 +1123,11 @@ export default function HomePage() {
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
-                <button className="secondary compact" onClick={toggleMultiSelectorPanel}>
+                <button
+                  ref={multiSelectorToggleButtonRef}
+                  className="secondary compact"
+                  onClick={toggleMultiSelectorPanel}
+                >
                   {isMultiSelectorExpanded ? TEXT_MULTI_SELECTOR_OPEN : TEXT_MULTI_SELECTOR_CLOSED}
                 </button>
               </div>

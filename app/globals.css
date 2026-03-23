@@ -53,8 +53,10 @@
   --tab-inactive-hover-text: #334155;
   --tab-active-text: #2563eb;
   --tab-active-indicator: #2563eb;
-  --collapse-max-height: 360px;
+  --collapse-max-height: 480px;
   --collapse-transition-ms: 220ms;
+  --collapse-scale-collapsed: 0.985;
+  --collapse-easing: cubic-bezier(0.22, 1, 0.36, 1);
   --article-grid-min-width: 220px;
   --article-grid-gap: 10px;
   --article-library-border: #dbe2ea;
@@ -371,17 +373,20 @@ button.compact {
 .multi-selector-collapse {
   max-height: 0;
   overflow: hidden;
-  transform: scaleY(0.96);
+  overflow-anchor: none;
+  transform: scaleY(var(--collapse-scale-collapsed));
   transform-origin: top;
   opacity: 0;
+  will-change: max-height, transform, opacity;
   transition:
-    max-height var(--collapse-transition-ms) ease,
-    transform var(--collapse-transition-ms) ease,
-    opacity var(--collapse-transition-ms) ease;
+    max-height var(--collapse-transition-ms) var(--collapse-easing),
+    transform var(--collapse-transition-ms) var(--collapse-easing),
+    opacity var(--collapse-transition-ms) var(--collapse-easing);
 }
 
 .multi-selector-collapse.expanded {
-  max-height: none;
+  max-height: var(--collapse-max-height);
+  overflow-y: auto;
   transform: scaleY(1);
   opacity: 1;
 }
@@ -389,17 +394,20 @@ button.compact {
 .single-selector-collapse {
   max-height: 0;
   overflow: hidden;
-  transform: scaleY(0.96);
+  overflow-anchor: none;
+  transform: scaleY(var(--collapse-scale-collapsed));
   transform-origin: top;
   opacity: 0;
+  will-change: max-height, transform, opacity;
   transition:
-    max-height var(--collapse-transition-ms) ease,
-    transform var(--collapse-transition-ms) ease,
-    opacity var(--collapse-transition-ms) ease;
+    max-height var(--collapse-transition-ms) var(--collapse-easing),
+    transform var(--collapse-transition-ms) var(--collapse-easing),
+    opacity var(--collapse-transition-ms) var(--collapse-easing);
 }
 
 .single-selector-collapse.expanded {
-  max-height: none;
+  max-height: var(--collapse-max-height);
+  overflow-y: auto;
   transform: scaleY(1);
   opacity: 1;
 }
