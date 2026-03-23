@@ -11,7 +11,10 @@ export default function MultiSentenceChecklist({
         const displayIndex = index + 1;
 
         return (
-          <label key={`${itemKeyPrefix}-${index}`} className="multi-sentence-item">
+          <label
+            key={`${itemKeyPrefix}-${index}`}
+            className={`multi-sentence-item ${isChecked ? "is-selected" : ""}`}
+          >
             <input type="checkbox" checked={isChecked} onChange={() => onToggleSentence(index)} />
             <span className="multi-sentence-index">{displayIndex}.</span>
             <span className="multi-sentence-text">{sentence}</span>

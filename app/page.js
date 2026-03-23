@@ -818,20 +818,23 @@ export default function HomePage() {
 
   function renderComparisonResult() {
     return (
-      <>
+      <section className="result-review-panel" aria-label={t.resultReviewTitle}>
+        <h3 className="result-review-title">{t.resultReviewTitle}</h3>
         <ComparisonPanel
           panelRef={comparisonPanelRef}
-          title={t.yourInputTitle}
+          title={t.resultReviewTitle}
+          actualTitle={t.yourInputTitle}
+          expectedTitle={t.standardAnswerTitle}
           actualLineTokens={actualLineTokens}
           expectedLineTokens={expectedLineTokens}
         />
         <ComparisonLegend legendItems={legendItems} />
-      </>
+      </section>
     );
   }
 
   return (
-    <div className="container">
+    <main className="container app-shell">
       <AppHeader
         title={t.appTitle}
         introHint={t.introHint}
@@ -839,7 +842,7 @@ export default function HomePage() {
         onLanguageChange={setLanguage}
         languageSwitchAria={t.languageSwitchAria}
       />
-      <div className="card">
+      <section className="card section-card section-card--library">
         <ArticleLibrary
           title={t.articleLibraryTitle}
           subtitle={t.articleLibrarySubtitle}
@@ -849,12 +852,17 @@ export default function HomePage() {
           getArticleButtonTitle={(isEnabled) =>
             isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
           }
+          getArticleStateLabel={(isEnabled) =>
+            isEnabled ? t.articleReadyState : t.articleLockedState
+          }
           onSelectArticle={handleArticleSelection}
         />
-      </div>
+      </section>
 
-      <div className="card">
-        <h2 className="section-title">{t.practiceAreaTitle}</h2>
+      <section className="card section-card section-card--workspace">
+        <div className="section-heading">
+          <h2 className="section-title">{t.practiceAreaTitle}</h2>
+        </div>
         <PracticeTabs
           activePracticeTab={activePracticeTab}
           singleTabValue={PRACTICE_TAB_SINGLE}
@@ -1081,7 +1089,7 @@ export default function HomePage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

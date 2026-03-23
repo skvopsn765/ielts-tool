@@ -5,6 +5,7 @@ export default function ArticleLibrary({
   activeArticleId,
   getArticleLabel,
   getArticleButtonTitle,
+  getArticleStateLabel,
   onSelectArticle,
 }) {
   return (
@@ -27,7 +28,10 @@ export default function ArticleLibrary({
               title={articleButtonTitle}
               disabled={!isArticleEnabled}
             >
-              {getArticleLabel(articleId)}
+              <span className="article-button-title">{getArticleLabel(articleId)}</span>
+              <span className="article-button-meta">
+                {getArticleStateLabel(isArticleEnabled)}
+              </span>
             </button>
           );
         })}
