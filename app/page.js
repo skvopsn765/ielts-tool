@@ -871,6 +871,12 @@ export default function HomePage() {
           imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
           onImageError={() => setIsActiveArticleImageUnavailable(true)}
         />
+        {hasActiveArticle && (
+          <section className="article-text-panel" aria-label={t.articleTextTitle}>
+            <div className="article-text-title">{t.articleTextTitle}</div>
+            <pre className="article-text-content">{activeArticleText}</pre>
+          </section>
+        )}
 
         <div
           role="tabpanel"

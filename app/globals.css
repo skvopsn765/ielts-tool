@@ -471,6 +471,36 @@ button.practice-tab-button.active {
   font-size: var(--font-small);
 }
 
+.article-text-panel {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  border: 1px solid var(--article-image-border);
+  border-radius: var(--radius-control);
+  background: var(--article-image-bg);
+  padding: 12px;
+}
+
+.article-text-title {
+  font-size: var(--font-small);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.article-text-content {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--article-image-fallback-bg);
+  color: var(--text);
+  font-size: var(--font-small);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+}
+
 .sentence-nav {
   display: inline-flex;
   align-items: center;
