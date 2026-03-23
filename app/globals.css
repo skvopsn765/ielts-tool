@@ -484,11 +484,46 @@ button.practice-tab-button.active {
   font-size: var(--font-small);
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 8px;
+}
+
+.article-text-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.article-text-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.article-text-collapse {
+  max-height: 0;
+  overflow: hidden;
+  overflow-anchor: none;
+  transform: scaleY(var(--collapse-scale-collapsed));
+  transform-origin: top;
+  opacity: 0;
+  will-change: max-height, transform, opacity;
+  transition:
+    max-height var(--collapse-transition-ms) var(--collapse-easing),
+    transform var(--collapse-transition-ms) var(--collapse-easing),
+    opacity var(--collapse-transition-ms) var(--collapse-easing);
+}
+
+.article-text-collapse.expanded {
+  max-height: var(--collapse-max-height);
+  overflow: visible;
+  transform: scaleY(1);
+  opacity: 1;
 }
 
 .article-text-content {
-  margin: 0;
+  margin: 8px 0 0 0;
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);

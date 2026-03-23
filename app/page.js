@@ -427,6 +427,7 @@ export default function HomePage() {
   const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
   const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
   const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
+  const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -526,6 +527,10 @@ export default function HomePage() {
       ...previousMap,
       [index]: !previousMap[index],
     }));
+  }
+
+  function toggleArticleTextExpanded() {
+    setIsArticleTextExpanded((previousValue) => !previousValue);
   }
 
   function startMultiPracticeBySelection() {
@@ -749,6 +754,7 @@ export default function HomePage() {
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
     setIsActiveArticleImageUnavailable(false);
+    setIsArticleTextExpanded(true);
   }, [activeArticleId]);
 
   useEffect(() => {
@@ -873,8 +879,21 @@ export default function HomePage() {
         />
         {hasActiveArticle && (
           <section className="article-text-panel" aria-label={t.articleTextTitle}>
-            <div className="article-text-title">{t.articleTextTitle}</div>
-            <pre className="article-text-content">{activeArticleText}</pre>
+            <div className="article-text-header">
+              <div className="article-text-title">{t.articleTextTitle}</div>
+              <div className="article-text-actions">
+                <button className="secondary compact" onClick={toggleArticleTextExpanded}>
+                  {isArticleTextExpanded ? t.collapseArticleText : t.expandArticleText}
+                </button>
+              </div>
+            </div>
+            <div
+              className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
+            >
+              <pre className="article-text-content">
+                {activeArticleText}
+              </pre>
+            </div>
           </section>
         )}
 
