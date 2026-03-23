@@ -60,7 +60,6 @@ const SCROLL_BEHAVIOR_AUTO = "auto";
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
 const IMAGE_MIME_PREFIX = "image/";
-const SAMPLE_ARTICLE_IMAGE_PATH = "/sample-article-chart.png";
 const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
 const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-year-stage";
 const MEMORIZATION_ARTICLE_BUTTONS = [
@@ -128,11 +127,9 @@ A more dramatic rise is predicted between 2030 and 2040 in Japan, by which time 
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
-    imagePath: SAMPLE_ARTICLE_IMAGE_PATH,
   },
   [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: {
     text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
-    imagePath: EMPTY_STRING,
   },
 };
 const DOT_COLOR_EXTRA = "#8b5cf6";
@@ -513,7 +510,9 @@ export default function HomePage() {
   }
 
   function focusAnswerInput() {
-    answerInputRef.current?.focus();
+    const answerInputElement = answerInputRef.current;
+    if (!answerInputElement) return;
+    answerInputElement.focus({ preventScroll: true });
   }
 
   function blurAnswerInput() {
@@ -557,10 +556,6 @@ export default function HomePage() {
 
     setActiveArticleId(articleId);
     setSourceText(targetArticle.text);
-    setUploadedImageSrc(targetArticle.imagePath);
-    requestAnimationFrame(() => {
-      autoResizeSourceTextarea();
-    });
     startPractice(targetArticle.text);
   }
 
