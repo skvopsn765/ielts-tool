@@ -44,15 +44,30 @@
   --missing-bg: #ffedd5;
   --extra-bg: #f3e8ff;
   --neutral-bg: #e5e7eb;
+  --option-bg: #ffffff;
+  --option-border: #cbd5e1;
+  --option-text: #334155;
+  --option-hover-bg: #eff6ff;
+  --option-hover-border: #bfdbfe;
+  --option-hover-text: #1e3a8a;
+  --option-active-bg: #e2ecff;
+  --option-active-border: #93c5fd;
+  --option-active-text: #1e3a8a;
   --tab-inactive-hover-text: #334155;
   --practice-tab-height: 42px;
   --practice-tab-gap: 6px;
   --practice-tab-container-bg: #eef2ff;
   --practice-tab-active-bg: #ffffff;
   --practice-tab-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --practice-tab-text: #475569;
-  --practice-tab-active-text: #1d4ed8;
-  --practice-tab-hover-bg: #e2e8f0;
+  --practice-tab-text: var(--option-text);
+  --practice-tab-active-text: var(--option-active-text);
+  --practice-tab-hover-bg: var(--option-hover-bg);
+  --practice-tab-hover-text: var(--option-hover-text);
+  --practice-tab-soft-bg: var(--option-bg);
+  --practice-tab-soft-border: var(--option-border);
+  --practice-tab-soft-active-bg: var(--option-active-bg);
+  --practice-tab-soft-active-border: var(--option-active-border);
+  --practice-tab-soft-active-text: var(--option-active-text);
   --practice-tab-focus-ring: rgba(37, 99, 235, 0.2);
   --collapse-max-height: 10000px;
   --collapse-transition-ms: 220ms;
@@ -62,16 +77,22 @@
   --article-grid-gap: 10px;
   --article-library-border: #dbe2ea;
   --article-library-bg: #f8fafc;
-  --article-active-bg: #dbeafe;
-  --article-active-border: #60a5fa;
-  --article-active-text: #1d4ed8;
+  --article-active-bg: var(--option-active-bg);
+  --article-active-border: var(--option-active-border);
+  --article-active-text: var(--option-active-text);
   --single-sentence-grid-min-width: 220px;
   --single-sentence-grid-gap: 8px;
   --single-selector-border: #dbe2ea;
   --single-selector-bg: #f8fafc;
-  --single-selector-active-bg: #dbeafe;
-  --single-selector-active-border: #60a5fa;
-  --single-selector-active-text: #1d4ed8;
+  --single-selector-active-bg: var(--option-active-bg);
+  --single-selector-active-border: var(--option-active-border);
+  --single-selector-active-text: var(--option-active-text);
+  --single-selector-hover-bg: var(--option-hover-bg);
+  --single-selector-hover-border: var(--option-hover-border);
+  --single-selector-hover-text: var(--option-hover-text);
+  --single-selector-soft-active-bg: var(--option-active-bg);
+  --single-selector-soft-active-border: var(--option-active-border);
+  --single-selector-soft-active-text: var(--option-active-text);
   --language-switch-gap: 6px;
   --language-switch-height: 30px;
   --language-switch-padding-x: 10px;
@@ -85,9 +106,9 @@
   --article-image-fallback-bg: #ffffff;
   --article-image-max-height: 460px;
   --color-on-primary: #ffffff;
-  --interactive-hover-bg: #eff6ff;
-  --interactive-hover-border: #93c5fd;
-  --interactive-hover-text: #1e40af;
+  --interactive-hover-bg: var(--option-hover-bg);
+  --interactive-hover-border: var(--option-hover-border);
+  --interactive-hover-text: var(--option-hover-text);
   --surface-subtle: #f8fafc;
   --border-subtle: #cbd5e1;
   --disabled-bg: #f1f5f9;
@@ -264,9 +285,9 @@ textarea {
   text-align: left;
   line-height: 1.4;
   min-height: 52px;
-  background: var(--card);
-  color: var(--secondary);
-  border: 1px solid var(--border);
+  background: var(--option-bg);
+  color: var(--option-text);
+  border: 1px solid var(--option-border);
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
@@ -377,16 +398,23 @@ button.compact {
     box-shadow 0.18s ease;
 }
 
-.practice-tab-button:hover {
+button.practice-tab-button {
+  background: var(--practice-tab-soft-bg);
+  color: var(--practice-tab-text);
+  border: 1px solid var(--practice-tab-soft-border);
+}
+
+button.practice-tab-button:hover:not(:disabled) {
   background: var(--practice-tab-hover-bg);
-  color: var(--tab-inactive-hover-text);
+  color: var(--practice-tab-hover-text);
   transform: none;
 }
 
-.practice-tab-button.active {
-  background: var(--practice-tab-active-bg);
-  color: var(--practice-tab-active-text);
+button.practice-tab-button.active {
+  background: var(--practice-tab-soft-active-bg);
+  color: var(--practice-tab-soft-active-text);
   box-shadow: var(--practice-tab-active-shadow);
+  border-color: var(--practice-tab-soft-active-border);
 }
 
 .practice-tab-button.active::after {
@@ -530,23 +558,30 @@ button.compact {
   gap: 4px;
   min-height: 70px;
   text-align: left;
-  border: 1px solid var(--single-selector-border);
-  background: var(--card);
-  color: var(--secondary);
+  border: 1px solid var(--option-border);
+  background: var(--option-bg);
+  color: var(--option-text);
   line-height: 1.4;
 }
 
-.single-sentence-button:hover,
-.single-sentence-button:focus-visible {
-  background: var(--interactive-hover-bg);
-  border-color: var(--interactive-hover-border);
-  color: var(--interactive-hover-text);
+button.single-sentence-button:hover,
+button.single-sentence-button:focus-visible {
+  background: var(--single-selector-hover-bg);
+  border-color: var(--single-selector-hover-border);
+  color: var(--single-selector-hover-text);
 }
 
-.single-sentence-button.active {
-  background: var(--single-selector-active-bg);
-  border-color: var(--single-selector-active-border);
-  color: var(--single-selector-active-text);
+button.single-sentence-button.active {
+  background: var(--single-selector-soft-active-bg);
+  border-color: var(--single-selector-soft-active-border);
+  color: var(--single-selector-soft-active-text);
+}
+
+button.single-sentence-button.active:hover,
+button.single-sentence-button.active:focus-visible {
+  background: var(--single-selector-soft-active-bg);
+  border-color: var(--single-selector-soft-active-border);
+  color: var(--single-selector-soft-active-text);
 }
 
 .single-sentence-index {
@@ -586,11 +621,11 @@ button.compact {
 }
 
 .multi-sentence-item:hover {
-  background: var(--practice-tab-container-bg);
+  background: var(--option-hover-bg);
 }
 
 .multi-sentence-item:focus-within {
-  background: var(--interactive-hover-bg);
+  background: var(--option-hover-bg);
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
