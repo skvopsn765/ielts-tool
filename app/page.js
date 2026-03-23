@@ -40,8 +40,18 @@ const SCROLL_BEHAVIOR_AUTO = "auto";
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
 const NO_ACTIVE_ARTICLE_ID = null;
+const ARTICLE_IMAGE_BASE_PATH = "/articles/";
+const ARTICLE_IMAGE_EXTENSION = ".png";
+const ARTICLE_IMAGE_PATH_OVERRIDE_MAP = {
+  "dynamic-chart-same-trend-by-category": "/sample-article-chart.png",
+};
 const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
 const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-year-stage";
+const PIE_CHART_STABLE_ARTICLE_ID = "pie-chart-stable-structure-by-category";
+const STATIC_COMPARISON_ARTICLE_ID = "static-comparison-table-bar-by-category-group";
+const MAP_STATIC_ARTICLE_ID = "map-static";
+const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
+const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
@@ -68,7 +78,15 @@ const PRACTICE_ARTICLE_LIBRARY = {
     text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
   },
 };
-const AVAILABLE_PRACTICE_ARTICLE_IDS = Object.keys(PRACTICE_ARTICLE_LIBRARY);
+const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
+  { id: SAMPLE_ARTICLE_ID, isEnabled: true },
+  { id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID, isEnabled: true },
+  { id: PIE_CHART_STABLE_ARTICLE_ID, isEnabled: false },
+  { id: STATIC_COMPARISON_ARTICLE_ID, isEnabled: false },
+  { id: MAP_STATIC_ARTICLE_ID, isEnabled: false },
+  { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: false },
+  { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
+];
 const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
@@ -401,6 +419,7 @@ export default function HomePage() {
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
   const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
   const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
+  const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -418,6 +437,12 @@ export default function HomePage() {
   }, [activeArticleId]);
   const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
+  const activeArticleImageUrl = useMemo(() => {
+    if (!activeArticleId) return EMPTY_STRING;
+    const overridePath = ARTICLE_IMAGE_PATH_OVERRIDE_MAP[activeArticleId];
+    if (overridePath) return overridePath;
+    return `${ARTICLE_IMAGE_BASE_PATH}${activeArticleId}${ARTICLE_IMAGE_EXTENSION}`;
+  }, [activeArticleId]);
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
 
@@ -438,6 +463,27 @@ export default function HomePage() {
             {item.label}
           </button>
         ))}
+      </div>
+    );
+  }
+
+  function renderActiveArticleImagePanel() {
+    if (!hasActiveArticle) return null;
+    const activeArticleLabel = getArticleLabel(activeArticleId);
+
+    return (
+      <div className="article-image-panel">
+        <div className="article-image-title">{t.questionImageTitle}</div>
+        {isActiveArticleImageUnavailable ? (
+          <div className="article-image-fallback">{t.questionImageUnavailable}</div>
+        ) : (
+          <img
+            src={activeArticleImageUrl}
+            alt={t.formatArticleImageAlt(activeArticleLabel)}
+            className="article-image-preview"
+            onError={() => setIsActiveArticleImageUnavailable(true)}
+          />
+        )}
       </div>
     );
   }
@@ -733,6 +779,7 @@ export default function HomePage() {
     setMultiTargetText(EMPTY_STRING);
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
+    setIsActiveArticleImageUnavailable(false);
   }, [activeArticleId]);
 
   useEffect(() => {
@@ -802,16 +849,25 @@ export default function HomePage() {
             ) : null}
           </div>
           <div className="article-button-grid">
-            {AVAILABLE_PRACTICE_ARTICLE_IDS.map((articleId) => (
-              <button
-                key={articleId}
-                className={`article-button ${activeArticleId === articleId ? "active" : EMPTY_STRING}`}
-                onClick={() => handleArticleSelection(articleId)}
-                title={t.articleButtonTitleEnabled}
-              >
-                {getArticleLabel(articleId)}
-              </button>
-            ))}
+            {PRACTICE_ARTICLE_BUTTON_CONFIGS.map((articleConfig) => {
+              const articleId = articleConfig.id;
+              const isArticleEnabled = articleConfig.isEnabled;
+              const articleButtonTitle = isArticleEnabled
+                ? t.articleButtonTitleEnabled
+                : t.articleButtonTitleDisabled;
+
+              return (
+                <button
+                  key={articleId}
+                  className={`article-button ${activeArticleId === articleId ? "active" : EMPTY_STRING}`}
+                  onClick={() => handleArticleSelection(articleId)}
+                  title={articleButtonTitle}
+                  disabled={!isArticleEnabled}
+                >
+                  {getArticleLabel(articleId)}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -835,6 +891,7 @@ export default function HomePage() {
             {t.tabMulti}
           </button>
         </div>
+        {renderActiveArticleImagePanel()}
 
         {!hasActiveArticle ? (
           <div className="practice-empty-state">{t.selectArticleFirst}</div>
