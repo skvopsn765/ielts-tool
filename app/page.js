@@ -964,7 +964,9 @@ export default function HomePage() {
         <div className="article-library">
           <div className="article-library-header">
             <div className="article-library-title">{t.articleLibraryTitle}</div>
-            <div className="article-library-subtitle">{t.articleLibrarySubtitle}</div>
+            {t.articleLibrarySubtitle ? (
+              <div className="article-library-subtitle">{t.articleLibrarySubtitle}</div>
+            ) : null}
           </div>
           <div className="article-button-grid">
             {MEMORIZATION_ARTICLE_BUTTONS.map((articleButton) => (
