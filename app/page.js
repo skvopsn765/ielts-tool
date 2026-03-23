@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LANG_TW, LANGUAGES, UI_TEXTS } from "./i18n";
 
 const KEY_ENTER = "Enter";
 const KEY_TAB = "Tab";
@@ -14,26 +15,6 @@ const WHITESPACE_RE = /\s+/g;
 const LETTER_RE = /[A-Za-z]/;
 const STATUS_IDLE = "idle";
 const STATUS_READY_NEXT = "ready_next";
-const TEXT_NO_SENTENCE = "沒有可練習的句子";
-const TEXT_PASTE_FIRST = "請先貼上文章並開始練習";
-const TEXT_NO_DOT = "沒有抓到句子，請確認有英文句號 .";
-const TEXT_REPASTE = "請重新貼上內容";
-const TEXT_LAST_SENTENCE = "已經是最後一句。";
-const TEXT_FIRST_SENTENCE = "已經是第一句。";
-const TEXT_CORRECT = "完全正確！";
-const TEXT_SELECT_SENTENCE_FIRST = "請至少勾選一句再開始多句練習。";
-const TEXT_MULTI_SHORTCUT_HINT = "快捷鍵：按 1 重練本組，F2 顯示提示";
-const TEXT_MULTI_PASSED = "完全正確！多句已一次通過。";
-const TEXT_MULTI_NOT_STARTED = "多句練習：尚未開始";
-const TEXT_MULTI_SELECTOR_OPEN = "收合選句";
-const TEXT_MULTI_SELECTOR_CLOSED = "重新選句";
-const TEXT_SINGLE_SELECTOR_OPEN = "收合句子清單";
-const TEXT_SINGLE_SELECTOR_CLOSED = "展開句子清單";
-const TEXT_SINGLE_SELECTOR_PLACEHOLDER = "請先按「開始練習」，這裡會顯示所有句子供你快速切換。";
-const TEXT_SHORTCUT_HINT =
-  "快捷鍵：Enter 檢查，檢查後按 Enter 下一句，按 1 重練本句，非輸入時 Tab 上一句";
-const TEXT_IDLE_STATUS = "尚未開始練習";
-const TEXT_IDLE_MASK = "_ _ _ _ _";
 const DOT_COLOR_OK = "#15803d";
 const DOT_COLOR_ERROR = "#b91c1c";
 const DOT_COLOR_MISSING = "#fca5a5";
@@ -65,37 +46,30 @@ const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-yea
 const MEMORIZATION_ARTICLE_BUTTONS = [
   {
     id: SAMPLE_ARTICLE_ID,
-    label: "動態圖（同趨勢）—by category",
     isEnabled: true,
   },
   {
     id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID,
-    label: "動態圖（不同趨勢）—by year / by stage",
     isEnabled: true,
   },
   {
     id: "pie-chart-stable-structure-by-category",
-    label: "餅圖（結構穩定）—by category（最大占比變化小）",
     isEnabled: false,
   },
   {
     id: "static-comparison-table-bar-by-category-group",
-    label: "靜態比較（Table/Bar 靜態）—by category / by group",
     isEnabled: false,
   },
   {
     id: "map-static",
-    label: "地圖（靜態）",
     isEnabled: false,
   },
   {
     id: "map-dynamic-before-after-now-future",
-    label: "地圖（動態：before vs after / now vs future）",
     isEnabled: false,
   },
   {
     id: "process-diagram",
-    label: "流程圖（Process）",
     isEnabled: false,
   },
 ];
@@ -113,17 +87,13 @@ In 1980, petrol and oil consumption stood at around 35 quadrillion units, signif
 Coal and natural gas displayed similar levels at the beginning, at about 16 and 20 units respectively. Natural gas fluctuated over time and is predicted to stabilize at around 25 units from 2015 onwards. Meanwhile, coal consumption rose gradually and is expected to surpass natural gas, reaching roughly 30 units by 2030.
 
 The remaining energy sources were used far less. Nuclear energy increased slightly from about 4 to around 7 units, while solar and wind are projected to grow steadily to approximately 6 units. In contrast, hydropower remains relatively stable at just above 3 units throughout the period.`;
-const DYNAMIC_DIFFERENT_TREND_ARTICLE = `The graph shows the increase in the ageing population in Japan, Sweden and the USA.
+const DYNAMIC_DIFFERENT_TREND_ARTICLE = `The line graph compares the proportion of people aged 65 and over in Japan, Sweden and the USA between 1940 and 2040.
 
-It indicates that the percentage of elderly people in all three countries is expected to increase to almost 25% of the respective populations by the year 2040.
+Overall, all three countries show an upward trend in the percentage of elderly people. However, Japan is expected to experience the most dramatic growth and will overtake both Sweden and the USA by 2040, despite having the lowest figures for much of the period.
 
-In 1940 the proportion of people aged 65 or more stood at only 5% in Japan, approximately 7% in Sweden and 9% in the US.
+In 1940, the USA had the highest proportion of older people at around 9%, followed by Sweden at approximately 7%, while Japan had the lowest figure at about 5%. Over the next five decades, the percentages in the USA and Sweden increased steadily, reaching roughly 15% and 14% respectively by 1990. In contrast, Japan saw a decline to around 3% and remained at a relatively low level until the late 20th century.
 
-However, while the figures for the Western countries grew to about 15% in around 1990, the figure for Japan dipped to only 2.5% for much of this period, before rising to almost 5% again at the present time.
-
-In spite of some fluctuation in the expected percentages, the proportion of older people will probably continue to increase in the next two decades in the three countries.
-
-A more dramatic rise is predicted between 2030 and 2040 in Japan, by which time it is thought that the proportion of elderly people will be similar in the three countries.`;
+After 2000, Sweden’s elderly population rose significantly, peaking at about 20% around 2010 before experiencing a slight dip. Meanwhile, the USA showed a more gradual increase. Japan, however, is projected to rise sharply after 2020, climbing from around 10% to approximately 27% by 2040, making it the country with the highest proportion of elderly people.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
@@ -444,6 +414,8 @@ function toLineToken(token, lineType) {
 }
 
 export default function HomePage() {
+  const [language, setLanguage] = useState(LANG_TW);
+  const t = UI_TEXTS[language];
   const [sourceText, setSourceText] = useState(EMPTY_STRING);
   const [sentences, setSentences] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -451,8 +423,8 @@ export default function HomePage() {
   const [resultStatus, setResultStatus] = useState(EMPTY_STRING);
   const [comparisonTokens, setComparisonTokens] = useState([]);
   const [practiceStatus, setPracticeStatus] = useState(STATUS_IDLE);
-  const [sentenceStatus, setSentenceStatus] = useState(TEXT_IDLE_STATUS);
-  const [maskedSentence, setMaskedSentence] = useState(TEXT_IDLE_MASK);
+  const [sentenceStatus, setSentenceStatus] = useState(UI_TEXTS[LANG_TW].idleStatus);
+  const [maskedSentence, setMaskedSentence] = useState(UI_TEXTS[LANG_TW].idleMask);
   const [showHintMask, setShowHintMask] = useState(true);
   const [uploadedImageSrc, setUploadedImageSrc] = useState(EMPTY_STRING);
   const [isDragOverUploadZone, setIsDragOverUploadZone] = useState(false);
@@ -482,6 +454,27 @@ export default function HomePage() {
   const sourceSentenceList = useMemo(() => splitSentences(sourceText), [sourceText]);
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
+
+  function getArticleLabel(articleId) {
+    return t.articleLabelMap[articleId] ?? articleId;
+  }
+
+  function renderLanguageSwitch() {
+    return (
+      <div className="language-switch" role="group" aria-label={t.languageSwitchAria}>
+        {LANGUAGES.map((item) => (
+          <button
+            key={item.id}
+            className={`language-switch-button ${language === item.id ? "active" : EMPTY_STRING}`}
+            onClick={() => setLanguage(item.id)}
+            disabled={language === item.id}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   function getCurrentSentence() {
     return sentences[currentIndex] ?? EMPTY_STRING;
@@ -524,21 +517,21 @@ export default function HomePage() {
     const sentenceCount = nextSentences.length;
 
     if (!sentence) {
-      setSentenceStatus(TEXT_NO_SENTENCE);
-      setMaskedSentence(TEXT_PASTE_FIRST);
+      setSentenceStatus(t.noSentence);
+      setMaskedSentence(t.pasteFirst);
       return;
     }
 
     const displayIndex = nextIndex + 1;
-    setSentenceStatus(`第 ${displayIndex} / ${sentenceCount} 句`);
+    setSentenceStatus(t.formatSentenceProgress(displayIndex, sentenceCount));
     setMaskedSentence(maskSentence(sentence));
   }
 
   function startPractice(textOverride = sourceText) {
     const nextSentences = splitSentences(textOverride);
     if (nextSentences.length === 0) {
-      setSentenceStatus(TEXT_NO_DOT);
-      setMaskedSentence(TEXT_REPASTE);
+      setSentenceStatus(t.noDot);
+      setMaskedSentence(t.repaste);
       return;
     }
 
@@ -569,8 +562,8 @@ export default function HomePage() {
     setUploadedImageSrc(EMPTY_STRING);
     setSentences([]);
     setCurrentIndex(FIRST_INDEX);
-    setSentenceStatus(TEXT_IDLE_STATUS);
-    setMaskedSentence(TEXT_IDLE_MASK);
+    setSentenceStatus(t.idleStatus);
+    setMaskedSentence(t.idleMask);
     setShowHintMask(true);
     setIsMultiPracticeStarted(false);
     setIsMultiSelectorExpanded(true);
@@ -597,14 +590,14 @@ export default function HomePage() {
   function startMultiPracticeBySelection() {
     const selectedSentences = sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index]);
     if (selectedSentences.length === 0) {
-      setMultiSelectionStatus(TEXT_SELECT_SENTENCE_FIRST);
+      setMultiSelectionStatus(t.selectSentenceFirst);
       return;
     }
 
     const combinedSentenceText = normalizeSpaces(selectedSentences.join(" "));
     setMultiTargetText(combinedSentenceText);
     setMultiAnswerInput(EMPTY_STRING);
-    setSentenceStatus(`多句練習：共 ${selectedSentences.length} 句`);
+    setSentenceStatus(t.formatMultiSentenceProgress(selectedSentences.length));
     setMaskedSentence(maskSentence(combinedSentenceText));
     setResultStatus(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
@@ -703,15 +696,13 @@ export default function HomePage() {
     const result = compareAnswer(target, normalizedInput);
 
     if (result.isCorrect) {
-      setResultStatus(`${TEXT_CORRECT}（再按 Enter 可下一句）`);
+      setResultStatus(t.correctAndNextHint);
     } else {
       const targetLength = Array.from(target).length;
       const accuracyPercent = Math.round(
         ((targetLength - result.wrongCount) / targetLength) * 100
       );
-      setResultStatus(
-        `有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 1 可重練）`
-      );
+      setResultStatus(t.formatSingleWrongResult(result.wrongCount, accuracyPercent));
     }
 
     setComparisonTokens(result.tokens);
@@ -726,13 +717,13 @@ export default function HomePage() {
     const normalizedInput = normalizeSpaces(multiAnswerInput);
     const result = compareAnswer(multiTargetText, normalizedInput);
     if (result.isCorrect) {
-      setResultStatus(TEXT_MULTI_PASSED);
+      setResultStatus(t.multiPassed);
     } else {
       const targetLength = Array.from(multiTargetText).length;
       const accuracyPercent = Math.round(
         ((targetLength - result.wrongCount) / targetLength) * 100
       );
-      setResultStatus(`尚未全對：有 ${result.wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%`);
+      setResultStatus(t.formatMultiWrongResult(result.wrongCount, accuracyPercent));
     }
 
     setComparisonTokens(result.tokens);
@@ -756,7 +747,7 @@ export default function HomePage() {
   function goToNextSentence() {
     const nextIndex = currentIndex + 1;
     if (nextIndex >= sentences.length) {
-      setResultStatus(TEXT_LAST_SENTENCE);
+      setResultStatus(t.lastSentence);
       setPracticeStatus(STATUS_IDLE);
       return;
     }
@@ -770,7 +761,7 @@ export default function HomePage() {
   function goToPreviousSentence() {
     const previousIndex = currentIndex - 1;
     if (previousIndex < 0) {
-      setResultStatus(TEXT_FIRST_SENTENCE);
+      setResultStatus(t.firstSentence);
       setPracticeStatus(STATUS_IDLE);
       return;
     }
@@ -855,6 +846,36 @@ export default function HomePage() {
     setMultiSelectionStatus(EMPTY_STRING);
   }, [sourceText]);
 
+  useEffect(() => {
+    if (isMultiPracticeStarted) {
+      const selectedSentenceCount = sourceSentenceList.filter(
+        (sentence, index) => selectedSentenceMap[index] && sentence
+      ).length;
+      setSentenceStatus(t.formatMultiSentenceProgress(selectedSentenceCount));
+      if (multiTargetText) {
+        setMaskedSentence(maskSentence(multiTargetText));
+      }
+      return;
+    }
+
+    if (sentences.length > 0) {
+      renderCurrentSentence(sentences, currentIndex);
+      return;
+    }
+
+    setSentenceStatus(t.idleStatus);
+    setMaskedSentence(t.idleMask);
+  }, [
+    language,
+    isMultiPracticeStarted,
+    sourceSentenceList,
+    selectedSentenceMap,
+    multiTargetText,
+    sentences,
+    currentIndex,
+    t,
+  ]);
+
   const expectedLineTokens = useMemo(
     () =>
       comparisonTokens
@@ -870,9 +891,10 @@ export default function HomePage() {
   return (
     <div className="container">
       <div className="card">
-        <h1>英文句子背誦練習</h1>
+        <div className="card-header">{renderLanguageSwitch()}</div>
+        <h1>{t.appTitle}</h1>
         <p className="hint">
-          1) 先貼上文章。2) 按「開始練習」。3) 每次輸入一個句子，按 Enter 進行比對。
+          {t.introHint}
         </p>
         <textarea
           ref={sourceTextareaRef}
@@ -889,7 +911,7 @@ export default function HomePage() {
               isSourceCtrlVPasteRef.current = false;
             });
           }}
-          placeholder="請貼上英文文章（以英文句號 . 分句）"
+          placeholder={t.sourcePlaceholder}
           spellCheck={false}
         />
         {!uploadedImageSrc && (
@@ -916,8 +938,8 @@ export default function HomePage() {
               }
             }}
           >
-            <div className="upload-title">圖片上傳區</div>
-            <div className="upload-description">點擊選檔、拖曳圖片到此處，或直接 Ctrl+V 貼上圖片</div>
+            <div className="upload-title">{t.uploadTitle}</div>
+            <div className="upload-description">{t.uploadDescription}</div>
           </div>
         )}
         <input
@@ -934,13 +956,13 @@ export default function HomePage() {
         />
         {uploadedImageSrc && (
           <div className="uploaded-image-card">
-            <img src={uploadedImageSrc} alt="上傳圖片預覽" className="uploaded-image-preview" />
+            <img src={uploadedImageSrc} alt={t.uploadedImageAlt} className="uploaded-image-preview" />
           </div>
         )}
         <div className="article-library">
           <div className="article-library-header">
-            <div className="article-library-title">背誦文章（共 7 篇）</div>
-            <div className="article-library-subtitle">先練第一篇，其餘六篇按鈕先保留版位</div>
+            <div className="article-library-title">{t.articleLibraryTitle}</div>
+            <div className="article-library-subtitle">{t.articleLibrarySubtitle}</div>
           </div>
           <div className="article-button-grid">
             {MEMORIZATION_ARTICLE_BUTTONS.map((articleButton) => (
@@ -951,22 +973,25 @@ export default function HomePage() {
                 } ${articleButton.isEnabled ? EMPTY_STRING : "coming-soon"}`}
                 onClick={() => handleArticleSelection(articleButton.id)}
                 disabled={!articleButton.isEnabled}
-                title={articleButton.isEnabled ? "載入這篇文章" : "此按鈕目前僅為預留版位"}
+                title={
+                  articleButton.isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
+                }
               >
-                {articleButton.label}
+                {getArticleLabel(articleButton.id)}
               </button>
             ))}
           </div>
         </div>
         <div className="row">
-          <button onClick={() => startPractice()}>開始練習</button>
+          <button onClick={() => startPractice()}>{t.startPractice}</button>
           <button className="danger" onClick={clearAllData}>
-            清空
+            {t.clearAll}
           </button>
         </div>
       </div>
 
       <div className="card">
+        <div className="card-header">{renderLanguageSwitch()}</div>
         <div className="practice-tab-bar">
           <button
             className={`practice-tab-button ${
@@ -974,7 +999,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActivePracticeTab(PRACTICE_TAB_SINGLE)}
           >
-            單句練習
+            {t.tabSingle}
           </button>
           <button
             className={`practice-tab-button ${
@@ -982,7 +1007,7 @@ export default function HomePage() {
             }`}
             onClick={() => setActivePracticeTab(PRACTICE_TAB_MULTI)}
           >
-            多句練習
+            {t.tabMulti}
           </button>
         </div>
 
@@ -996,13 +1021,13 @@ export default function HomePage() {
                   className="secondary compact"
                   onClick={toggleSingleSelectorPanel}
                 >
-                  {isSingleSelectorExpanded ? TEXT_SINGLE_SELECTOR_OPEN : TEXT_SINGLE_SELECTOR_CLOSED}
+                  {isSingleSelectorExpanded ? t.singleSelectorOpen : t.singleSelectorClosed}
                 </button>
                 <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
-                  上一句
+                  {t.previousSentence}
                 </button>
                 <button className="secondary compact" onClick={goToNextSentence} disabled={!hasSentence}>
-                  下一句
+                  {t.nextSentence}
                 </button>
               </div>
               <label className="hint-toggle">
@@ -1011,7 +1036,7 @@ export default function HomePage() {
                   checked={showHintMask}
                   onChange={(event) => setShowHintMask(event.target.checked)}
                 />
-                顯示提示 (F2)
+                {t.toggleHintMask}
               </label>
             </div>
             <div
@@ -1020,7 +1045,7 @@ export default function HomePage() {
               }`}
             >
               {sentences.length === 0 ? (
-                <div className="single-selector-placeholder">{TEXT_SINGLE_SELECTOR_PLACEHOLDER}</div>
+                <div className="single-selector-placeholder">{t.singleSelectorPlaceholder}</div>
               ) : (
                 <div className="single-sentence-grid">
                   {sentences.map((sentence, index) => {
@@ -1032,7 +1057,9 @@ export default function HomePage() {
                         className={`single-sentence-button ${isActiveSentence ? "active" : EMPTY_STRING}`}
                         onClick={() => goToSentenceByIndex(index)}
                       >
-                        <span className="single-sentence-index">第 {displayIndex} 句</span>
+                        <span className="single-sentence-index">
+                          {t.formatSingleSentenceLabel(displayIndex)}
+                        </span>
                         <span className="single-sentence-preview">{sentence}</span>
                       </button>
                     );
@@ -1054,26 +1081,26 @@ export default function HomePage() {
                     checkCurrentAnswer();
                   }
                 }}
-                placeholder="在這裡輸入完整句子，按 Enter 比對"
+                placeholder={t.inputPlaceholderSingle}
                 disabled={!hasSentence}
                 spellCheck={false}
               />
             </div>
             <div className="row">
               <button onClick={checkCurrentAnswer} disabled={!hasSentence}>
-                檢查答案
+                {t.checkAnswer}
               </button>
               <button className="secondary" onClick={retryCurrentSentence} disabled={!hasSentence}>
-                重練這一句
+                {t.retryCurrentSentence}
               </button>
               <button className="secondary" onClick={goToNextSentence} disabled={!hasSentence}>
-                下一句
+                {t.nextSentence}
               </button>
             </div>
             <div className="status">{resultStatus}</div>
-            <div className="status">{TEXT_SHORTCUT_HINT}</div>
+            <div className="status">{t.singleShortcutHint}</div>
             <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
-              <div className="comparison-title">你的輸入</div>
+              <div className="comparison-title">{t.yourInputTitle}</div>
               <div className="comparison-line">
                 <div className="comparison-content anki-line">
                   {actualLineTokens.map((token, index) => (
@@ -1097,19 +1124,19 @@ export default function HomePage() {
             <div className="legend">
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_OK }} />
-                正確字元
+                {t.legendCorrect}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
-                錯誤字元
+                {t.legendWrong}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-                少打字元
+                {t.legendMissing}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
-                多打字元
+                {t.legendExtra}
               </span>
             </div>
           </>
@@ -1123,7 +1150,7 @@ export default function HomePage() {
                   className="secondary compact"
                   onClick={toggleMultiSelectorPanel}
                 >
-                  {isMultiSelectorExpanded ? TEXT_MULTI_SELECTOR_OPEN : TEXT_MULTI_SELECTOR_CLOSED}
+                  {isMultiSelectorExpanded ? t.multiSelectorOpen : t.multiSelectorClosed}
                 </button>
               </div>
               <label className="hint-toggle">
@@ -1132,7 +1159,7 @@ export default function HomePage() {
                   checked={showHintMask}
                   onChange={(event) => setShowHintMask(event.target.checked)}
                 />
-                顯示提示 (F2)
+                {t.toggleHintMask}
               </label>
             </div>
             <div
@@ -1141,7 +1168,7 @@ export default function HomePage() {
               }`}
             >
               <div className="multi-practice-selector">
-                <div className="status multi-practice-title">請勾選要背誦的句子</div>
+                <div className="status multi-practice-title">{t.multiSelectorTitle}</div>
                 <div className="multi-sentence-list">
                   {sourceSentenceList.map((sentence, index) => {
                     const isChecked = Boolean(selectedSentenceMap[index]);
@@ -1160,7 +1187,7 @@ export default function HomePage() {
                   })}
                 </div>
                 <div className="row">
-                  <button onClick={startMultiPracticeBySelection}>確認並開始背誦</button>
+                  <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
                 </div>
                 <div className="status">{multiSelectionStatus}</div>
               </div>
@@ -1171,21 +1198,21 @@ export default function HomePage() {
                 ref={multiAnswerInputRef}
                 value={multiAnswerInput}
                 onChange={(event) => setMultiAnswerInput(event.target.value)}
-                placeholder="一次輸入勾選的所有句子（可換行）"
+                placeholder={t.inputPlaceholderMulti}
                 className="multi-answer-input"
                 spellCheck={false}
               />
             </div>
             <div className="row">
-              <button onClick={checkMultiAnswer}>檢查答案</button>
+              <button onClick={checkMultiAnswer}>{t.checkAnswer}</button>
               <button className="secondary" onClick={retryMultiPractice}>
-                重練這組
+                {t.retryCurrentGroup}
               </button>
             </div>
             <div className="status">{resultStatus}</div>
-            <div className="status">{TEXT_MULTI_SHORTCUT_HINT}</div>
+            <div className="status">{t.multiShortcutHint}</div>
             <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
-              <div className="comparison-title">你的輸入</div>
+              <div className="comparison-title">{t.yourInputTitle}</div>
               <div className="comparison-line">
                 <div className="comparison-content anki-line">
                   {actualLineTokens.map((token, index) => (
@@ -1209,27 +1236,27 @@ export default function HomePage() {
             <div className="legend">
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_OK }} />
-                正確字元
+                {t.legendCorrect}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
-                錯誤字元
+                {t.legendWrong}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-                少打字元
+                {t.legendMissing}
               </span>
               <span>
                 <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
-                多打字元
+                {t.legendExtra}
               </span>
             </div>
           </>
         ) : (
           <div className="multi-practice-selector">
-            <div className="status multi-practice-title">{TEXT_MULTI_NOT_STARTED}</div>
+            <div className="status multi-practice-title">{t.multiNotStarted}</div>
             {sourceSentenceList.length === 0 ? (
-              <div className="multi-practice-placeholder">請先在上方貼入文章，再到這裡勾選句子。</div>
+              <div className="multi-practice-placeholder">{t.multiNotStartedPlaceholder}</div>
             ) : (
               <>
                 <div className="multi-sentence-list">
@@ -1250,7 +1277,7 @@ export default function HomePage() {
                   })}
                 </div>
                 <div className="row">
-                  <button onClick={startMultiPracticeBySelection}>確認並開始背誦</button>
+                  <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
                 </div>
                 <div className="status">{multiSelectionStatus}</div>
               </>

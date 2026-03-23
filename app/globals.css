@@ -73,6 +73,14 @@
   --single-selector-active-bg: #dbeafe;
   --single-selector-active-border: #60a5fa;
   --single-selector-active-text: #1d4ed8;
+  --language-switch-gap: 6px;
+  --language-switch-height: 30px;
+  --language-switch-padding-x: 10px;
+  --language-switch-font-size: 12px;
+  --language-switch-bg: #f1f5f9;
+  --language-switch-active-bg: #2563eb;
+  --language-switch-active-text: #ffffff;
+  --language-switch-inactive-text: #334155;
 }
 
 * {
@@ -98,6 +106,41 @@ body {
   border-radius: var(--radius-card);
   padding: var(--space-card);
   margin-bottom: var(--space-card);
+}
+
+.card-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.language-switch {
+  display: inline-flex;
+  gap: var(--language-switch-gap);
+  background: var(--language-switch-bg);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+
+.language-switch-button {
+  min-height: var(--language-switch-height);
+  padding: 0 var(--language-switch-padding-x);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--language-switch-inactive-text);
+  font-size: var(--language-switch-font-size);
+  font-weight: 700;
+}
+
+.language-switch-button:hover:not(:disabled) {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.language-switch-button.active,
+.language-switch-button:disabled {
+  background: var(--language-switch-active-bg);
+  color: var(--language-switch-active-text);
+  cursor: default;
 }
 
 h1 {
