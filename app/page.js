@@ -54,6 +54,10 @@ const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
+const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
+const PRACTICE_TAB_MULTI_BUTTON_ID = "practice-tab-multi-button";
+const PRACTICE_TAB_SINGLE_PANEL_ID = "practice-tab-single-panel";
+const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
 const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
 
 Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
@@ -873,30 +877,47 @@ export default function HomePage() {
       </div>
 
       <div className="card">
-        <div className="practice-tab-bar">
+        <div className="practice-tab-bar" role="tablist" aria-label={t.practiceTabAriaLabel}>
           <button
+            id={PRACTICE_TAB_SINGLE_BUTTON_ID}
+            role="tab"
             className={`practice-tab-button ${
               activePracticeTab === PRACTICE_TAB_SINGLE ? "active" : EMPTY_STRING
             }`}
             onClick={() => setActivePracticeTab(PRACTICE_TAB_SINGLE)}
+            aria-selected={activePracticeTab === PRACTICE_TAB_SINGLE}
+            aria-controls={PRACTICE_TAB_SINGLE_PANEL_ID}
+            tabIndex={activePracticeTab === PRACTICE_TAB_SINGLE ? 0 : -1}
           >
             {t.tabSingle}
           </button>
           <button
+            id={PRACTICE_TAB_MULTI_BUTTON_ID}
+            role="tab"
             className={`practice-tab-button ${
               activePracticeTab === PRACTICE_TAB_MULTI ? "active" : EMPTY_STRING
             }`}
             onClick={() => setActivePracticeTab(PRACTICE_TAB_MULTI)}
+            aria-selected={activePracticeTab === PRACTICE_TAB_MULTI}
+            aria-controls={PRACTICE_TAB_MULTI_PANEL_ID}
+            tabIndex={activePracticeTab === PRACTICE_TAB_MULTI ? 0 : -1}
           >
             {t.tabMulti}
           </button>
         </div>
         {renderActiveArticleImagePanel()}
 
-        {!hasActiveArticle ? (
-          <div className="practice-empty-state">{t.selectArticleFirst}</div>
-        ) : isSinglePracticeTab ? (
-          <>
+        <div
+          role="tabpanel"
+          id={isSinglePracticeTab ? PRACTICE_TAB_SINGLE_PANEL_ID : PRACTICE_TAB_MULTI_PANEL_ID}
+          aria-labelledby={
+            isSinglePracticeTab ? PRACTICE_TAB_SINGLE_BUTTON_ID : PRACTICE_TAB_MULTI_BUTTON_ID
+          }
+        >
+          {!hasActiveArticle ? (
+            <div className="practice-empty-state">{t.selectArticleFirst}</div>
+          ) : isSinglePracticeTab ? (
+            <>
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
@@ -1023,9 +1044,9 @@ export default function HomePage() {
                 {t.legendExtra}
               </span>
             </div>
-          </>
-        ) : isMultiPracticeStarted ? (
-          <>
+            </>
+          ) : isMultiPracticeStarted ? (
+            <>
             <div className="sentence-header">
               <div className="sentence-nav">
                 <div className="status sentence-status">{sentenceStatus}</div>
@@ -1135,39 +1156,40 @@ export default function HomePage() {
                 {t.legendExtra}
               </span>
             </div>
-          </>
-        ) : (
-          <div className="multi-practice-selector">
-            <div className="status multi-practice-title">{t.multiNotStarted}</div>
-            {sourceSentenceList.length === 0 ? (
-              <div className="multi-practice-placeholder">{t.multiNotStartedPlaceholder}</div>
-            ) : (
-              <>
-                <div className="multi-sentence-list">
-                  {sourceSentenceList.map((sentence, index) => {
-                    const isChecked = Boolean(selectedSentenceMap[index]);
-                    const displayIndex = index + 1;
-                    return (
-                      <label key={`multi-${index}`} className="multi-sentence-item">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleSentenceSelection(index)}
-                        />
-                        <span className="multi-sentence-index">{displayIndex}.</span>
-                        <span className="multi-sentence-text">{sentence}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-                <div className="row">
-                  <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
-                </div>
-                <div className="status">{multiSelectionStatus}</div>
-              </>
-            )}
-          </div>
-        )}
+            </>
+          ) : (
+            <div className="multi-practice-selector">
+              <div className="status multi-practice-title">{t.multiNotStarted}</div>
+              {sourceSentenceList.length === 0 ? (
+                <div className="multi-practice-placeholder">{t.multiNotStartedPlaceholder}</div>
+              ) : (
+                <>
+                  <div className="multi-sentence-list">
+                    {sourceSentenceList.map((sentence, index) => {
+                      const isChecked = Boolean(selectedSentenceMap[index]);
+                      const displayIndex = index + 1;
+                      return (
+                        <label key={`multi-${index}`} className="multi-sentence-item">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleSentenceSelection(index)}
+                          />
+                          <span className="multi-sentence-index">{displayIndex}.</span>
+                          <span className="multi-sentence-text">{sentence}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="row">
+                    <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
+                  </div>
+                  <div className="status">{multiSelectionStatus}</div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
