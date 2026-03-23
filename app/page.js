@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LANG_TW, LANGUAGES, UI_TEXTS } from "./i18n";
+import { LANG_TW, UI_TEXTS } from "./i18n";
+import AppHeader from "./components/AppHeader";
+import ArticleLibrary from "./components/ArticleLibrary";
+import PracticeTabs from "./components/PracticeTabs";
+import ArticleImagePanel from "./components/ArticleImagePanel";
+import ComparisonPanel from "./components/ComparisonPanel";
+import ComparisonLegend from "./components/ComparisonLegend";
+import MultiSentenceChecklist from "./components/MultiSentenceChecklist";
 
 const KEY_ENTER = "Enter";
-const KEY_TAB = "Tab";
 const KEY_F2 = "F2";
 const KEY_RETRY_SENTENCE = "1";
+const KEY_PREVIOUS_SENTENCE = "[";
 const EMPTY_STRING = "";
 const SENTENCE_SEPARATOR = ".";
 const MASK_CHAR = "_";
@@ -14,9 +21,6 @@ const WHITESPACE_RE = /\s+/g;
 const LETTER_RE = /[A-Za-z]/;
 const STATUS_IDLE = "idle";
 const STATUS_READY_NEXT = "ready_next";
-const DOT_COLOR_OK = "#15803d";
-const DOT_COLOR_ERROR = "#b91c1c";
-const DOT_COLOR_MISSING = "#fca5a5";
 const TAG_INPUT = "INPUT";
 const TAG_TEXTAREA = "TEXTAREA";
 const COMPARE_OK = "ok";
@@ -91,7 +95,6 @@ const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: false },
   { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
 ];
-const DOT_COLOR_EXTRA = "#8b5cf6";
 
 function normalizeSpaces(text) {
   if (typeof text !== "string") {
@@ -454,44 +457,6 @@ export default function HomePage() {
     return t.articleLabelMap[articleId] ?? articleId;
   }
 
-  function renderLanguageSwitch() {
-    return (
-      <div className="language-switch" role="group" aria-label={t.languageSwitchAria}>
-        {LANGUAGES.map((item) => (
-          <button
-            key={item.id}
-            className={`language-switch-button ${language === item.id ? "active" : EMPTY_STRING}`}
-            onClick={() => setLanguage(item.id)}
-            disabled={language === item.id}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  function renderActiveArticleImagePanel() {
-    if (!hasActiveArticle) return null;
-    const activeArticleLabel = getArticleLabel(activeArticleId);
-
-    return (
-      <div className="article-image-panel">
-        <div className="article-image-title">{t.questionImageTitle}</div>
-        {isActiveArticleImageUnavailable ? (
-          <div className="article-image-fallback">{t.questionImageUnavailable}</div>
-        ) : (
-          <img
-            src={activeArticleImageUrl}
-            alt={t.formatArticleImageAlt(activeArticleLabel)}
-            className="article-image-preview"
-            onError={() => setIsActiveArticleImageUnavailable(true)}
-          />
-        )}
-      </div>
-    );
-  }
-
   function getCurrentSentence() {
     return sentences[currentIndex] ?? EMPTY_STRING;
   }
@@ -744,7 +709,7 @@ export default function HomePage() {
       if (isSinglePracticeTab) {
         if (!hasSentence) return;
 
-        if (event.key === KEY_TAB) {
+        if (event.key === KEY_PREVIOUS_SENTENCE) {
           event.preventDefault();
           goToPreviousSentence();
           return;
@@ -834,78 +799,78 @@ export default function HomePage() {
     () => comparisonTokens.map((token) => toLineToken(token, LINE_TYPE_ACTUAL)),
     [comparisonTokens]
   );
+  const legendItems = useMemo(
+    () => [
+      { id: COMPARE_OK, dotClassName: "legend-dot--ok", label: t.legendCorrect },
+      { id: COMPARE_WRONG, dotClassName: "legend-dot--wrong", label: t.legendWrong },
+      { id: COMPARE_MISSING, dotClassName: "legend-dot--missing", label: t.legendMissing },
+      { id: COMPARE_EXTRA, dotClassName: "legend-dot--extra", label: t.legendExtra },
+    ],
+    [t]
+  );
+  const activeArticleLabel = hasActiveArticle ? getArticleLabel(activeArticleId) : EMPTY_STRING;
+
+  function renderComparisonResult() {
+    return (
+      <>
+        <ComparisonPanel
+          panelRef={comparisonPanelRef}
+          title={t.yourInputTitle}
+          actualLineTokens={actualLineTokens}
+          expectedLineTokens={expectedLineTokens}
+        />
+        <ComparisonLegend legendItems={legendItems} />
+      </>
+    );
+  }
 
   return (
     <div className="container">
+      <AppHeader
+        title={t.appTitle}
+        introHint={t.introHint}
+        language={language}
+        onLanguageChange={setLanguage}
+        languageSwitchAria={t.languageSwitchAria}
+      />
       <div className="card">
-        <div className="card-header">
-          <h1 className="app-title">{t.appTitle}</h1>
-          {renderLanguageSwitch()}
-        </div>
-        <p className="hint">
-          {t.introHint}
-        </p>
-        <div className="article-library">
-          <div className="article-library-header">
-            <div className="article-library-title">{t.articleLibraryTitle}</div>
-            {t.articleLibrarySubtitle ? (
-              <div className="article-library-subtitle">{t.articleLibrarySubtitle}</div>
-            ) : null}
-          </div>
-          <div className="article-button-grid">
-            {PRACTICE_ARTICLE_BUTTON_CONFIGS.map((articleConfig) => {
-              const articleId = articleConfig.id;
-              const isArticleEnabled = articleConfig.isEnabled;
-              const articleButtonTitle = isArticleEnabled
-                ? t.articleButtonTitleEnabled
-                : t.articleButtonTitleDisabled;
-
-              return (
-                <button
-                  key={articleId}
-                  className={`article-button ${activeArticleId === articleId ? "active" : EMPTY_STRING}`}
-                  onClick={() => handleArticleSelection(articleId)}
-                  title={articleButtonTitle}
-                  disabled={!isArticleEnabled}
-                >
-                  {getArticleLabel(articleId)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <ArticleLibrary
+          title={t.articleLibraryTitle}
+          subtitle={t.articleLibrarySubtitle}
+          articleConfigs={PRACTICE_ARTICLE_BUTTON_CONFIGS}
+          activeArticleId={activeArticleId}
+          getArticleLabel={getArticleLabel}
+          getArticleButtonTitle={(isEnabled) =>
+            isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
+          }
+          onSelectArticle={handleArticleSelection}
+        />
       </div>
 
       <div className="card">
-        <div className="practice-tab-bar" role="tablist" aria-label={t.practiceTabAriaLabel}>
-          <button
-            id={PRACTICE_TAB_SINGLE_BUTTON_ID}
-            role="tab"
-            className={`practice-tab-button ${
-              activePracticeTab === PRACTICE_TAB_SINGLE ? "active" : EMPTY_STRING
-            }`}
-            onClick={() => setActivePracticeTab(PRACTICE_TAB_SINGLE)}
-            aria-selected={activePracticeTab === PRACTICE_TAB_SINGLE}
-            aria-controls={PRACTICE_TAB_SINGLE_PANEL_ID}
-            tabIndex={activePracticeTab === PRACTICE_TAB_SINGLE ? 0 : -1}
-          >
-            {t.tabSingle}
-          </button>
-          <button
-            id={PRACTICE_TAB_MULTI_BUTTON_ID}
-            role="tab"
-            className={`practice-tab-button ${
-              activePracticeTab === PRACTICE_TAB_MULTI ? "active" : EMPTY_STRING
-            }`}
-            onClick={() => setActivePracticeTab(PRACTICE_TAB_MULTI)}
-            aria-selected={activePracticeTab === PRACTICE_TAB_MULTI}
-            aria-controls={PRACTICE_TAB_MULTI_PANEL_ID}
-            tabIndex={activePracticeTab === PRACTICE_TAB_MULTI ? 0 : -1}
-          >
-            {t.tabMulti}
-          </button>
-        </div>
-        {renderActiveArticleImagePanel()}
+        <h2 className="section-title">{t.practiceAreaTitle}</h2>
+        <PracticeTabs
+          activePracticeTab={activePracticeTab}
+          singleTabValue={PRACTICE_TAB_SINGLE}
+          multiTabValue={PRACTICE_TAB_MULTI}
+          singleTabLabel={t.tabSingle}
+          multiTabLabel={t.tabMulti}
+          onTabChange={setActivePracticeTab}
+          tabAriaLabel={t.practiceTabAriaLabel}
+          singleButtonId={PRACTICE_TAB_SINGLE_BUTTON_ID}
+          multiButtonId={PRACTICE_TAB_MULTI_BUTTON_ID}
+          singlePanelId={PRACTICE_TAB_SINGLE_PANEL_ID}
+          multiPanelId={PRACTICE_TAB_MULTI_PANEL_ID}
+        />
+        <ArticleImagePanel
+          isVisible={hasActiveArticle}
+          title={t.questionImageTitle}
+          isImageUnavailable={isActiveArticleImageUnavailable}
+          imageUnavailableText={t.questionImageUnavailable}
+          imageUrl={activeArticleImageUrl}
+          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
+          onImageError={() => setIsActiveArticleImageUnavailable(true)}
+        />
 
         <div
           role="tabpanel"
@@ -961,6 +926,7 @@ export default function HomePage() {
                         key={`single-sentence-${index}`}
                         className={`single-sentence-button ${isActiveSentence ? "active" : EMPTY_STRING}`}
                         onClick={() => goToSentenceByIndex(index)}
+                        aria-pressed={isActiveSentence}
                       >
                         <span className="single-sentence-index">
                           {t.formatSingleSentenceLabel(displayIndex)}
@@ -1004,46 +970,7 @@ export default function HomePage() {
             </div>
             <div className="status">{resultStatus}</div>
             <div className="status">{t.singleShortcutHint}</div>
-            <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
-              <div className="comparison-title">{t.yourInputTitle}</div>
-              <div className="comparison-line">
-                <div className="comparison-content anki-line">
-                  {actualLineTokens.map((token, index) => (
-                    <span key={`actual-${index}`} className={token.className}>
-                      {token.text}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="comparison-separator">↓</div>
-              <div className="comparison-line">
-                <div className="comparison-content anki-line">
-                  {expectedLineTokens.map((token, index) => (
-                    <span key={`expected-${index}`} className={token.className}>
-                      {token.text}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="legend">
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_OK }} />
-                {t.legendCorrect}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
-                {t.legendWrong}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-                {t.legendMissing}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
-                {t.legendExtra}
-              </span>
-            </div>
+            {renderComparisonResult()}
             </>
           ) : isMultiPracticeStarted ? (
             <>
@@ -1074,23 +1001,12 @@ export default function HomePage() {
             >
               <div className="multi-practice-selector">
                 <div className="status multi-practice-title">{t.multiSelectorTitle}</div>
-                <div className="multi-sentence-list">
-                  {sourceSentenceList.map((sentence, index) => {
-                    const isChecked = Boolean(selectedSentenceMap[index]);
-                    const displayIndex = index + 1;
-                    return (
-                      <label key={`multi-reselect-${index}`} className="multi-sentence-item">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleSentenceSelection(index)}
-                        />
-                        <span className="multi-sentence-index">{displayIndex}.</span>
-                        <span className="multi-sentence-text">{sentence}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <MultiSentenceChecklist
+                  sentences={sourceSentenceList}
+                  selectedSentenceMap={selectedSentenceMap}
+                  onToggleSentence={toggleSentenceSelection}
+                  itemKeyPrefix="multi-reselect"
+                />
                 <div className="row">
                   <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
                 </div>
@@ -1116,46 +1032,7 @@ export default function HomePage() {
             </div>
             <div className="status">{resultStatus}</div>
             <div className="status">{t.multiShortcutHint}</div>
-            <div ref={comparisonPanelRef} className="comparison-panel" aria-live="polite">
-              <div className="comparison-title">{t.yourInputTitle}</div>
-              <div className="comparison-line">
-                <div className="comparison-content anki-line">
-                  {actualLineTokens.map((token, index) => (
-                    <span key={`actual-${index}`} className={token.className}>
-                      {token.text}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="comparison-separator">↓</div>
-              <div className="comparison-line">
-                <div className="comparison-content anki-line">
-                  {expectedLineTokens.map((token, index) => (
-                    <span key={`expected-${index}`} className={token.className}>
-                      {token.text}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="legend">
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_OK }} />
-                {t.legendCorrect}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_ERROR }} />
-                {t.legendWrong}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_MISSING }} />
-                {t.legendMissing}
-              </span>
-              <span>
-                <i className="dot" style={{ background: DOT_COLOR_EXTRA }} />
-                {t.legendExtra}
-              </span>
-            </div>
+            {renderComparisonResult()}
             </>
           ) : (
             <div className="multi-practice-selector">
@@ -1164,23 +1041,12 @@ export default function HomePage() {
                 <div className="multi-practice-placeholder">{t.multiNotStartedPlaceholder}</div>
               ) : (
                 <>
-                  <div className="multi-sentence-list">
-                    {sourceSentenceList.map((sentence, index) => {
-                      const isChecked = Boolean(selectedSentenceMap[index]);
-                      const displayIndex = index + 1;
-                      return (
-                        <label key={`multi-${index}`} className="multi-sentence-item">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggleSentenceSelection(index)}
-                          />
-                          <span className="multi-sentence-index">{displayIndex}.</span>
-                          <span className="multi-sentence-text">{sentence}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
+                  <MultiSentenceChecklist
+                    sentences={sourceSentenceList}
+                    selectedSentenceMap={selectedSentenceMap}
+                    onToggleSentence={toggleSentenceSelection}
+                    itemKeyPrefix="multi"
+                  />
                   <div className="row">
                     <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
                   </div>
