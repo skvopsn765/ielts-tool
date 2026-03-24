@@ -546,6 +546,26 @@ export default function HomePage() {
     }));
   }
 
+  function toggleSelectAllSentences() {
+    const allSelected = sourceSentenceList.length > 0 &&
+      sourceSentenceList.every((_sentence, index) => selectedSentenceMap[index]);
+    if (allSelected) {
+      setSelectedSentenceMap({});
+    } else {
+      const nextMap = {};
+      sourceSentenceList.forEach((_sentence, index) => {
+        nextMap[index] = true;
+      });
+      setSelectedSentenceMap(nextMap);
+    }
+  }
+
+  const isAllSentencesSelected = useMemo(
+    () => sourceSentenceList.length > 0 &&
+      sourceSentenceList.every((_sentence, index) => selectedSentenceMap[index]),
+    [sourceSentenceList, selectedSentenceMap]
+  );
+
   function toggleArticleTextExpanded() {
     setIsArticleTextExpanded((previousValue) => !previousValue);
   }
@@ -1075,6 +1095,11 @@ export default function HomePage() {
               >
                 <div className="multi-practice-selector">
                   <div className="status multi-practice-title">{t.multiSelectorTitle}</div>
+                  <div className="btn-row">
+                    <button className="btn-secondary compact" onClick={toggleSelectAllSentences}>
+                      {isAllSentencesSelected ? t.deselectAll : t.selectAll}
+                    </button>
+                  </div>
                   <MultiSentenceChecklist
                     sentences={sourceSentenceList}
                     selectedSentenceMap={selectedSentenceMap}
@@ -1115,6 +1140,11 @@ export default function HomePage() {
                 <div className="multi-practice-placeholder">{t.multiNotStartedPlaceholder}</div>
               ) : (
                 <>
+                  <div className="btn-row">
+                    <button className="btn-secondary compact" onClick={toggleSelectAllSentences}>
+                      {isAllSentencesSelected ? t.deselectAll : t.selectAll}
+                    </button>
+                  </div>
                   <MultiSentenceChecklist
                     sentences={sourceSentenceList}
                     selectedSentenceMap={selectedSentenceMap}
