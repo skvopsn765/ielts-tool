@@ -183,12 +183,16 @@ body {
   min-width: 0;
   overflow: hidden;
   opacity: 1;
-  transition: opacity var(--duration-layout) var(--easing);
+  max-height: var(--collapse-max-height);
+  transition:
+    opacity var(--duration-layout) var(--easing),
+    max-height var(--duration-layout) var(--easing);
 }
 
 .workspace-layout.reference-collapsed .reference-column {
   opacity: 0;
   pointer-events: none;
+  max-height: 0;
 }
 
 .practice-column {
