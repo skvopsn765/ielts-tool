@@ -74,10 +74,8 @@ export const UI_TEXTS = {
       `有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 1 可重練）`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `尚未全對：有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%`,
-    expandReference: "展開參考資料",
-    collapseReference: "收合參考資料",
-    dictationModeOn: "進入練習模式",
-    dictationModeOff: "退出練習模式",
+    showReference: "顯示範文",
+    hideReference: "隱藏範文",
     words: "個字",
     sentenceLabel: "第",
     articleLabelMap: {
@@ -160,10 +158,8 @@ export const UI_TEXTS = {
       `${wrongCount} characters are incorrect. Accuracy ${accuracyPercent}% (Press Enter for next sentence, or 1 to retry)`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `Not fully correct yet: ${wrongCount} incorrect characters, accuracy ${accuracyPercent}%`,
-    expandReference: "Show Reference",
-    collapseReference: "Hide Reference",
-    dictationModeOn: "Enter Practice Mode",
-    dictationModeOff: "Exit Practice Mode",
+    showReference: "Show Essay",
+    hideReference: "Hide Essay",
     words: "words",
     sentenceLabel: "Sentence",
     articleLabelMap: {

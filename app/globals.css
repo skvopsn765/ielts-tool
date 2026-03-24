@@ -55,6 +55,7 @@
   /* --- Transition --- */
   --duration-fast: 120ms;
   --duration-normal: 200ms;
+  --duration-layout: 300ms;
   --easing: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* --- 圓角 --- */
@@ -165,17 +166,29 @@ body {
 
 .workspace-layout {
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
   align-items: start;
+  transition:
+    grid-template-columns var(--duration-layout) var(--easing),
+    column-gap var(--duration-layout) var(--easing);
 }
 
 .workspace-layout.reference-collapsed {
-  grid-template-columns: 1fr;
+  grid-template-columns: 0fr 1fr;
+  column-gap: 0;
 }
 
 .reference-column {
   min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity var(--duration-layout) var(--easing);
+}
+
+.workspace-layout.reference-collapsed .reference-column {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .practice-column {
@@ -1165,6 +1178,23 @@ textarea {
 
   .workspace-layout {
     grid-template-columns: 1fr;
+    transition: none;
+  }
+
+  .workspace-layout.reference-collapsed {
+    grid-template-columns: 1fr;
+    column-gap: var(--space-6);
+  }
+
+  .reference-column {
+    max-height: var(--collapse-max-height);
+    transition:
+      max-height var(--duration-layout) var(--easing),
+      opacity var(--duration-layout) var(--easing);
+  }
+
+  .workspace-layout.reference-collapsed .reference-column {
+    max-height: 0;
   }
 
   .practice-column {

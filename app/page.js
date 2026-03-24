@@ -901,18 +901,8 @@ export default function HomePage() {
   }
 
   function renderReferenceColumn() {
-    if (isReferenceCollapsed) return null;
     return (
       <div className="reference-column">
-        <ArticleImagePanel
-          isVisible={hasActiveArticle}
-          title={t.questionImageTitle}
-          isImageUnavailable={isActiveArticleImageUnavailable}
-          imageUnavailableText={t.questionImageUnavailable}
-          imageUrl={activeArticleImageUrl}
-          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
-          onImageError={() => setIsActiveArticleImageUnavailable(true)}
-        />
         {hasActiveArticle && (
           <section className="article-text-panel" aria-label={t.articleTextTitle}>
             <div className="article-text-header">
@@ -939,17 +929,15 @@ export default function HomePage() {
   function renderPracticeColumn() {
     return (
       <div className="practice-column">
-        {isReferenceCollapsed && (
-          <ArticleImagePanel
-            isVisible={hasActiveArticle}
-            title={t.questionImageTitle}
-            isImageUnavailable={isActiveArticleImageUnavailable}
-            imageUnavailableText={t.questionImageUnavailable}
-            imageUrl={activeArticleImageUrl}
-            imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
-            onImageError={() => setIsActiveArticleImageUnavailable(true)}
-          />
-        )}
+        <ArticleImagePanel
+          isVisible={hasActiveArticle}
+          title={t.questionImageTitle}
+          isImageUnavailable={isActiveArticleImageUnavailable}
+          imageUnavailableText={t.questionImageUnavailable}
+          imageUrl={activeArticleImageUrl}
+          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
+          onImageError={() => setIsActiveArticleImageUnavailable(true)}
+        />
         <div className="section-heading">
           <h2 className="section-title">{t.practiceAreaTitle}</h2>
           {hasActiveArticle && (
@@ -957,7 +945,7 @@ export default function HomePage() {
               className="btn-ghost"
               onClick={() => setIsReferenceCollapsed((prev) => !prev)}
             >
-              {isReferenceCollapsed ? t.dictationModeOn : t.dictationModeOff}
+              {isReferenceCollapsed ? t.showReference : t.hideReference}
             </button>
           )}
         </div>
