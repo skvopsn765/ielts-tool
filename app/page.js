@@ -957,7 +957,7 @@ export default function HomePage() {
               className="btn-ghost"
               onClick={() => setIsReferenceCollapsed((prev) => !prev)}
             >
-              {isReferenceCollapsed ? t.dictationModeOff : t.dictationModeOn}
+              {isReferenceCollapsed ? t.dictationModeOn : t.dictationModeOff}
             </button>
           )}
         </div>
