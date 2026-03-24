@@ -435,6 +435,7 @@ export default function HomePage() {
   const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
   const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
   const [isComparisonExpanded, setIsComparisonExpanded] = useState(false);
+  const [isReferenceCollapsed, setIsReferenceCollapsed] = useState(true);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -462,8 +463,12 @@ export default function HomePage() {
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
   const currentSentencePreview = useMemo(() => {
     const sentence = sentences[currentIndex] ?? EMPTY_STRING;
+    if (isReferenceCollapsed) {
+      const wordCount = sentence.split(WHITESPACE_RE).filter(Boolean).length;
+      return `${t.sentenceLabel} ${currentIndex + 1}（${wordCount} ${t.words}）`;
+    }
     return truncatePreview(sentence, SENTENCE_PREVIEW_MAX_LENGTH);
-  }, [sentences, currentIndex]);
+  }, [sentences, currentIndex, isReferenceCollapsed, t]);
 
   function getArticleLabel(articleId) {
     return t.articleLabelMap[articleId] ?? articleId;
@@ -896,6 +901,7 @@ export default function HomePage() {
   }
 
   function renderReferenceColumn() {
+    if (isReferenceCollapsed) return null;
     return (
       <div className="reference-column">
         <ArticleImagePanel
@@ -933,8 +939,27 @@ export default function HomePage() {
   function renderPracticeColumn() {
     return (
       <div className="practice-column">
+        {isReferenceCollapsed && (
+          <ArticleImagePanel
+            isVisible={hasActiveArticle}
+            title={t.questionImageTitle}
+            isImageUnavailable={isActiveArticleImageUnavailable}
+            imageUnavailableText={t.questionImageUnavailable}
+            imageUrl={activeArticleImageUrl}
+            imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
+            onImageError={() => setIsActiveArticleImageUnavailable(true)}
+          />
+        )}
         <div className="section-heading">
           <h2 className="section-title">{t.practiceAreaTitle}</h2>
+          {hasActiveArticle && (
+            <button
+              className="btn-ghost"
+              onClick={() => setIsReferenceCollapsed((prev) => !prev)}
+            >
+              {isReferenceCollapsed ? t.dictationModeOff : t.dictationModeOn}
+            </button>
+          )}
         </div>
         <PracticeTabs
           activePracticeTab={activePracticeTab}
@@ -1146,7 +1171,7 @@ export default function HomePage() {
         />
       </section>
 
-      <div className="workspace-layout">
+      <div className={`workspace-layout ${isReferenceCollapsed ? "reference-collapsed" : EMPTY_STRING}`}>
         {renderReferenceColumn()}
         {renderPracticeColumn()}
       </div>
