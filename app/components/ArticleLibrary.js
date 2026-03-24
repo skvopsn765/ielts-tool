@@ -23,7 +23,7 @@ export default function ArticleLibrary({
           return (
             <button
               key={articleId}
-              className={`article-button ${activeArticleId === articleId ? "active" : ""}`}
+              className={`article-btn ${activeArticleId === articleId ? "active" : ""}`}
               onClick={() => onSelectArticle(articleId)}
               title={articleButtonTitle}
               disabled={!isArticleEnabled}

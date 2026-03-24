@@ -62,6 +62,7 @@ const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
 const PRACTICE_TAB_MULTI_BUTTON_ID = "practice-tab-multi-button";
 const PRACTICE_TAB_SINGLE_PANEL_ID = "practice-tab-single-panel";
 const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
+const SENTENCE_PREVIEW_MAX_LENGTH = 70;
 const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
 
 Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
@@ -77,7 +78,7 @@ Overall, all three countries show an upward trend in the percentage of elderly p
 
 In 1940, the USA had the highest proportion of older people at around 9%, followed by Sweden at approximately 7%, while Japan had the lowest figure at about 5%. Over the next five decades, the percentages in the USA and Sweden increased steadily, reaching roughly 15% and 14% respectively by 1990. In contrast, Japan saw a decline to around 3% and remained at a relatively low level until the late 20th century.
 
-After 2000, Sweden’s elderly population rose significantly, peaking at about 20% around 2010 before experiencing a slight dip. Meanwhile, the USA showed a more gradual increase. Japan, however, is projected to rise sharply after 2020, climbing from around 10% to approximately 27% by 2040, making it the country with the highest proportion of elderly people.`;
+After 2000, Sweden's elderly population rose significantly, peaking at about 20% around 2010 before experiencing a slight dip. Meanwhile, the USA showed a more gradual increase. Japan, however, is projected to rise sharply after 2020, climbing from around 10% to approximately 27% by 2040, making it the country with the highest proportion of elderly people.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
@@ -118,6 +119,11 @@ function maskSentence(sentence) {
   return Array.from(sentence)
     .map((char) => (LETTER_RE.test(char) ? MASK_CHAR : char))
     .join(EMPTY_STRING);
+}
+
+function truncatePreview(text, maxLength) {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + "...";
 }
 
 function splitCompareUnits(text) {
@@ -428,6 +434,7 @@ export default function HomePage() {
   const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
   const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
   const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
+  const [isComparisonExpanded, setIsComparisonExpanded] = useState(false);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -453,6 +460,10 @@ export default function HomePage() {
   }, [activeArticleId]);
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
+  const currentSentencePreview = useMemo(() => {
+    const sentence = sentences[currentIndex] ?? EMPTY_STRING;
+    return truncatePreview(sentence, SENTENCE_PREVIEW_MAX_LENGTH);
+  }, [sentences, currentIndex]);
 
   function getArticleLabel(articleId) {
     return t.articleLabelMap[articleId] ?? articleId;
@@ -467,6 +478,7 @@ export default function HomePage() {
     setResultStatus(EMPTY_STRING);
     setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
+    setIsComparisonExpanded(false);
   }
 
   function focusAnswerInput() {
@@ -551,6 +563,7 @@ export default function HomePage() {
     setPracticeStatus(STATUS_IDLE);
     setIsMultiPracticeStarted(true);
     setIsMultiSelectorExpanded(false);
+    setIsComparisonExpanded(false);
     requestAnimationFrame(() => {
       multiAnswerInputRef.current?.focus();
     });
@@ -633,6 +646,7 @@ export default function HomePage() {
 
     setComparisonTokens(result.tokens);
     setPracticeStatus(STATUS_READY_NEXT);
+    setIsComparisonExpanded(true);
     blurAnswerInput();
     scrollToPracticeResultArea();
   }
@@ -654,6 +668,7 @@ export default function HomePage() {
 
     setComparisonTokens(result.tokens);
     setPracticeStatus(STATUS_IDLE);
+    setIsComparisonExpanded(true);
     scrollToPracticeResultArea();
   }
 
@@ -667,6 +682,7 @@ export default function HomePage() {
     setResultStatus(EMPTY_STRING);
     setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
+    setIsComparisonExpanded(false);
     multiAnswerInputRef.current?.focus();
   }
 
@@ -706,7 +722,6 @@ export default function HomePage() {
         return;
       }
 
-      // 輸入欄位聚焦時不要攔截快捷鍵，避免影響正常打字
       if (isTypingElement(document.activeElement)) {
         return;
       }
@@ -755,6 +770,7 @@ export default function HomePage() {
     setMultiSelectionStatus(EMPTY_STRING);
     setIsActiveArticleImageUnavailable(false);
     setIsArticleTextExpanded(true);
+    setIsComparisonExpanded(false);
   }, [activeArticleId]);
 
   useEffect(() => {
@@ -817,49 +833,106 @@ export default function HomePage() {
   const activeArticleLabel = hasActiveArticle ? getArticleLabel(activeArticleId) : EMPTY_STRING;
 
   function renderComparisonResult() {
+    const hasResult = comparisonTokens.length > 0;
     return (
       <section className="result-review-panel" aria-label={t.resultReviewTitle}>
         <h3 className="result-review-title">{t.resultReviewTitle}</h3>
-        <ComparisonPanel
-          panelRef={comparisonPanelRef}
-          title={t.resultReviewTitle}
-          actualTitle={t.yourInputTitle}
-          expectedTitle={t.standardAnswerTitle}
-          actualLineTokens={actualLineTokens}
-          expectedLineTokens={expectedLineTokens}
-        />
-        <ComparisonLegend legendItems={legendItems} />
+        {hasResult ? (
+          <>
+            <div className="result-summary">
+              <span>{resultStatus}</span>
+              <button
+                className="btn-ghost compact"
+                onClick={() => setIsComparisonExpanded((prev) => !prev)}
+              >
+                {isComparisonExpanded ? t.collapseComparison : t.expandComparison}
+              </button>
+            </div>
+            {isComparisonExpanded && (
+              <>
+                <ComparisonPanel
+                  panelRef={comparisonPanelRef}
+                  title={t.resultReviewTitle}
+                  actualTitle={t.yourInputTitle}
+                  expectedTitle={t.standardAnswerTitle}
+                  actualLineTokens={actualLineTokens}
+                  expectedLineTokens={expectedLineTokens}
+                />
+                <ComparisonLegend legendItems={legendItems} />
+              </>
+            )}
+          </>
+        ) : (
+          <div className="comparison-empty-state">{t.comparisonEmptyHint}</div>
+        )}
       </section>
     );
   }
 
-  return (
-    <main className="container app-shell">
-      <AppHeader
-        title={t.appTitle}
-        introHint={t.introHint}
-        language={language}
-        onLanguageChange={setLanguage}
-        languageSwitchAria={t.languageSwitchAria}
-      />
-      <section className="card section-card section-card--library">
-        <ArticleLibrary
-          title={t.articleLibraryTitle}
-          subtitle={t.articleLibrarySubtitle}
-          articleConfigs={PRACTICE_ARTICLE_BUTTON_CONFIGS}
-          activeArticleId={activeArticleId}
-          getArticleLabel={getArticleLabel}
-          getArticleButtonTitle={(isEnabled) =>
-            isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
-          }
-          getArticleStateLabel={(isEnabled) =>
-            isEnabled ? t.articleReadyState : t.articleLockedState
-          }
-          onSelectArticle={handleArticleSelection}
-        />
-      </section>
+  function renderSentencePills() {
+    if (sentences.length === 0) return null;
+    return (
+      <>
+        <div className="sentence-pill-bar">
+          {sentences.map((sentence, index) => {
+            const isActiveSentence = index === currentIndex;
+            const displayIndex = index + 1;
+            return (
+              <button
+                key={`pill-${index}`}
+                className={`sentence-pill ${isActiveSentence ? "active" : EMPTY_STRING}`}
+                onClick={() => goToSentenceByIndex(index)}
+                aria-pressed={isActiveSentence}
+                aria-label={t.formatSingleSentenceLabel(displayIndex)}
+              >
+                {displayIndex}
+              </button>
+            );
+          })}
+        </div>
+        <div className="sentence-preview">{currentSentencePreview}</div>
+      </>
+    );
+  }
 
-      <section className="card section-card section-card--workspace">
+  function renderReferenceColumn() {
+    return (
+      <div className="reference-column">
+        <ArticleImagePanel
+          isVisible={hasActiveArticle}
+          title={t.questionImageTitle}
+          isImageUnavailable={isActiveArticleImageUnavailable}
+          imageUnavailableText={t.questionImageUnavailable}
+          imageUrl={activeArticleImageUrl}
+          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
+          onImageError={() => setIsActiveArticleImageUnavailable(true)}
+        />
+        {hasActiveArticle && (
+          <section className="article-text-panel" aria-label={t.articleTextTitle}>
+            <div className="article-text-header">
+              <div className="article-text-title">{t.articleTextTitle}</div>
+              <div className="article-text-actions">
+                <button className="btn-ghost compact" onClick={toggleArticleTextExpanded}>
+                  {isArticleTextExpanded ? t.collapseArticleText : t.expandArticleText}
+                </button>
+              </div>
+            </div>
+            <div
+              className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
+            >
+              <pre className="article-text-content">
+                {activeArticleText}
+              </pre>
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  function renderPracticeColumn() {
+    return (
+      <div className="practice-column">
         <div className="section-heading">
           <h2 className="section-title">{t.practiceAreaTitle}</h2>
         </div>
@@ -876,34 +949,6 @@ export default function HomePage() {
           singlePanelId={PRACTICE_TAB_SINGLE_PANEL_ID}
           multiPanelId={PRACTICE_TAB_MULTI_PANEL_ID}
         />
-        <ArticleImagePanel
-          isVisible={hasActiveArticle}
-          title={t.questionImageTitle}
-          isImageUnavailable={isActiveArticleImageUnavailable}
-          imageUnavailableText={t.questionImageUnavailable}
-          imageUrl={activeArticleImageUrl}
-          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
-          onImageError={() => setIsActiveArticleImageUnavailable(true)}
-        />
-        {hasActiveArticle && (
-          <section className="article-text-panel" aria-label={t.articleTextTitle}>
-            <div className="article-text-header">
-              <div className="article-text-title">{t.articleTextTitle}</div>
-              <div className="article-text-actions">
-                <button className="secondary compact" onClick={toggleArticleTextExpanded}>
-                  {isArticleTextExpanded ? t.collapseArticleText : t.expandArticleText}
-                </button>
-              </div>
-            </div>
-            <div
-              className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
-            >
-              <pre className="article-text-content">
-                {activeArticleText}
-              </pre>
-            </div>
-          </section>
-        )}
 
         <div
           role="tabpanel"
@@ -916,156 +961,138 @@ export default function HomePage() {
             <div className="practice-empty-state">{t.selectArticleFirst}</div>
           ) : isSinglePracticeTab ? (
             <>
-            <div className="sentence-header">
-              <div className="sentence-nav">
-                <div className="status sentence-status">{sentenceStatus}</div>
-                <button
-                  ref={singleSelectorToggleButtonRef}
-                  className="secondary compact"
-                  onClick={toggleSingleSelectorPanel}
-                >
-                  {isSingleSelectorExpanded ? t.singleSelectorOpen : t.singleSelectorClosed}
+              <div className="sentence-header">
+                <div className="sentence-nav">
+                  <div className="status sentence-status">{sentenceStatus}</div>
+                  <button
+                    ref={singleSelectorToggleButtonRef}
+                    className="btn-ghost compact"
+                    onClick={toggleSingleSelectorPanel}
+                  >
+                    {isSingleSelectorExpanded ? t.singleSelectorOpen : t.singleSelectorClosed}
+                  </button>
+                  <button className="btn-ghost compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
+                    {t.previousSentence}
+                  </button>
+                  <button className="btn-ghost compact" onClick={goToNextSentence} disabled={!hasSentence}>
+                    {t.nextSentence}
+                  </button>
+                </div>
+                <label className="hint-toggle">
+                  <input
+                    type="checkbox"
+                    checked={showHintMask}
+                    onChange={(event) => setShowHintMask(event.target.checked)}
+                  />
+                  {t.toggleHintMask}
+                </label>
+              </div>
+              <div
+                className={`single-selector-collapse ${
+                  isSingleSelectorExpanded ? "expanded" : EMPTY_STRING
+                }`}
+              >
+                {sentences.length === 0 ? (
+                  <div className="single-selector-placeholder">{t.singleSelectorPlaceholder}</div>
+                ) : (
+                  renderSentencePills()
+                )}
+              </div>
+              {showHintMask && <div className="masked">{maskedSentence}</div>}
+              <div className="btn-row">
+                <input
+                  ref={answerInputRef}
+                  type="text"
+                  value={answerInput}
+                  onChange={(event) => setAnswerInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === KEY_ENTER) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      checkCurrentAnswer();
+                    }
+                  }}
+                  placeholder={t.inputPlaceholderSingle}
+                  disabled={!hasSentence}
+                  spellCheck={false}
+                />
+              </div>
+              <div className="btn-row">
+                <button className="btn-primary" onClick={checkCurrentAnswer} disabled={!hasSentence}>
+                  {t.checkAnswer}
                 </button>
-                <button className="secondary compact" onClick={goToPreviousSentence} disabled={!hasSentence}>
-                  {t.previousSentence}
+                <button className="btn-secondary" onClick={retryCurrentSentence} disabled={!hasSentence}>
+                  {t.retryCurrentSentence}
                 </button>
-                <button className="secondary compact" onClick={goToNextSentence} disabled={!hasSentence}>
+                <button className="btn-ghost" onClick={goToNextSentence} disabled={!hasSentence}>
                   {t.nextSentence}
                 </button>
               </div>
-              <label className="hint-toggle">
-                <input
-                  type="checkbox"
-                  checked={showHintMask}
-                  onChange={(event) => setShowHintMask(event.target.checked)}
-                />
-                {t.toggleHintMask}
-              </label>
-            </div>
-            <div
-              className={`single-selector-collapse ${
-                isSingleSelectorExpanded ? "expanded" : EMPTY_STRING
-              }`}
-            >
-              {sentences.length === 0 ? (
-                <div className="single-selector-placeholder">{t.singleSelectorPlaceholder}</div>
-              ) : (
-                <div className="single-sentence-grid">
-                  {sentences.map((sentence, index) => {
-                    const isActiveSentence = index === currentIndex;
-                    const displayIndex = index + 1;
-                    return (
-                      <button
-                        key={`single-sentence-${index}`}
-                        className={`single-sentence-button ${isActiveSentence ? "active" : EMPTY_STRING}`}
-                        onClick={() => goToSentenceByIndex(index)}
-                        aria-pressed={isActiveSentence}
-                      >
-                        <span className="single-sentence-index">
-                          {t.formatSingleSentenceLabel(displayIndex)}
-                        </span>
-                        <span className="single-sentence-preview">{sentence}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            {showHintMask && <div className="masked">{maskedSentence}</div>}
-            <div className="row">
-              <input
-                ref={answerInputRef}
-                type="text"
-                value={answerInput}
-                onChange={(event) => setAnswerInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === KEY_ENTER) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    checkCurrentAnswer();
-                  }
-                }}
-                placeholder={t.inputPlaceholderSingle}
-                disabled={!hasSentence}
-                spellCheck={false}
-              />
-            </div>
-            <div className="row">
-              <button onClick={checkCurrentAnswer} disabled={!hasSentence}>
-                {t.checkAnswer}
-              </button>
-              <button className="secondary" onClick={retryCurrentSentence} disabled={!hasSentence}>
-                {t.retryCurrentSentence}
-              </button>
-              <button className="secondary" onClick={goToNextSentence} disabled={!hasSentence}>
-                {t.nextSentence}
-              </button>
-            </div>
-            <div className="status">{resultStatus}</div>
-            <div className="status">{t.singleShortcutHint}</div>
-            {renderComparisonResult()}
+              <div className="status">{resultStatus}</div>
+              <div className="status text-caption">{t.singleShortcutHint}</div>
+              {renderComparisonResult()}
             </>
           ) : isMultiPracticeStarted ? (
             <>
-            <div className="sentence-header">
-              <div className="sentence-nav">
-                <div className="status sentence-status">{sentenceStatus}</div>
-                <button
-                  ref={multiSelectorToggleButtonRef}
-                  className="secondary compact"
-                  onClick={toggleMultiSelectorPanel}
-                >
-                  {isMultiSelectorExpanded ? t.multiSelectorOpen : t.multiSelectorClosed}
+              <div className="sentence-header">
+                <div className="sentence-nav">
+                  <div className="status sentence-status">{sentenceStatus}</div>
+                  <button
+                    ref={multiSelectorToggleButtonRef}
+                    className="btn-ghost compact"
+                    onClick={toggleMultiSelectorPanel}
+                  >
+                    {isMultiSelectorExpanded ? t.multiSelectorOpen : t.multiSelectorClosed}
+                  </button>
+                </div>
+                <label className="hint-toggle">
+                  <input
+                    type="checkbox"
+                    checked={showHintMask}
+                    onChange={(event) => setShowHintMask(event.target.checked)}
+                  />
+                  {t.toggleHintMask}
+                </label>
+              </div>
+              <div
+                className={`multi-selector-collapse ${
+                  isMultiSelectorExpanded ? "expanded" : EMPTY_STRING
+                }`}
+              >
+                <div className="multi-practice-selector">
+                  <div className="status multi-practice-title">{t.multiSelectorTitle}</div>
+                  <MultiSentenceChecklist
+                    sentences={sourceSentenceList}
+                    selectedSentenceMap={selectedSentenceMap}
+                    onToggleSentence={toggleSentenceSelection}
+                    itemKeyPrefix="multi-reselect"
+                  />
+                  <div className="btn-row">
+                    <button className="btn-primary" onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
+                  </div>
+                  <div className="status">{multiSelectionStatus}</div>
+                </div>
+              </div>
+              {showHintMask && <div className="masked">{maskedSentence}</div>}
+              <div className="btn-row">
+                <textarea
+                  ref={multiAnswerInputRef}
+                  value={multiAnswerInput}
+                  onChange={(event) => setMultiAnswerInput(event.target.value)}
+                  placeholder={t.inputPlaceholderMulti}
+                  className="multi-answer-input"
+                  spellCheck={false}
+                />
+              </div>
+              <div className="btn-row">
+                <button className="btn-primary" onClick={checkMultiAnswer}>{t.checkAnswer}</button>
+                <button className="btn-secondary" onClick={retryMultiPractice}>
+                  {t.retryCurrentGroup}
                 </button>
               </div>
-              <label className="hint-toggle">
-                <input
-                  type="checkbox"
-                  checked={showHintMask}
-                  onChange={(event) => setShowHintMask(event.target.checked)}
-                />
-                {t.toggleHintMask}
-              </label>
-            </div>
-            <div
-              className={`multi-selector-collapse ${
-                isMultiSelectorExpanded ? "expanded" : EMPTY_STRING
-              }`}
-            >
-              <div className="multi-practice-selector">
-                <div className="status multi-practice-title">{t.multiSelectorTitle}</div>
-                <MultiSentenceChecklist
-                  sentences={sourceSentenceList}
-                  selectedSentenceMap={selectedSentenceMap}
-                  onToggleSentence={toggleSentenceSelection}
-                  itemKeyPrefix="multi-reselect"
-                />
-                <div className="row">
-                  <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
-                </div>
-                <div className="status">{multiSelectionStatus}</div>
-              </div>
-            </div>
-            {showHintMask && <div className="masked">{maskedSentence}</div>}
-            <div className="row">
-              <textarea
-                ref={multiAnswerInputRef}
-                value={multiAnswerInput}
-                onChange={(event) => setMultiAnswerInput(event.target.value)}
-                placeholder={t.inputPlaceholderMulti}
-                className="multi-answer-input"
-                spellCheck={false}
-              />
-            </div>
-            <div className="row">
-              <button onClick={checkMultiAnswer}>{t.checkAnswer}</button>
-              <button className="secondary" onClick={retryMultiPractice}>
-                {t.retryCurrentGroup}
-              </button>
-            </div>
-            <div className="status">{resultStatus}</div>
-            <div className="status">{t.multiShortcutHint}</div>
-            {renderComparisonResult()}
+              <div className="status">{resultStatus}</div>
+              <div className="status text-caption">{t.multiShortcutHint}</div>
+              {renderComparisonResult()}
             </>
           ) : (
             <div className="multi-practice-selector">
@@ -1080,8 +1107,8 @@ export default function HomePage() {
                     onToggleSentence={toggleSentenceSelection}
                     itemKeyPrefix="multi"
                   />
-                  <div className="row">
-                    <button onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
+                  <div className="btn-row">
+                    <button className="btn-primary" onClick={startMultiPracticeBySelection}>{t.confirmAndStart}</button>
                   </div>
                   <div className="status">{multiSelectionStatus}</div>
                 </>
@@ -1089,7 +1116,40 @@ export default function HomePage() {
             </div>
           )}
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="container app-shell">
+      <AppHeader
+        title={t.appTitle}
+        introHint={t.introHint}
+        language={language}
+        onLanguageChange={setLanguage}
+        languageSwitchAria={t.languageSwitchAria}
+      />
+      <section className="card">
+        <ArticleLibrary
+          title={t.articleLibraryTitle}
+          subtitle={t.articleLibrarySubtitle}
+          articleConfigs={PRACTICE_ARTICLE_BUTTON_CONFIGS}
+          activeArticleId={activeArticleId}
+          getArticleLabel={getArticleLabel}
+          getArticleButtonTitle={(isEnabled) =>
+            isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
+          }
+          getArticleStateLabel={(isEnabled) =>
+            isEnabled ? t.articleReadyState : t.articleLockedState
+          }
+          onSelectArticle={handleArticleSelection}
+        />
       </section>
+
+      <div className="workspace-layout">
+        {renderReferenceColumn()}
+        {renderPracticeColumn()}
+      </div>
     </main>
   );
 }
