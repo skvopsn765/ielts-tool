@@ -28,11 +28,6 @@ const COMPARE_WRONG = "wrong";
 const COMPARE_MISSING = "missing";
 const COMPARE_EXTRA = "extra";
 const COMPARE_BREAK = "break";
-const SPACE_CHAR = " ";
-const NON_BREAKING_SPACE = "\u00A0";
-const LINE_TYPE_EXPECTED = "expected";
-const LINE_TYPE_ACTUAL = "actual";
-const DISPLAY_MISSING_MARK = "-";
 const WORD_OR_NON_WORD_RE = /[A-Za-z]+|[^A-Za-z]/g;
 const WORD_ONLY_RE = /^[A-Za-z]+$/;
 const TOKEN_COST_SAME = 0;
@@ -378,37 +373,74 @@ function isTypingElement(element) {
   return tagName === TAG_INPUT || tagName === TAG_TEXTAREA || isEditable;
 }
 
-function toDisplayChar(charValue) {
-  if (charValue === SPACE_CHAR) return NON_BREAKING_SPACE;
-  return charValue;
+const SEGMENT_TYPE_WORD = "word";
+const SEGMENT_TYPE_SEPARATOR = "separator";
+const SEGMENT_TYPE_BREAK = "break";
+
+function isTokenWordChar(token) {
+  const actual = token.actualChar;
+  const expected = token.expectedChar;
+  const hasActual = actual !== EMPTY_STRING;
+  const hasExpected = expected !== EMPTY_STRING;
+
+  if (hasActual && hasExpected) {
+    return LETTER_RE.test(actual) && LETTER_RE.test(expected);
+  }
+
+  const char = actual || expected;
+  return LETTER_RE.test(char);
 }
 
-function toLineToken(token, lineType) {
-  if (token.status === COMPARE_BREAK) {
-    return { text: "\n", className: "token-line-break" };
+function groupTokensIntoWordSegments(tokens) {
+  const segments = [];
+  let pendingWordTokens = [];
+
+  function flushPendingWord() {
+    if (pendingWordTokens.length === 0) return;
+
+    let actualText = EMPTY_STRING;
+    let expectedText = EMPTY_STRING;
+    let hasError = false;
+
+    for (const t of pendingWordTokens) {
+      actualText += t.actualChar;
+      expectedText += t.expectedChar;
+      if (t.status !== COMPARE_OK) {
+        hasError = true;
+      }
+    }
+
+    segments.push({
+      type: SEGMENT_TYPE_WORD,
+      actualText,
+      expectedText,
+      hasError,
+    });
+    pendingWordTokens = [];
   }
 
-  if (lineType === LINE_TYPE_EXPECTED) {
-    if (token.status === COMPARE_EXTRA) return null;
-    if (token.status === COMPARE_OK) {
-      return { text: toDisplayChar(token.expectedChar), className: "token-expected-ok" };
+  for (const token of tokens) {
+    if (token.status === COMPARE_BREAK) {
+      flushPendingWord();
+      segments.push({ type: SEGMENT_TYPE_BREAK });
+      continue;
     }
-    if (token.status === COMPARE_WRONG) {
-      return { text: toDisplayChar(token.expectedChar), className: "token-expected-wrong" };
+
+    if (isTokenWordChar(token)) {
+      pendingWordTokens.push(token);
+    } else {
+      flushPendingWord();
+      segments.push({
+        type: SEGMENT_TYPE_SEPARATOR,
+        actualText: token.actualChar,
+        expectedText: token.expectedChar,
+        hasError: token.status !== COMPARE_OK,
+      });
     }
-    return { text: toDisplayChar(token.expectedChar), className: "token-expected-missing" };
   }
 
-  if (token.status === COMPARE_MISSING) {
-    return { text: DISPLAY_MISSING_MARK, className: "token-actual-missing" };
-  }
-  if (token.status === COMPARE_OK) {
-    return { text: toDisplayChar(token.actualChar), className: "token-actual-ok" };
-  }
-  if (token.status === COMPARE_WRONG) {
-    return { text: toDisplayChar(token.actualChar), className: "token-actual-wrong" };
-  }
-  return { text: toDisplayChar(token.actualChar), className: "token-actual-extra" };
+  flushPendingWord();
+  return segments;
 }
 
 export default function HomePage() {
@@ -836,23 +868,14 @@ export default function HomePage() {
     t,
   ]);
 
-  const expectedLineTokens = useMemo(
-    () =>
-      comparisonTokens
-        .map((token) => toLineToken(token, LINE_TYPE_EXPECTED))
-        .filter((token) => token !== null),
-    [comparisonTokens]
-  );
-  const actualLineTokens = useMemo(
-    () => comparisonTokens.map((token) => toLineToken(token, LINE_TYPE_ACTUAL)),
+  const unifiedSegments = useMemo(
+    () => groupTokensIntoWordSegments(comparisonTokens),
     [comparisonTokens]
   );
   const legendItems = useMemo(
     () => [
-      { id: COMPARE_OK, dotClassName: "legend-dot--ok", label: t.legendCorrect },
-      { id: COMPARE_WRONG, dotClassName: "legend-dot--wrong", label: t.legendWrong },
-      { id: COMPARE_MISSING, dotClassName: "legend-dot--missing", label: t.legendMissing },
-      { id: COMPARE_EXTRA, dotClassName: "legend-dot--extra", label: t.legendExtra },
+      { id: "deletion", dotClassName: "legend-dot--deletion", label: t.legendDeletion },
+      { id: "insertion", dotClassName: "legend-dot--insertion", label: t.legendInsertion },
     ],
     [t]
   );
@@ -878,11 +901,7 @@ export default function HomePage() {
               <>
                 <ComparisonPanel
                   panelRef={comparisonPanelRef}
-                  title={t.resultReviewTitle}
-                  actualTitle={t.yourInputTitle}
-                  expectedTitle={t.standardAnswerTitle}
-                  actualLineTokens={actualLineTokens}
-                  expectedLineTokens={expectedLineTokens}
+                  segments={unifiedSegments}
                 />
                 <ComparisonLegend legendItems={legendItems} />
               </>

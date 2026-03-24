@@ -92,10 +92,12 @@
   --collapse-easing: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* --- 比對 token 色彩 --- */
-  --legend-dot-ok: var(--ok);
-  --legend-dot-wrong: var(--error);
-  --legend-dot-missing: #d08c55;
-  --legend-dot-extra: #6f59bd;
+  --color-deletion: #c0392b;
+  --color-deletion-bg: #fde8e8;
+  --color-insertion: #1e7e34;
+  --color-insertion-bg: #e6f4ea;
+  --legend-dot-deletion: var(--color-deletion);
+  --legend-dot-insertion: var(--color-insertion);
 }
 
 /* ==============================
@@ -1007,92 +1009,29 @@ textarea {
   font-family: inherit;
 }
 
-.comparison-title {
-  font-size: var(--heading-size);
-  font-weight: var(--heading-weight);
-  color: var(--text-primary);
-  margin-bottom: var(--space-3);
-}
-
-.comparison-grid {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.comparison-block {
-  border-radius: var(--radius-control);
-  background: white;
-  padding: var(--space-3);
-}
-
-.comparison-block-title {
-  margin-bottom: var(--space-2);
-  font-size: var(--caption-size);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.comparison-line {
-  display: block;
-}
-
-.comparison-line + .comparison-line {
-  margin-top: var(--space-2);
-}
-
-.comparison-content {
+.unified-diff {
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.7;
-}
-
-.anki-line {
+  line-height: 1.8;
   font-size: var(--font-compare-size);
   font-weight: var(--font-compare-weight);
 }
 
-.anki-line span {
-  padding: 0 1px;
+.token-deleted {
+  color: var(--color-deletion);
+  background: var(--color-deletion-bg);
+  text-decoration: line-through;
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
-.token-line-break {
-  display: block;
-  line-height: 1;
-  height: 14px;
-  padding: 0;
-}
-
-.token-actual-ok,
-.token-expected-ok {
-  background: #ddf5e5;
-  color: #10563a;
-}
-
-.token-actual-wrong {
-  background: #f8dde3;
-  color: #8f243a;
-}
-
-.token-expected-wrong {
-  background: #fceecf;
-  color: #8b6423;
-}
-
-.token-actual-missing {
-  background: #d1d5db;
-  color: #374151;
-}
-
-.token-expected-missing {
-  background: #f6e6d7;
-  color: #8f5f2a;
-}
-
-.token-actual-extra {
-  background: #ebe5fa;
-  color: #503c92;
+.token-inserted {
+  color: var(--color-insertion);
+  background: var(--color-insertion-bg);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
 /* ==============================
@@ -1156,20 +1095,12 @@ textarea {
   display: inline-block;
 }
 
-.legend-dot--ok {
-  background: var(--legend-dot-ok);
+.legend-dot--deletion {
+  background: var(--legend-dot-deletion);
 }
 
-.legend-dot--wrong {
-  background: var(--legend-dot-wrong);
-}
-
-.legend-dot--missing {
-  background: var(--legend-dot-missing);
-}
-
-.legend-dot--extra {
-  background: var(--legend-dot-extra);
+.legend-dot--insertion {
+  background: var(--legend-dot-insertion);
 }
 
 /* ==============================
