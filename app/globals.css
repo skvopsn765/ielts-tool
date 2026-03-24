@@ -399,6 +399,11 @@ button:disabled {
   border-color: var(--disabled-border);
 }
 
+.btn-secondary.compact {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--caption-size);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);

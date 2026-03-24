@@ -779,7 +779,7 @@ export default function HomePage() {
   }, [activeArticleId]);
 
   useEffect(() => {
-    if (isMultiPracticeStarted) {
+    if (isMultiPracticeTab && isMultiPracticeStarted) {
       const selectedSentenceCount = sourceSentenceList.filter(
         (sentence, index) => selectedSentenceMap[index] && sentence
       ).length;
@@ -806,6 +806,7 @@ export default function HomePage() {
   }, [
     hasActiveArticle,
     language,
+    isMultiPracticeTab,
     isMultiPracticeStarted,
     sourceSentenceList,
     selectedSentenceMap,
@@ -1052,7 +1053,7 @@ export default function HomePage() {
                   <div className="status sentence-status">{sentenceStatus}</div>
                   <button
                     ref={multiSelectorToggleButtonRef}
-                    className="btn-ghost compact"
+                    className="btn-secondary compact"
                     onClick={toggleMultiSelectorPanel}
                   >
                     {isMultiSelectorExpanded ? t.multiSelectorOpen : t.multiSelectorClosed}
