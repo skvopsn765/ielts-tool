@@ -969,15 +969,6 @@ export default function HomePage() {
   function renderPracticeColumn() {
     return (
       <div className="practice-column">
-        <ArticleImagePanel
-          isVisible={hasActiveArticle}
-          title={t.questionImageTitle}
-          isImageUnavailable={isActiveArticleImageUnavailable}
-          imageUnavailableText={t.questionImageUnavailable}
-          imageUrl={activeArticleImageUrl}
-          imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
-          onImageError={() => setIsActiveArticleImageUnavailable(true)}
-        />
         <div className="section-heading">
           <h2 className="section-title">{t.practiceAreaTitle}</h2>
           {hasActiveArticle && (
@@ -1208,6 +1199,16 @@ export default function HomePage() {
           onSelectArticle={handleArticleSelection}
         />
       </section>
+
+      <ArticleImagePanel
+        isVisible={hasActiveArticle}
+        title={t.questionImageTitle}
+        isImageUnavailable={isActiveArticleImageUnavailable}
+        imageUnavailableText={t.questionImageUnavailable}
+        imageUrl={activeArticleImageUrl}
+        imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
+        onImageError={() => setIsActiveArticleImageUnavailable(true)}
+      />
 
       <div className={`workspace-layout ${isReferenceCollapsed ? "reference-collapsed" : EMPTY_STRING}`}>
         {renderReferenceColumn()}
