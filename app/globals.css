@@ -83,7 +83,7 @@
   --content-max-width-reading: 86ch;
   --textarea-min-height: 180px;
   --dot-size: 10px;
-  --article-image-max-height: 560px;
+  --article-image-max-height: 660px;
 
   /* --- Collapse --- */
   --collapse-max-height: 10000px;
@@ -657,16 +657,45 @@ textarea {
   padding: var(--space-3);
 }
 
+.article-image-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .article-image-title {
   font-size: var(--heading-size);
   font-weight: var(--heading-weight);
   color: var(--text-primary);
-  margin-bottom: var(--space-2);
+}
+
+.article-image-collapse {
+  max-height: 0;
+  overflow: hidden;
+  overflow-anchor: none;
+  transform: scaleY(var(--collapse-scale-collapsed));
+  transform-origin: top;
+  opacity: 0;
+  will-change: max-height, transform, opacity;
+  transition:
+    max-height var(--collapse-transition-ms) var(--collapse-easing),
+    transform var(--collapse-transition-ms) var(--collapse-easing),
+    opacity var(--collapse-transition-ms) var(--collapse-easing);
+}
+
+.article-image-collapse.expanded {
+  max-height: var(--collapse-max-height);
+  overflow: visible;
+  transform: scaleY(1);
+  opacity: 1;
+  margin-top: var(--space-2);
 }
 
 .article-image-preview {
   display: block;
-  width: 100%;
+  width: 80%;
+  margin: 0 auto;
   max-height: var(--article-image-max-height);
   object-fit: contain;
   background: white;

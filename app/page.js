@@ -577,6 +577,7 @@ export default function HomePage() {
   const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
   const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
   const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
+  const [isArticleImageExpanded, setIsArticleImageExpanded] = useState(true);
   const [isComparisonExpanded, setIsComparisonExpanded] = useState(false);
   const [isReferenceCollapsed, setIsReferenceCollapsed] = useState(true);
   const [isArticleTextCopied, setIsArticleTextCopied] = useState(false);
@@ -971,6 +972,7 @@ export default function HomePage() {
     setMultiSelectionStatus(EMPTY_STRING);
     setIsActiveArticleImageUnavailable(false);
     setIsArticleTextExpanded(true);
+    setIsArticleImageExpanded(true);
     setIsComparisonExpanded(false);
   }, [activeArticleId]);
 
@@ -1394,6 +1396,10 @@ export default function HomePage() {
         imageUrl={activeArticleImageUrl}
         imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
         onImageError={() => setIsActiveArticleImageUnavailable(true)}
+        isExpanded={isArticleImageExpanded}
+        onToggleExpanded={() => setIsArticleImageExpanded((prev) => !prev)}
+        collapseLabel={t.collapseArticleText}
+        expandLabel={t.expandArticleText}
       />
 
       <div className={`workspace-layout ${isReferenceCollapsed ? "reference-collapsed" : EMPTY_STRING}`}>
