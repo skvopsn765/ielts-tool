@@ -93,6 +93,54 @@ const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
 ];
 
+const HIGHLIGHT_DOT_CHAR = "\u00B7";
+const HIGHLIGHT_LETTER_GLOBAL_RE = /[A-Za-z]/g;
+
+const ARTICLE_HIGHLIGHT_PHRASES = {
+  [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: [
+    // 第一段（Intro）觸發詞與結構
+    "The line graph compares",
+    "the proportion of people aged 65 and over",
+    "Japan, Sweden and the USA",
+    "between 1940 and 2040",
+    // 第二段（Overview）觸發詞與核心詞彙
+    "Overall",
+    "all three countries",
+    "an upward trend",
+    "However",
+    "Japan is expected to experience the most dramatic growth",
+    "overtake both Sweden and the USA by 2040",
+    "the lowest figures for much of the period",
+    // 第三段（Body 1）觸發詞、資料與核心詞彙
+    "In 1940",
+    "the highest proportion",
+    "9%",
+    "7%",
+    "the lowest figure",
+    "5%",
+    "Over the next five decades",
+    "increased steadily",
+    "15% and 14% respectively by 1990",
+    "In contrast",
+    "saw a decline",
+    "around 3%",
+    "remained at a relatively low level",
+    "the late 20th century",
+    // 第四段（Body 2）觸發詞、資料與核心詞彙
+    "After 2000",
+    "rose significantly",
+    "peaking at about 20%",
+    "around 2010",
+    "a slight dip",
+    "Meanwhile",
+    "a more gradual increase",
+    "Japan, however",
+    "is projected to rise sharply after 2020",
+    "climbing from around 10% to approximately 27% by 2040",
+    "the highest proportion of elderly people",
+  ],
+};
+
 function normalizeSpaces(text) {
   if (typeof text !== "string") {
     return EMPTY_STRING;
@@ -374,6 +422,51 @@ function isTypingElement(element) {
   return tagName === TAG_INPUT || tagName === TAG_TEXTAREA || isEditable;
 }
 
+function buildHighlightSegments(text, phrases) {
+  const matches = [];
+  for (const phrase of phrases) {
+    let searchFrom = 0;
+    while (searchFrom < text.length) {
+      const index = text.indexOf(phrase, searchFrom);
+      if (index === -1) break;
+      matches.push({ start: index, end: index + phrase.length });
+      searchFrom = index + 1;
+    }
+  }
+
+  matches.sort((a, b) => {
+    if (a.start !== b.start) return a.start - b.start;
+    return (b.end - b.start) - (a.end - a.start);
+  });
+
+  const resolvedMatches = [];
+  for (const match of matches) {
+    const lastResolved = resolvedMatches[resolvedMatches.length - 1];
+    if (!lastResolved || match.start >= lastResolved.end) {
+      resolvedMatches.push(match);
+    }
+  }
+
+  const segments = [];
+  let cursor = 0;
+  for (const match of resolvedMatches) {
+    if (match.start > cursor) {
+      segments.push({ text: text.slice(cursor, match.start), isHighlighted: false });
+    }
+    segments.push({ text: text.slice(match.start, match.end), isHighlighted: true });
+    cursor = match.end;
+  }
+  if (cursor < text.length) {
+    segments.push({ text: text.slice(cursor), isHighlighted: false });
+  }
+
+  return segments;
+}
+
+function replaceLettersWithDots(text) {
+  return text.replace(HIGHLIGHT_LETTER_GLOBAL_RE, HIGHLIGHT_DOT_CHAR);
+}
+
 const SEGMENT_TYPE_WORD = "word";
 const SEGMENT_TYPE_SEPARATOR = "separator";
 const SEGMENT_TYPE_BREAK = "break";
@@ -470,6 +563,8 @@ export default function HomePage() {
   const [isComparisonExpanded, setIsComparisonExpanded] = useState(false);
   const [isReferenceCollapsed, setIsReferenceCollapsed] = useState(true);
   const [isArticleTextCopied, setIsArticleTextCopied] = useState(false);
+  const [isHighlightActive, setIsHighlightActive] = useState(false);
+  const [isSkeletonActive, setIsSkeletonActive] = useState(false);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -493,6 +588,28 @@ export default function HomePage() {
     if (overridePath) return overridePath;
     return `${ARTICLE_IMAGE_BASE_PATH}${activeArticleId}${ARTICLE_IMAGE_EXTENSION}`;
   }, [activeArticleId]);
+  const highlightPhrases = useMemo(() => {
+    if (!activeArticleId) return [];
+    return ARTICLE_HIGHLIGHT_PHRASES[activeArticleId] ?? [];
+  }, [activeArticleId]);
+  const hasHighlightPhrases = highlightPhrases.length > 0;
+
+  const highlightedArticleContent = useMemo(() => {
+    if (!activeArticleText || highlightPhrases.length === 0) return activeArticleText;
+    if (!isHighlightActive && !isSkeletonActive) return activeArticleText;
+
+    const segments = buildHighlightSegments(activeArticleText, highlightPhrases);
+    return segments.map((segment, index) => {
+      if (segment.isHighlighted) {
+        return <mark key={index} className="highlight-keyword">{segment.text}</mark>;
+      }
+      if (isSkeletonActive) {
+        return <span key={index} className="highlight-faded">{replaceLettersWithDots(segment.text)}</span>;
+      }
+      return segment.text;
+    });
+  }, [activeArticleText, highlightPhrases, isHighlightActive, isSkeletonActive]);
+
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
   const currentSentencePreview = useMemo(() => {
@@ -968,6 +1085,22 @@ export default function HomePage() {
             >
               <div className="article-text-block">
                 <div className="article-text-toolbar">
+                  {hasHighlightPhrases && (
+                    <>
+                      <button
+                        className={`article-text-highlight-btn ${isHighlightActive ? "active" : EMPTY_STRING}`}
+                        onClick={() => setIsHighlightActive((prev) => !prev)}
+                      >
+                        {isHighlightActive ? t.removeHighlight : t.highlightKeywords}
+                      </button>
+                      <button
+                        className={`article-text-highlight-btn ${isSkeletonActive ? "active" : EMPTY_STRING}`}
+                        onClick={() => setIsSkeletonActive((prev) => !prev)}
+                      >
+                        {isSkeletonActive ? t.hideSkeleton : t.showSkeleton}
+                      </button>
+                    </>
+                  )}
                   <button
                     className="article-text-copy-btn"
                     onClick={copyArticleTextToClipboard}
@@ -992,7 +1125,7 @@ export default function HomePage() {
                   </button>
                 </div>
                 <pre className="article-text-content">
-                  {activeArticleText}
+                  {highlightedArticleContent}
                 </pre>
               </div>
             </div>

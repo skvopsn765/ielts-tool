@@ -74,6 +74,10 @@ export const UI_TEXTS = {
       `有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 1 可重練）`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `尚未全對：有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%`,
+    highlightKeywords: "標記關鍵字",
+    removeHighlight: "取消標記",
+    showSkeleton: "骨架模式",
+    hideSkeleton: "還原全文",
     showReference: "顯示範文",
     hideReference: "隱藏範文",
     words: "個字",
@@ -158,6 +162,10 @@ export const UI_TEXTS = {
       `${wrongCount} characters are incorrect. Accuracy ${accuracyPercent}% (Press Enter for next sentence, or 1 to retry)`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `Not fully correct yet: ${wrongCount} incorrect characters, accuracy ${accuracyPercent}%`,
+    highlightKeywords: "Highlight",
+    removeHighlight: "Unhighlight",
+    showSkeleton: "Skeleton",
+    hideSkeleton: "Full Text",
     showReference: "Show Essay",
     hideReference: "Hide Essay",
     words: "words",

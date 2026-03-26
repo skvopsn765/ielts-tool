@@ -785,6 +785,48 @@ textarea {
   font-family: inherit;
 }
 
+/* --- 範文 Highlight / 骨架模式 --- */
+
+.article-text-highlight-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.article-text-highlight-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.article-text-highlight-btn.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+
+mark.highlight-keyword {
+  background: rgba(250, 204, 21, 0.38);
+  color: inherit;
+  border-radius: 3px;
+  padding: 1px 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.highlight-faded {
+  color: var(--text-muted);
+  opacity: 0.28;
+}
+
 /* ==============================
    Sentence Header / Nav
    ============================== */
