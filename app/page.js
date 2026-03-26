@@ -45,6 +45,8 @@ const TTS_VOICE_GENDER_MALE = "male";
 const TTS_VOICE_GENDER_FEMALE = "female";
 const TTS_VOICE_MALE_KEYWORDS = ["male", "daniel", "james"];
 const TTS_VOICE_FEMALE_KEYWORDS = ["female", "serena", "kate", "hazel"];
+const TTS_SENTENCE_INDEX_START = 0;
+const TTS_SENTENCE_SPLIT_RE = /(?<=[.!?])\s+/;
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
@@ -221,6 +223,14 @@ function splitSentences(text) {
     .map((part) => normalizeSpaces(part))
     .filter((part) => part.length > 0)
     .map((part) => part + SENTENCE_SEPARATOR);
+}
+
+function splitIntoSentences(text) {
+  if (!text) return [];
+  return text
+    .split(TTS_SENTENCE_SPLIT_RE)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 function maskSentence(sentence) {
@@ -633,8 +643,12 @@ export default function HomePage() {
   const [ttsState, setTtsState] = useState(TTS_STATE_IDLE);
   const [ttsVoices, setTtsVoices] = useState({ male: null, female: null });
   const [ttsSelectedGender, setTtsSelectedGender] = useState(TTS_VOICE_GENDER_FEMALE);
+  const [currentTtsSentenceIndex, setCurrentTtsSentenceIndex] = useState(TTS_SENTENCE_INDEX_START);
+  const [isTtsRepeat, setIsTtsRepeat] = useState(false);
 
   const ttsUtteranceRef = useRef(null);
+  const isTtsRepeatRef = useRef(false);
+  const ttsSentencesRef = useRef([]);
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
@@ -650,6 +664,8 @@ export default function HomePage() {
     return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.text ?? EMPTY_STRING;
   }, [activeArticleId]);
   const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
+  const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
+  ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
@@ -669,20 +685,40 @@ export default function HomePage() {
   const hasHighlightPhrases = highlightPhrases.length > 0;
 
   const highlightedArticleContent = useMemo(() => {
-    if (!activeArticleText || highlightPhrases.length === 0) return activeArticleText;
-    if (!isHighlightActive && !isSkeletonActive) return activeArticleText;
+    if (!activeArticleText) return activeArticleText;
+    if (ttsSentences.length === 0) return activeArticleText;
 
-    const segments = buildHighlightSegments(activeArticleText, highlightPhrases);
-    return segments.map((segment, index) => {
-      if (segment.isHighlighted) {
-        return <mark key={index} className="highlight-keyword">{segment.text}</mark>;
+    const needsKeywordHighlight =
+      highlightPhrases.length > 0 && (isHighlightActive || isSkeletonActive);
+
+    return ttsSentences.map((sentence, sentenceIdx) => {
+      const isActive = currentTtsSentenceIndex === sentenceIdx && isTtsPlaying;
+      const spanClass = isActive ? "tts-sentence-active" : EMPTY_STRING;
+
+      let innerContent;
+      if (needsKeywordHighlight) {
+        const segments = buildHighlightSegments(sentence, highlightPhrases);
+        innerContent = segments.map((segment, segIdx) => {
+          if (segment.isHighlighted) {
+            return <mark key={segIdx} className="highlight-keyword">{segment.text}</mark>;
+          }
+          if (isSkeletonActive) {
+            return <span key={segIdx} className="highlight-faded">{replaceLettersWithDots(segment.text)}</span>;
+          }
+          return segment.text;
+        });
+      } else {
+        innerContent = sentence;
       }
-      if (isSkeletonActive) {
-        return <span key={index} className="highlight-faded">{replaceLettersWithDots(segment.text)}</span>;
-      }
-      return segment.text;
+
+      const separator = sentenceIdx < ttsSentences.length - 1 ? " " : EMPTY_STRING;
+      return (
+        <span key={sentenceIdx} data-sentence-index={sentenceIdx} className={spanClass}>
+          {innerContent}{separator}
+        </span>
+      );
     });
-  }, [activeArticleText, highlightPhrases, isHighlightActive, isSkeletonActive]);
+  }, [activeArticleText, ttsSentences, highlightPhrases, isHighlightActive, isSkeletonActive, currentTtsSentenceIndex, isTtsPlaying]);
 
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
@@ -803,8 +839,40 @@ export default function HomePage() {
     });
   }
 
+  function playSentence(index) {
+    window.speechSynthesis.cancel();
+    const currentSentences = ttsSentencesRef.current;
+    if (index < 0 || index >= currentSentences.length) return;
+
+    setCurrentTtsSentenceIndex(index);
+    const utterance = new SpeechSynthesisUtterance(currentSentences[index]);
+    utterance.lang = TTS_LANG_PREFERRED;
+    const voice = ttsVoices[ttsSelectedGender];
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onend = () => {
+      const nextIndex = index + 1;
+      const sentencesSnapshot = ttsSentencesRef.current;
+      if (nextIndex < sentencesSnapshot.length) {
+        playSentence(nextIndex);
+      } else if (isTtsRepeatRef.current) {
+        playSentence(TTS_SENTENCE_INDEX_START);
+      } else {
+        setTtsState(TTS_STATE_IDLE);
+        setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
+      }
+    };
+    utterance.onerror = () => setTtsState(TTS_STATE_IDLE);
+
+    ttsUtteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setTtsState(TTS_STATE_PLAYING);
+  }
+
   function handleTtsPlay() {
-    if (!activeArticleText) return;
+    if (!activeArticleText || ttsSentences.length === 0) return;
 
     if (isTtsPaused) {
       window.speechSynthesis.resume();
@@ -812,18 +880,7 @@ export default function HomePage() {
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(activeArticleText);
-    utterance.lang = TTS_LANG_PREFERRED;
-    const selectedVoice = ttsVoices[ttsSelectedGender];
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
-    utterance.onend = () => setTtsState(TTS_STATE_IDLE);
-    utterance.onerror = () => setTtsState(TTS_STATE_IDLE);
-    ttsUtteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-    setTtsState(TTS_STATE_PLAYING);
+    playSentence(currentTtsSentenceIndex);
   }
 
   function handleTtsPause() {
@@ -835,6 +892,25 @@ export default function HomePage() {
     window.speechSynthesis.cancel();
     ttsUtteranceRef.current = null;
     setTtsState(TTS_STATE_IDLE);
+    setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
+  }
+
+  function handleTtsPrev() {
+    const prevIndex = Math.max(0, currentTtsSentenceIndex - 1);
+    playSentence(prevIndex);
+  }
+
+  function handleTtsNext() {
+    const nextIndex = Math.min(ttsSentences.length - 1, currentTtsSentenceIndex + 1);
+    playSentence(nextIndex);
+  }
+
+  function toggleTtsRepeat() {
+    setIsTtsRepeat((prev) => {
+      const next = !prev;
+      isTtsRepeatRef.current = next;
+      return next;
+    });
   }
 
   function startMultiPracticeBySelection() {
@@ -1082,6 +1158,7 @@ export default function HomePage() {
     window.speechSynthesis.cancel();
     ttsUtteranceRef.current = null;
     setTtsState(TTS_STATE_IDLE);
+    setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
     return () => {
       window.speechSynthesis.cancel();
     };
@@ -1092,6 +1169,7 @@ export default function HomePage() {
       window.speechSynthesis.cancel();
       ttsUtteranceRef.current = null;
       setTtsState(TTS_STATE_IDLE);
+      setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
     }
   }, [ttsSelectedGender]);
 
@@ -1220,6 +1298,31 @@ export default function HomePage() {
             </div>
             <div className="tts-player-bar">
               <button
+                className={`tts-player-btn ${isTtsRepeat ? "active" : EMPTY_STRING}`}
+                onClick={toggleTtsRepeat}
+                aria-label={t.ttsPlayerRepeat}
+                title={t.ttsPlayerRepeat}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polyline points="17 1 21 5 17 9" />
+                  <path d="M3 11V9a4 4 0 014-4h14" />
+                  <polyline points="7 23 3 19 7 15" />
+                  <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+              </button>
+              <button
+                className="tts-player-btn"
+                onClick={handleTtsPrev}
+                disabled={isTtsIdle || currentTtsSentenceIndex === 0}
+                aria-label={t.ttsPlayerPrev}
+                title={t.ttsPlayerPrev}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="11 19 2 12 11 5 11 19" />
+                  <polygon points="22 19 13 12 22 5 22 19" />
+                </svg>
+              </button>
+              <button
                 className={`tts-player-btn ${isTtsPlaying ? "active" : EMPTY_STRING}`}
                 onClick={isTtsPlaying ? handleTtsPause : handleTtsPlay}
                 aria-label={isTtsPlaying ? t.ttsPlayerPause : t.ttsPlayerPlay}
@@ -1234,6 +1337,18 @@ export default function HomePage() {
                     <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                 )}
+              </button>
+              <button
+                className="tts-player-btn"
+                onClick={handleTtsNext}
+                disabled={isTtsIdle || currentTtsSentenceIndex >= ttsSentences.length - 1}
+                aria-label={t.ttsPlayerNext}
+                title={t.ttsPlayerNext}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <polygon points="13 19 22 12 13 5 13 19" />
+                  <polygon points="2 19 11 12 2 5 2 19" />
+                </svg>
               </button>
               <button
                 className="tts-player-btn"
@@ -1254,6 +1369,11 @@ export default function HomePage() {
                 <option value={TTS_VOICE_GENDER_FEMALE}>{t.ttsVoiceFemale}</option>
                 <option value={TTS_VOICE_GENDER_MALE}>{t.ttsVoiceMale}</option>
               </select>
+              {ttsSentences.length > 0 && (
+                <span className="tts-player-progress">
+                  {t.formatTtsSentenceProgress(currentTtsSentenceIndex + 1, ttsSentences.length)}
+                </span>
+              )}
             </div>
             <div
               className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
