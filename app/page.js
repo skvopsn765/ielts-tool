@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { LANG_TW, UI_TEXTS } from "./i18n";
+import { LANG_TW, LANG_EN, UI_TEXTS } from "./i18n";
 import AppHeader from "./components/AppHeader";
 import ArticleLibrary from "./components/ArticleLibrary";
 import PracticeTabs from "./components/PracticeTabs";
@@ -1093,6 +1093,15 @@ export default function HomePage() {
     renderCurrentSentence(sentences, previousIndex);
     focusAnswerInput();
   }
+
+  useEffect(() => {
+    const detected = (navigator.language ?? "").toLowerCase().startsWith("zh") ? LANG_TW : LANG_EN;
+    if (detected !== LANG_TW) {
+      setLanguage(detected);
+      setSentenceStatus(UI_TEXTS[detected].selectArticleFirst);
+      setMaskedSentence(UI_TEXTS[detected].idleMask);
+    }
+  }, []);
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
