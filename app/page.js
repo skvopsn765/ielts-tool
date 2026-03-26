@@ -249,8 +249,8 @@ function filterUkVoices(voices) {
 
   const maleCandidate =
     findByNameToken(enVoices, "noah", femaleCandidate) ??
-    findByKeywords(prioritizedPool, TTS_VOICE_MALE_KEYWORDS) ??
-    findByKeywords(fallbackPool, TTS_VOICE_MALE_KEYWORDS) ??
+    findByKeywords(prioritizedPool, TTS_VOICE_MALE_KEYWORDS, femaleCandidate) ??
+    findByKeywords(fallbackPool, TTS_VOICE_MALE_KEYWORDS, femaleCandidate) ??
     findByDetectedGender(prioritizedPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
     findByDetectedGender(fallbackPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
     pickDistinctVoice(prioritizedPool, fallbackPool, femaleCandidate) ??
@@ -735,6 +735,12 @@ export default function HomePage() {
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
   const selectedTtsVoiceName = ttsVoices[ttsSelectedGender]?.name ?? EMPTY_STRING;
+  const ttsFemaleOptionLabel = ttsVoices.female
+    ? `${t.ttsVoiceFemale} (${ttsVoices.female.name})`
+    : t.ttsVoiceFemale;
+  const ttsMaleOptionLabel = ttsVoices.male
+    ? `${t.ttsVoiceMale} (${ttsVoices.male.name})`
+    : t.ttsVoiceMale;
   const activeArticleImageUrls = useMemo(() => {
     if (!activeArticleId) return [];
     const multiImages = ARTICLE_MULTI_IMAGE_MAP[activeArticleId];
@@ -911,6 +917,12 @@ export default function HomePage() {
     }
   }
 
+  function resolveTtsVoicesFromSystem() {
+    const all = window.speechSynthesis.getVoices();
+    if (all.length === 0) return null;
+    return filterUkVoices(all);
+  }
+
   function playSentence(index) {
     clearUtteranceHandlers();
     window.speechSynthesis.cancel();
@@ -919,7 +931,17 @@ export default function HomePage() {
 
     setCurrentTtsSentenceIndex(index);
     const utterance = new SpeechSynthesisUtterance(currentSentences[index].text);
-    const voice = ttsVoices[ttsSelectedGender];
+    const latestVoices = resolveTtsVoicesFromSystem();
+    if (latestVoices) {
+      const hasVoiceChanged =
+        latestVoices.male?.voiceURI !== ttsVoices.male?.voiceURI ||
+        latestVoices.female?.voiceURI !== ttsVoices.female?.voiceURI;
+      if (hasVoiceChanged) {
+        setTtsVoices(latestVoices);
+      }
+    }
+    const voiceSet = latestVoices ?? ttsVoices;
+    const voice = voiceSet[ttsSelectedGender];
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
@@ -1220,14 +1242,28 @@ export default function HomePage() {
 
   useEffect(() => {
     function loadVoices() {
-      const all = window.speechSynthesis.getVoices();
-      if (all.length > 0) {
-        setTtsVoices(filterUkVoices(all));
-      }
+      const resolved = resolveTtsVoicesFromSystem();
+      if (!resolved) return false;
+      setTtsVoices(resolved);
+      return true;
     }
-    loadVoices();
+    const loadedImmediately = loadVoices();
+    let retryCount = 0;
+    const retryTimerId = window.setInterval(() => {
+      retryCount += 1;
+      const loaded = loadVoices();
+      if (loaded || retryCount >= 20) {
+        window.clearInterval(retryTimerId);
+      }
+    }, 300);
+    if (loadedImmediately) {
+      window.clearInterval(retryTimerId);
+    }
     window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
-    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+    return () => {
+      window.clearInterval(retryTimerId);
+      window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+    };
   }, []);
 
   useEffect(() => {
@@ -1446,8 +1482,8 @@ export default function HomePage() {
                 aria-label={t.ttsVoiceSelectorLabel}
                 title={selectedTtsVoiceName}
               >
-                <option value={TTS_VOICE_GENDER_FEMALE}>{t.ttsVoiceFemale}</option>
-                <option value={TTS_VOICE_GENDER_MALE}>{t.ttsVoiceMale}</option>
+                <option value={TTS_VOICE_GENDER_FEMALE}>{ttsFemaleOptionLabel}</option>
+                <option value={TTS_VOICE_GENDER_MALE}>{ttsMaleOptionLabel}</option>
               </select>
               {ttsSentences.length > 0 && (
                 <span className="tts-player-progress">
