@@ -736,10 +736,46 @@ textarea {
   opacity: 1;
 }
 
-.article-text-content {
-  margin: var(--space-2) 0 0 0;
-  padding: var(--space-3);
+.article-text-block {
+  margin-top: var(--space-2);
+  border: 1px solid var(--border);
   border-radius: var(--radius-control);
+  overflow: hidden;
+  background: white;
+}
+
+.article-text-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.article-text-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.article-text-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.article-text-content {
+  margin: 0;
+  padding: var(--space-3);
   background: white;
   color: var(--text-primary);
   font-size: var(--body-size);

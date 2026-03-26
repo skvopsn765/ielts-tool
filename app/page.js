@@ -36,6 +36,7 @@ const TOKEN_COST_REPLACE_HIGH = 3;
 const WORD_REPLACE_ALLOWED_DISTANCE = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BEHAVIOR_AUTO = "auto";
+const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
 const NO_ACTIVE_ARTICLE_ID = null;
@@ -468,6 +469,7 @@ export default function HomePage() {
   const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
   const [isComparisonExpanded, setIsComparisonExpanded] = useState(false);
   const [isReferenceCollapsed, setIsReferenceCollapsed] = useState(true);
+  const [isArticleTextCopied, setIsArticleTextCopied] = useState(false);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -600,6 +602,14 @@ export default function HomePage() {
 
   function toggleArticleTextExpanded() {
     setIsArticleTextExpanded((previousValue) => !previousValue);
+  }
+
+  function copyArticleTextToClipboard() {
+    if (!activeArticleText) return;
+    navigator.clipboard.writeText(activeArticleText).then(() => {
+      setIsArticleTextCopied(true);
+      setTimeout(() => setIsArticleTextCopied(false), COPY_FEEDBACK_DURATION_MS);
+    });
   }
 
   function startMultiPracticeBySelection() {
@@ -956,9 +966,35 @@ export default function HomePage() {
             <div
               className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
             >
-              <pre className="article-text-content">
-                {activeArticleText}
-              </pre>
+              <div className="article-text-block">
+                <div className="article-text-toolbar">
+                  <button
+                    className="article-text-copy-btn"
+                    onClick={copyArticleTextToClipboard}
+                    aria-label={t.copyArticleText}
+                  >
+                    {isArticleTextCopied ? (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {t.copiedArticleText}
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                        </svg>
+                        {t.copyArticleText}
+                      </>
+                    )}
+                  </button>
+                </div>
+                <pre className="article-text-content">
+                  {activeArticleText}
+                </pre>
+              </div>
             </div>
           </section>
         )}
