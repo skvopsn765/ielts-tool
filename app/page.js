@@ -46,7 +46,7 @@ const TTS_VOICE_GENDER_FEMALE = "female";
 const TTS_VOICE_MALE_KEYWORDS = ["male", "daniel", "james"];
 const TTS_VOICE_FEMALE_KEYWORDS = ["female", "serena", "kate", "hazel"];
 const TTS_SENTENCE_INDEX_START = 0;
-const TTS_SENTENCE_SPLIT_RE = /(?<=[.!?])\s+/;
+const TTS_SENTENCE_SPLIT_CAPTURE_RE = /((?<=[.!?])\s+)/;
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
@@ -227,10 +227,15 @@ function splitSentences(text) {
 
 function splitIntoSentences(text) {
   if (!text) return [];
-  return text
-    .split(TTS_SENTENCE_SPLIT_RE)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const parts = text.split(TTS_SENTENCE_SPLIT_CAPTURE_RE);
+  const result = [];
+  for (let i = 0; i < parts.length; i += 2) {
+    const content = parts[i];
+    if (content.length === 0) continue;
+    const separator = i + 1 < parts.length ? parts[i + 1] : EMPTY_STRING;
+    result.push({ text: content, separator });
+  }
+  return result;
 }
 
 function maskSentence(sentence) {
@@ -691,13 +696,13 @@ export default function HomePage() {
     const needsKeywordHighlight =
       highlightPhrases.length > 0 && (isHighlightActive || isSkeletonActive);
 
-    return ttsSentences.map((sentence, sentenceIdx) => {
+    return ttsSentences.map((sentenceObj, sentenceIdx) => {
       const isActive = currentTtsSentenceIndex === sentenceIdx && isTtsPlaying;
       const spanClass = isActive ? "tts-sentence-active" : EMPTY_STRING;
 
       let innerContent;
       if (needsKeywordHighlight) {
-        const segments = buildHighlightSegments(sentence, highlightPhrases);
+        const segments = buildHighlightSegments(sentenceObj.text, highlightPhrases);
         innerContent = segments.map((segment, segIdx) => {
           if (segment.isHighlighted) {
             return <mark key={segIdx} className="highlight-keyword">{segment.text}</mark>;
@@ -708,13 +713,12 @@ export default function HomePage() {
           return segment.text;
         });
       } else {
-        innerContent = sentence;
+        innerContent = sentenceObj.text;
       }
 
-      const separator = sentenceIdx < ttsSentences.length - 1 ? " " : EMPTY_STRING;
       return (
         <span key={sentenceIdx} data-sentence-index={sentenceIdx} className={spanClass}>
-          {innerContent}{separator}
+          {innerContent}{sentenceObj.separator}
         </span>
       );
     });
@@ -839,13 +843,22 @@ export default function HomePage() {
     });
   }
 
+  function clearUtteranceHandlers() {
+    const prev = ttsUtteranceRef.current;
+    if (prev) {
+      prev.onend = null;
+      prev.onerror = null;
+    }
+  }
+
   function playSentence(index) {
+    clearUtteranceHandlers();
     window.speechSynthesis.cancel();
     const currentSentences = ttsSentencesRef.current;
     if (index < 0 || index >= currentSentences.length) return;
 
     setCurrentTtsSentenceIndex(index);
-    const utterance = new SpeechSynthesisUtterance(currentSentences[index]);
+    const utterance = new SpeechSynthesisUtterance(currentSentences[index].text);
     utterance.lang = TTS_LANG_PREFERRED;
     const voice = ttsVoices[ttsSelectedGender];
     if (voice) {
@@ -889,6 +902,7 @@ export default function HomePage() {
   }
 
   function handleTtsStop() {
+    clearUtteranceHandlers();
     window.speechSynthesis.cancel();
     ttsUtteranceRef.current = null;
     setTtsState(TTS_STATE_IDLE);
@@ -1155,17 +1169,20 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    clearUtteranceHandlers();
     window.speechSynthesis.cancel();
     ttsUtteranceRef.current = null;
     setTtsState(TTS_STATE_IDLE);
     setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
     return () => {
+      clearUtteranceHandlers();
       window.speechSynthesis.cancel();
     };
   }, [activeArticleId]);
 
   useEffect(() => {
     if (!isTtsIdle) {
+      clearUtteranceHandlers();
       window.speechSynthesis.cancel();
       ttsUtteranceRef.current = null;
       setTtsState(TTS_STATE_IDLE);
