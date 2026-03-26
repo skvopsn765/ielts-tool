@@ -75,6 +75,13 @@ Overall, all three countries show an upward trend in the percentage of elderly p
 In 1940, the USA had the highest proportion of older people at around 9%, followed by Sweden at approximately 7%, while Japan had the lowest figure at about 5%. Over the next five decades, the percentages in the USA and Sweden increased steadily, reaching roughly 15% and 14% respectively by 1990. In contrast, Japan saw a decline to around 3% and remained at a relatively low level until the late 20th century.
 
 After 2000, Sweden's elderly population rose significantly, peaking at about 20% around 2010 before experiencing a slight dip. Meanwhile, the USA showed a more gradual increase. Japan, however, is projected to rise sharply after 2020, climbing from around 10% to approximately 27% by 2040, making it the country with the highest proportion of elderly people.`;
+const PIE_CHART_STABLE_ARTICLE = `The pie charts compare the amount of electricity produced using five different sources of fuel in two countries over two separate years.
+
+Total electricity production increased dramatically from 1980 to 2000 in both Australia and France. While the totals for both countries were similar, there were big differences in the fuel sources used.
+
+Coal was used to produce 50 of the total 100 units of electricity in Australia in 1980, rising to 130 out of 170 units in 2000. By contrast, nuclear power became the most important fuel source in France in 2000, producing almost 75% of the country's electricity.
+
+Australia depended on hydro power for just under 25% of its electricity in both years, but the amount of electricity produced using this type of power fell from 5 to only 2 units in France. Oil, on the other hand, remained a relatively important fuel source in France, but its use declined in Australia. Both countries relied on natural gas for electricity production significantly more in 1980 than in 2000.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
@@ -82,11 +89,14 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: {
     text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
   },
+  [PIE_CHART_STABLE_ARTICLE_ID]: {
+    text: PIE_CHART_STABLE_ARTICLE,
+  },
 };
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
   { id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID, isEnabled: true },
-  { id: PIE_CHART_STABLE_ARTICLE_ID, isEnabled: false },
+  { id: PIE_CHART_STABLE_ARTICLE_ID, isEnabled: true },
   { id: STATIC_COMPARISON_ARTICLE_ID, isEnabled: false },
   { id: MAP_STATIC_ARTICLE_ID, isEnabled: false },
   { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: false },
@@ -97,6 +107,7 @@ const HIGHLIGHT_DOT_CHAR = "\u00B7";
 const HIGHLIGHT_LETTER_GLOBAL_RE = /[A-Za-z]/g;
 
 const ARTICLE_HIGHLIGHT_PHRASES = {
+  [PIE_CHART_STABLE_ARTICLE_ID]: [],
   [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: [
     // ── 第一段（Intro）── 動詞 + 結構介詞
     "compares",
