@@ -89,6 +89,13 @@ It is clear that the largest proportion of consumer spending in each country wen
 Out of the five countries, consumer spending on food, drinks and tobacco was noticeably higher in Turkey, at 32.14%, and Ireland, at nearly 29%. The proportion of spending on leisure and education was also highest in Turkey, at 4.35%, while expenditure on clothing and footwear was significantly higher in Italy, at 9%, than in any of the other countries.
 
 It can be seen that Sweden had the lowest percentages of national consumer expenditure for food/drinks/tobacco and for clothing/footwear, at nearly 16% and just over 5% respectively. Spain had slightly higher figures for these categories, but the lowest figure for leisure/education, at only 1.98%.`;
+const MAP_STATIC_ARTICLE = `The map shows two potential locations (S1 and S2) for a new supermarket in a town called Garlsdon.
+
+The main difference between the two sites is that S1 is outside the town, whereas S2 is in the town centre. The sites can also be compared in terms of access by road or rail, and their positions relative to three smaller towns.
+
+Looking at the information in more detail, S1 is in the countryside to the northwest of Garlsdon, but it is close to the residential area of the town. S2 is also close to the housing area, which surrounds the town centre.
+
+There are main roads from Hindon, Bransdon and Cransdon to Garlsdon town centre, but this is a no traffic zone, so there would be no access to S2 by car. By contrast, S1 lies on the main road to Hindon, but it would be more difficult to reach from Bransdon and Cransdon. Both supermarket sites are close to the railway that runs through Garlsdon from Hindon to Cransdon.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
@@ -102,13 +109,16 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [STATIC_COMPARISON_ARTICLE_ID]: {
     text: STATIC_COMPARISON_ARTICLE,
   },
+  [MAP_STATIC_ARTICLE_ID]: {
+    text: MAP_STATIC_ARTICLE,
+  },
 };
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
   { id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID, isEnabled: true },
   { id: PIE_CHART_STABLE_ARTICLE_ID, isEnabled: true },
   { id: STATIC_COMPARISON_ARTICLE_ID, isEnabled: true },
-  { id: MAP_STATIC_ARTICLE_ID, isEnabled: false },
+  { id: MAP_STATIC_ARTICLE_ID, isEnabled: true },
   { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: false },
   { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
 ];
