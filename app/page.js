@@ -41,36 +41,6 @@ const TTS_LANG_FALLBACK_PREFIX = "en";
 const TTS_STATE_IDLE = "idle_tts";
 const TTS_STATE_PLAYING = "playing";
 const TTS_STATE_PAUSED = "paused";
-const TTS_VOICE_GENDER_MALE = "male";
-const TTS_VOICE_GENDER_FEMALE = "female";
-const TTS_VOICE_MALE_KEYWORDS = [
-  "male",
-  "noah",
-  "daniel",
-  "james",
-  "mark",
-  "david",
-  "guy",
-  "ryan",
-  "george",
-  "liam",
-  "thomas",
-  "arthur",
-];
-const TTS_VOICE_FEMALE_KEYWORDS = [
-  "female",
-  "lily",
-  "serena",
-  "kate",
-  "hazel",
-  "zira",
-  "aria",
-  "susan",
-  "linda",
-  "emma",
-  "sophia",
-  "olivia",
-];
 const TTS_SENTENCE_INDEX_START = 0;
 const TTS_SENTENCE_SPLIT_CAPTURE_RE = /((?<=[.!?])\s+)/;
 const COPY_FEEDBACK_DURATION_MS = 2000;
@@ -211,59 +181,11 @@ const ARTICLE_HIGHLIGHT_PHRASES = {
   ],
 };
 
-function filterUkVoices(voices) {
+function filterUkVoiceList(voices) {
   const gbVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(TTS_LANG_PREFERRED.toLowerCase()));
   const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(TTS_LANG_FALLBACK_PREFIX));
-  const prioritizedPool = gbVoices.length > 0 ? gbVoices : enVoices;
-  const fallbackPool = enVoices.length > 0 ? enVoices : voices;
-  const nameLower = (v) => v.name.toLowerCase();
-  const findByNameToken = (pool, token, excludedVoice = null) =>
-    pool.find((v) => v !== excludedVoice && nameLower(v).includes(token));
-  const getVoiceGender = (voice) => {
-    const lowerName = nameLower(voice);
-    const isMale = TTS_VOICE_MALE_KEYWORDS.some((kw) => lowerName.includes(kw));
-    const isFemale = TTS_VOICE_FEMALE_KEYWORDS.some((kw) => lowerName.includes(kw));
-    if (isMale && !isFemale) return TTS_VOICE_GENDER_MALE;
-    if (!isMale && isFemale) return TTS_VOICE_GENDER_FEMALE;
-    return null;
-  };
-
-  const findByKeywords = (pool, keywords, excludedVoice = null) =>
-    pool.find((v) => v !== excludedVoice && keywords.some((kw) => nameLower(v).includes(kw)));
-  const findByDetectedGender = (pool, gender, excludedVoice = null) =>
-    pool.find((v) => v !== excludedVoice && getVoiceGender(v) === gender);
-
-  const pickDistinctVoice = (preferredPool, secondaryPool, excludedVoice) => {
-    const fromPreferred = preferredPool.find((v) => v !== excludedVoice);
-    if (fromPreferred) return fromPreferred;
-    return secondaryPool.find((v) => v !== excludedVoice) ?? null;
-  };
-
-  const femaleCandidate =
-    findByNameToken(enVoices, "lily") ??
-    findByKeywords(prioritizedPool, TTS_VOICE_FEMALE_KEYWORDS) ??
-    findByKeywords(fallbackPool, TTS_VOICE_FEMALE_KEYWORDS) ??
-    prioritizedPool[0] ??
-    fallbackPool[0] ??
-    null;
-
-  const maleCandidate =
-    findByNameToken(enVoices, "noah", femaleCandidate) ??
-    findByKeywords(prioritizedPool, TTS_VOICE_MALE_KEYWORDS, femaleCandidate) ??
-    findByKeywords(fallbackPool, TTS_VOICE_MALE_KEYWORDS, femaleCandidate) ??
-    findByDetectedGender(prioritizedPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
-    findByDetectedGender(fallbackPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
-    pickDistinctVoice(prioritizedPool, fallbackPool, femaleCandidate) ??
-    femaleCandidate;
-
-  const female =
-    femaleCandidate ??
-    pickDistinctVoice(prioritizedPool, fallbackPool, maleCandidate);
-  const male =
-    maleCandidate ??
-    pickDistinctVoice(prioritizedPool, fallbackPool, female);
-
-  return { male, female };
+  const pool = gbVoices.length > 0 ? gbVoices : enVoices.length > 0 ? enVoices : voices;
+  return pool;
 }
 
 function normalizeSpaces(text) {
@@ -705,8 +627,8 @@ export default function HomePage() {
   const [isHighlightActive, setIsHighlightActive] = useState(false);
   const [isSkeletonActive, setIsSkeletonActive] = useState(false);
   const [ttsState, setTtsState] = useState(TTS_STATE_IDLE);
-  const [ttsVoices, setTtsVoices] = useState({ male: null, female: null });
-  const [ttsSelectedGender, setTtsSelectedGender] = useState(TTS_VOICE_GENDER_FEMALE);
+  const [ttsVoiceList, setTtsVoiceList] = useState([]);
+  const [ttsSelectedVoiceURI, setTtsSelectedVoiceURI] = useState(EMPTY_STRING);
   const [currentTtsSentenceIndex, setCurrentTtsSentenceIndex] = useState(TTS_SENTENCE_INDEX_START);
   const [isTtsRepeat, setIsTtsRepeat] = useState(false);
 
@@ -734,13 +656,6 @@ export default function HomePage() {
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
-  const selectedTtsVoiceName = ttsVoices[ttsSelectedGender]?.name ?? EMPTY_STRING;
-  const ttsFemaleOptionLabel = ttsVoices.female
-    ? `${t.ttsVoiceFemale} (${ttsVoices.female.name})`
-    : t.ttsVoiceFemale;
-  const ttsMaleOptionLabel = ttsVoices.male
-    ? `${t.ttsVoiceMale} (${ttsVoices.male.name})`
-    : t.ttsVoiceMale;
   const activeArticleImageUrls = useMemo(() => {
     if (!activeArticleId) return [];
     const multiImages = ARTICLE_MULTI_IMAGE_MAP[activeArticleId];
@@ -920,7 +835,7 @@ export default function HomePage() {
   function resolveTtsVoicesFromSystem() {
     const all = window.speechSynthesis.getVoices();
     if (all.length === 0) return null;
-    return filterUkVoices(all);
+    return filterUkVoiceList(all);
   }
 
   function playSentence(index) {
@@ -931,17 +846,16 @@ export default function HomePage() {
 
     setCurrentTtsSentenceIndex(index);
     const utterance = new SpeechSynthesisUtterance(currentSentences[index].text);
-    const latestVoices = resolveTtsVoicesFromSystem();
-    if (latestVoices) {
-      const hasVoiceChanged =
-        latestVoices.male?.voiceURI !== ttsVoices.male?.voiceURI ||
-        latestVoices.female?.voiceURI !== ttsVoices.female?.voiceURI;
-      if (hasVoiceChanged) {
-        setTtsVoices(latestVoices);
-      }
+    const latestVoiceList = resolveTtsVoicesFromSystem();
+    if (latestVoiceList) {
+      setTtsVoiceList((prev) => {
+        const prevURIs = prev.map((v) => v.voiceURI).join();
+        const nextURIs = latestVoiceList.map((v) => v.voiceURI).join();
+        return prevURIs === nextURIs ? prev : latestVoiceList;
+      });
     }
-    const voiceSet = latestVoices ?? ttsVoices;
-    const voice = voiceSet[ttsSelectedGender];
+    const activeList = latestVoiceList ?? ttsVoiceList;
+    const voice = activeList.find((v) => v.voiceURI === ttsSelectedVoiceURI) ?? activeList[0] ?? null;
     if (voice) {
       utterance.voice = voice;
       utterance.lang = voice.lang;
@@ -1244,7 +1158,8 @@ export default function HomePage() {
     function loadVoices() {
       const resolved = resolveTtsVoicesFromSystem();
       if (!resolved) return false;
-      setTtsVoices(resolved);
+      setTtsVoiceList(resolved);
+      setTtsSelectedVoiceURI((prev) => prev || resolved[0]?.voiceURI || EMPTY_STRING);
       return true;
     }
     const loadedImmediately = loadVoices();
@@ -1286,7 +1201,7 @@ export default function HomePage() {
       setTtsState(TTS_STATE_IDLE);
       setCurrentTtsSentenceIndex(TTS_SENTENCE_INDEX_START);
     }
-  }, [ttsSelectedGender]);
+  }, [ttsSelectedVoiceURI]);
 
   useEffect(() => {
     if (isMultiPracticeTab && isMultiPracticeStarted) {
@@ -1477,13 +1392,13 @@ export default function HomePage() {
               </button>
               <select
                 className="tts-player-voice-select"
-                value={ttsSelectedGender}
-                onChange={(e) => setTtsSelectedGender(e.target.value)}
+                value={ttsSelectedVoiceURI}
+                onChange={(e) => setTtsSelectedVoiceURI(e.target.value)}
                 aria-label={t.ttsVoiceSelectorLabel}
-                title={selectedTtsVoiceName}
               >
-                <option value={TTS_VOICE_GENDER_FEMALE}>{ttsFemaleOptionLabel}</option>
-                <option value={TTS_VOICE_GENDER_MALE}>{ttsMaleOptionLabel}</option>
+                {ttsVoiceList.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+                ))}
               </select>
               {ttsSentences.length > 0 && (
                 <span className="tts-player-progress">

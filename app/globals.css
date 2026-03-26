@@ -875,6 +875,7 @@ textarea {
 .tts-player-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
@@ -919,6 +920,8 @@ textarea {
 }
 
 .tts-player-voice-select {
+  flex: 1 1 auto;
+  min-width: 0;
   padding: var(--space-1) var(--space-2);
   font-size: 0.8rem;
   font-family: inherit;
