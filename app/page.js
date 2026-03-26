@@ -43,8 +43,34 @@ const TTS_STATE_PLAYING = "playing";
 const TTS_STATE_PAUSED = "paused";
 const TTS_VOICE_GENDER_MALE = "male";
 const TTS_VOICE_GENDER_FEMALE = "female";
-const TTS_VOICE_MALE_KEYWORDS = ["male", "daniel", "james"];
-const TTS_VOICE_FEMALE_KEYWORDS = ["female", "serena", "kate", "hazel"];
+const TTS_VOICE_MALE_KEYWORDS = [
+  "male",
+  "noah",
+  "daniel",
+  "james",
+  "mark",
+  "david",
+  "guy",
+  "ryan",
+  "george",
+  "liam",
+  "thomas",
+  "arthur",
+];
+const TTS_VOICE_FEMALE_KEYWORDS = [
+  "female",
+  "lily",
+  "serena",
+  "kate",
+  "hazel",
+  "zira",
+  "aria",
+  "susan",
+  "linda",
+  "emma",
+  "sophia",
+  "olivia",
+];
 const TTS_SENTENCE_INDEX_START = 0;
 const TTS_SENTENCE_SPLIT_CAPTURE_RE = /((?<=[.!?])\s+)/;
 const COPY_FEEDBACK_DURATION_MS = 2000;
@@ -186,25 +212,58 @@ const ARTICLE_HIGHLIGHT_PHRASES = {
 };
 
 function filterUkVoices(voices) {
-  const gbVoices = voices.filter((v) => v.lang.includes(TTS_LANG_PREFERRED));
+  const gbVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(TTS_LANG_PREFERRED.toLowerCase()));
+  const enVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(TTS_LANG_FALLBACK_PREFIX));
+  const prioritizedPool = gbVoices.length > 0 ? gbVoices : enVoices;
+  const fallbackPool = enVoices.length > 0 ? enVoices : voices;
   const nameLower = (v) => v.name.toLowerCase();
-
-  const male = gbVoices.find((v) =>
-    TTS_VOICE_MALE_KEYWORDS.some((kw) => nameLower(v).includes(kw))
-  );
-  const female = gbVoices.find((v) =>
-    TTS_VOICE_FEMALE_KEYWORDS.some((kw) => nameLower(v).includes(kw))
-  );
-
-  if (male && female) return { male, female };
-
-  // 關鍵字比對不到時，取前兩個 en-GB 語音
-  const first = gbVoices[0] ?? null;
-  const second = gbVoices[1] ?? first;
-  return {
-    male: male ?? second,
-    female: female ?? first,
+  const findByNameToken = (pool, token, excludedVoice = null) =>
+    pool.find((v) => v !== excludedVoice && nameLower(v).includes(token));
+  const getVoiceGender = (voice) => {
+    const lowerName = nameLower(voice);
+    const isMale = TTS_VOICE_MALE_KEYWORDS.some((kw) => lowerName.includes(kw));
+    const isFemale = TTS_VOICE_FEMALE_KEYWORDS.some((kw) => lowerName.includes(kw));
+    if (isMale && !isFemale) return TTS_VOICE_GENDER_MALE;
+    if (!isMale && isFemale) return TTS_VOICE_GENDER_FEMALE;
+    return null;
   };
+
+  const findByKeywords = (pool, keywords, excludedVoice = null) =>
+    pool.find((v) => v !== excludedVoice && keywords.some((kw) => nameLower(v).includes(kw)));
+  const findByDetectedGender = (pool, gender, excludedVoice = null) =>
+    pool.find((v) => v !== excludedVoice && getVoiceGender(v) === gender);
+
+  const pickDistinctVoice = (preferredPool, secondaryPool, excludedVoice) => {
+    const fromPreferred = preferredPool.find((v) => v !== excludedVoice);
+    if (fromPreferred) return fromPreferred;
+    return secondaryPool.find((v) => v !== excludedVoice) ?? null;
+  };
+
+  const femaleCandidate =
+    findByNameToken(enVoices, "lily") ??
+    findByKeywords(prioritizedPool, TTS_VOICE_FEMALE_KEYWORDS) ??
+    findByKeywords(fallbackPool, TTS_VOICE_FEMALE_KEYWORDS) ??
+    prioritizedPool[0] ??
+    fallbackPool[0] ??
+    null;
+
+  const maleCandidate =
+    findByNameToken(enVoices, "noah", femaleCandidate) ??
+    findByKeywords(prioritizedPool, TTS_VOICE_MALE_KEYWORDS) ??
+    findByKeywords(fallbackPool, TTS_VOICE_MALE_KEYWORDS) ??
+    findByDetectedGender(prioritizedPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
+    findByDetectedGender(fallbackPool, TTS_VOICE_GENDER_MALE, femaleCandidate) ??
+    pickDistinctVoice(prioritizedPool, fallbackPool, femaleCandidate) ??
+    femaleCandidate;
+
+  const female =
+    femaleCandidate ??
+    pickDistinctVoice(prioritizedPool, fallbackPool, maleCandidate);
+  const male =
+    maleCandidate ??
+    pickDistinctVoice(prioritizedPool, fallbackPool, female);
+
+  return { male, female };
 }
 
 function normalizeSpaces(text) {
@@ -675,6 +734,7 @@ export default function HomePage() {
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
+  const selectedTtsVoiceName = ttsVoices[ttsSelectedGender]?.name ?? EMPTY_STRING;
   const activeArticleImageUrls = useMemo(() => {
     if (!activeArticleId) return [];
     const multiImages = ARTICLE_MULTI_IMAGE_MAP[activeArticleId];
@@ -859,10 +919,12 @@ export default function HomePage() {
 
     setCurrentTtsSentenceIndex(index);
     const utterance = new SpeechSynthesisUtterance(currentSentences[index].text);
-    utterance.lang = TTS_LANG_PREFERRED;
     const voice = ttsVoices[ttsSelectedGender];
     if (voice) {
       utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = TTS_LANG_PREFERRED;
     }
 
     utterance.onend = () => {
@@ -1382,6 +1444,7 @@ export default function HomePage() {
                 value={ttsSelectedGender}
                 onChange={(e) => setTtsSelectedGender(e.target.value)}
                 aria-label={t.ttsVoiceSelectorLabel}
+                title={selectedTtsVoiceName}
               >
                 <option value={TTS_VOICE_GENDER_FEMALE}>{t.ttsVoiceFemale}</option>
                 <option value={TTS_VOICE_GENDER_MALE}>{t.ttsVoiceMale}</option>
