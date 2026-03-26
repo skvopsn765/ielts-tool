@@ -98,46 +98,32 @@ const HIGHLIGHT_LETTER_GLOBAL_RE = /[A-Za-z]/g;
 
 const ARTICLE_HIGHLIGHT_PHRASES = {
   [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: [
-    // 第一段（Intro）觸發詞與結構
-    "The line graph compares",
-    "the proportion of people aged 65 and over",
-    "Japan, Sweden and the USA",
-    "between 1940 and 2040",
-    // 第二段（Overview）觸發詞與核心詞彙
+    // ── 第一段（Intro）── 動詞 + 結構介詞
+    "compares",
+    "between",
+    // ── 第二段（Overview）── 連接詞 + 段落核心動作
     "Overall",
-    "all three countries",
     "an upward trend",
     "However",
-    "Japan is expected to experience the most dramatic growth",
-    "overtake both Sweden and the USA by 2040",
-    "the lowest figures for much of the period",
-    // 第三段（Body 1）觸發詞、資料與核心詞彙
+    "the most dramatic growth",
+    "overtake both",
+    "despite",
+    // ── 第三段（Body 1）── 時間標記 + 連接詞 + 銜接動詞
     "In 1940",
-    "the highest proportion",
-    "9%",
-    "7%",
-    "the lowest figure",
-    "5%",
     "Over the next five decades",
-    "increased steadily",
-    "15% and 14% respectively by 1990",
+    "reaching",
     "In contrast",
     "saw a decline",
-    "around 3%",
-    "remained at a relatively low level",
-    "the late 20th century",
-    // 第四段（Body 2）觸發詞、資料與核心詞彙
+    "and remained",
+    // ── 第四段（Body 2）── 時間標記 + 連接詞 + 銜接動詞
     "After 2000",
-    "rose significantly",
-    "peaking at about 20%",
-    "around 2010",
-    "a slight dip",
+    "peaking at",
+    "before experiencing",
     "Meanwhile",
-    "a more gradual increase",
     "Japan, however",
-    "is projected to rise sharply after 2020",
-    "climbing from around 10% to approximately 27% by 2040",
-    "the highest proportion of elderly people",
+    "is projected to",
+    "climbing from",
+    "making it",
   ],
 };
 
