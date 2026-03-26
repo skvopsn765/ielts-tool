@@ -45,6 +45,12 @@ const ARTICLE_IMAGE_EXTENSION = ".png";
 const ARTICLE_IMAGE_PATH_OVERRIDE_MAP = {
   "dynamic-chart-same-trend-by-category": "/sample-article-chart.png",
 };
+const ARTICLE_MULTI_IMAGE_MAP = {
+  "map-dynamic-before-after-now-future": [
+    "/articles/map-dynamic-before-after-now-future-1.png",
+    "/articles/map-dynamic-before-after-now-future-2.png",
+  ],
+};
 const SAMPLE_ARTICLE_ID = "dynamic-chart-same-trend-by-category";
 const DYNAMIC_DIFFERENT_TREND_ARTICLE_ID = "dynamic-chart-different-trend-by-year-stage";
 const PIE_CHART_STABLE_ARTICLE_ID = "pie-chart-stable-structure-by-category";
@@ -96,6 +102,13 @@ The main difference between the two sites is that S1 is outside the town, wherea
 Looking at the information in more detail, S1 is in the countryside to the northwest of Garlsdon, but it is close to the residential area of the town. S2 is also close to the housing area, which surrounds the town centre.
 
 There are main roads from Hindon, Bransdon and Cransdon to Garlsdon town centre, but this is a no traffic zone, so there would be no access to S2 by car. By contrast, S1 lies on the main road to Hindon, but it would be more difficult to reach from Bransdon and Cransdon. Both supermarket sites are close to the railway that runs through Garlsdon from Hindon to Cransdon.`;
+const MAP_DYNAMIC_ARTICLE = `The maps illustrate the current layout of Islip town centre and the proposed redevelopment.
+
+Overall, the town centre will be significantly transformed, with the addition of a ring road, the pedestrianisation of the central area, and the development of new facilities and housing.
+
+At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
+
+In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     text: SAMPLE_ARTICLE,
@@ -112,6 +125,9 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [MAP_STATIC_ARTICLE_ID]: {
     text: MAP_STATIC_ARTICLE,
   },
+  [MAP_DYNAMIC_ARTICLE_ID]: {
+    text: MAP_DYNAMIC_ARTICLE,
+  },
 };
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
@@ -119,7 +135,7 @@ const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: PIE_CHART_STABLE_ARTICLE_ID, isEnabled: true },
   { id: STATIC_COMPARISON_ARTICLE_ID, isEnabled: true },
   { id: MAP_STATIC_ARTICLE_ID, isEnabled: true },
-  { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: false },
+  { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: true },
   { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
 ];
 
@@ -600,11 +616,13 @@ export default function HomePage() {
   }, [activeArticleId]);
   const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
-  const activeArticleImageUrl = useMemo(() => {
-    if (!activeArticleId) return EMPTY_STRING;
+  const activeArticleImageUrls = useMemo(() => {
+    if (!activeArticleId) return [];
+    const multiImages = ARTICLE_MULTI_IMAGE_MAP[activeArticleId];
+    if (multiImages) return multiImages;
     const overridePath = ARTICLE_IMAGE_PATH_OVERRIDE_MAP[activeArticleId];
-    if (overridePath) return overridePath;
-    return `${ARTICLE_IMAGE_BASE_PATH}${activeArticleId}${ARTICLE_IMAGE_EXTENSION}`;
+    if (overridePath) return [overridePath];
+    return [`${ARTICLE_IMAGE_BASE_PATH}${activeArticleId}${ARTICLE_IMAGE_EXTENSION}`];
   }, [activeArticleId]);
   const highlightPhrases = useMemo(() => {
     if (!activeArticleId) return [];
@@ -1393,7 +1411,7 @@ export default function HomePage() {
         title={t.questionImageTitle}
         isImageUnavailable={isActiveArticleImageUnavailable}
         imageUnavailableText={t.questionImageUnavailable}
-        imageUrl={activeArticleImageUrl}
+        imageUrls={activeArticleImageUrls}
         imageAlt={t.formatArticleImageAlt(activeArticleLabel)}
         onImageError={() => setIsActiveArticleImageUnavailable(true)}
         isExpanded={isArticleImageExpanded}

@@ -3,7 +3,7 @@ export default function ArticleImagePanel({
   title,
   isImageUnavailable,
   imageUnavailableText,
-  imageUrl,
+  imageUrls,
   imageAlt,
   onImageError,
   isExpanded,
@@ -25,7 +25,15 @@ export default function ArticleImagePanel({
         {isImageUnavailable ? (
           <div className="article-image-fallback">{imageUnavailableText}</div>
         ) : (
-          <img src={imageUrl} alt={imageAlt} className="article-image-preview" onError={onImageError} />
+          imageUrls.map((url, index) => (
+            <img
+              key={url}
+              src={url}
+              alt={imageUrls.length > 1 ? `${imageAlt} (${index + 1})` : imageAlt}
+              className="article-image-preview"
+              onError={onImageError}
+            />
+          ))
         )}
       </div>
     </div>
