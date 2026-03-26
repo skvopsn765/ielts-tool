@@ -36,6 +36,8 @@ const TOKEN_COST_REPLACE_HIGH = 3;
 const WORD_REPLACE_ALLOWED_DISTANCE = 1;
 const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BEHAVIOR_AUTO = "auto";
+const TTS_LANG_PREFERRED = "en-GB";
+const TTS_LANG_FALLBACK_PREFIX = "en";
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
@@ -599,6 +601,7 @@ export default function HomePage() {
   const [isArticleTextCopied, setIsArticleTextCopied] = useState(false);
   const [isHighlightActive, setIsHighlightActive] = useState(false);
   const [isSkeletonActive, setIsSkeletonActive] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
@@ -763,6 +766,36 @@ export default function HomePage() {
       setIsArticleTextCopied(true);
       setTimeout(() => setIsArticleTextCopied(false), COPY_FEEDBACK_DURATION_MS);
     });
+  }
+
+  function findPreferredVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    const gbVoice = voices.find((voice) => voice.lang === TTS_LANG_PREFERRED);
+    if (gbVoice) return gbVoice;
+    const anyEnglishVoice = voices.find((voice) => voice.lang.startsWith(TTS_LANG_FALLBACK_PREFIX));
+    return anyEnglishVoice ?? null;
+  }
+
+  function toggleSpeech() {
+    if (!activeArticleText) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(activeArticleText);
+    utterance.lang = TTS_LANG_PREFERRED;
+    const preferredVoice = findPreferredVoice();
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
   }
 
   function startMultiPracticeBySelection() {
@@ -995,6 +1028,14 @@ export default function HomePage() {
   }, [activeArticleId]);
 
   useEffect(() => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [activeArticleId]);
+
+  useEffect(() => {
     if (isMultiPracticeTab && isMultiPracticeStarted) {
       const selectedSentenceCount = sourceSentenceList.filter(
         (sentence, index) => selectedSentenceMap[index] && sentence
@@ -1138,6 +1179,27 @@ export default function HomePage() {
                       </button>
                     </>
                   )}
+                  <button
+                    className={`article-text-tts-btn ${isSpeaking ? "active" : EMPTY_STRING}`}
+                    onClick={toggleSpeech}
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <rect x="6" y="4" width="4" height="16" />
+                          <rect x="14" y="4" width="4" height="16" />
+                        </svg>
+                        {t.ttsStop}
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        {t.ttsPlay}
+                      </>
+                    )}
+                  </button>
                   <button
                     className="article-text-copy-btn"
                     onClick={copyArticleTextToClipboard}

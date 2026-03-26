@@ -842,6 +842,34 @@ textarea {
   font-weight: 600;
 }
 
+/* --- 範文 TTS 朗讀按鈕 --- */
+
+.article-text-tts-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.article-text-tts-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.article-text-tts-btn.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+
 mark.highlight-keyword {
   background: rgba(250, 204, 21, 0.38);
   color: inherit;
