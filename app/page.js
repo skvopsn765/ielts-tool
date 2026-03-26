@@ -38,6 +38,13 @@ const SCROLL_BEHAVIOR_SMOOTH = "smooth";
 const SCROLL_BEHAVIOR_AUTO = "auto";
 const TTS_LANG_PREFERRED = "en-GB";
 const TTS_LANG_FALLBACK_PREFIX = "en";
+const TTS_STATE_IDLE = "idle_tts";
+const TTS_STATE_PLAYING = "playing";
+const TTS_STATE_PAUSED = "paused";
+const TTS_VOICE_GENDER_MALE = "male";
+const TTS_VOICE_GENDER_FEMALE = "female";
+const TTS_VOICE_MALE_KEYWORDS = ["male", "daniel", "james"];
+const TTS_VOICE_FEMALE_KEYWORDS = ["female", "serena", "kate", "hazel"];
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
@@ -175,6 +182,28 @@ const ARTICLE_HIGHLIGHT_PHRASES = {
     "making it",
   ],
 };
+
+function filterUkVoices(voices) {
+  const gbVoices = voices.filter((v) => v.lang.includes(TTS_LANG_PREFERRED));
+  const nameLower = (v) => v.name.toLowerCase();
+
+  const male = gbVoices.find((v) =>
+    TTS_VOICE_MALE_KEYWORDS.some((kw) => nameLower(v).includes(kw))
+  );
+  const female = gbVoices.find((v) =>
+    TTS_VOICE_FEMALE_KEYWORDS.some((kw) => nameLower(v).includes(kw))
+  );
+
+  if (male && female) return { male, female };
+
+  // 關鍵字比對不到時，取前兩個 en-GB 語音
+  const first = gbVoices[0] ?? null;
+  const second = gbVoices[1] ?? first;
+  return {
+    male: male ?? second,
+    female: female ?? first,
+  };
+}
 
 function normalizeSpaces(text) {
   if (typeof text !== "string") {
@@ -601,8 +630,11 @@ export default function HomePage() {
   const [isArticleTextCopied, setIsArticleTextCopied] = useState(false);
   const [isHighlightActive, setIsHighlightActive] = useState(false);
   const [isSkeletonActive, setIsSkeletonActive] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [ttsState, setTtsState] = useState(TTS_STATE_IDLE);
+  const [ttsVoices, setTtsVoices] = useState({ male: null, female: null });
+  const [ttsSelectedGender, setTtsSelectedGender] = useState(TTS_VOICE_GENDER_FEMALE);
 
+  const ttsUtteranceRef = useRef(null);
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
@@ -619,6 +651,9 @@ export default function HomePage() {
   }, [activeArticleId]);
   const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
+  const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
+  const isTtsPaused = ttsState === TTS_STATE_PAUSED;
+  const isTtsIdle = ttsState === TTS_STATE_IDLE;
   const activeArticleImageUrls = useMemo(() => {
     if (!activeArticleId) return [];
     const multiImages = ARTICLE_MULTI_IMAGE_MAP[activeArticleId];
@@ -768,34 +803,38 @@ export default function HomePage() {
     });
   }
 
-  function findPreferredVoice() {
-    const voices = window.speechSynthesis.getVoices();
-    const gbVoice = voices.find((voice) => voice.lang === TTS_LANG_PREFERRED);
-    if (gbVoice) return gbVoice;
-    const anyEnglishVoice = voices.find((voice) => voice.lang.startsWith(TTS_LANG_FALLBACK_PREFIX));
-    return anyEnglishVoice ?? null;
-  }
-
-  function toggleSpeech() {
+  function handleTtsPlay() {
     if (!activeArticleText) return;
 
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
+    if (isTtsPaused) {
+      window.speechSynthesis.resume();
+      setTtsState(TTS_STATE_PLAYING);
       return;
     }
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(activeArticleText);
     utterance.lang = TTS_LANG_PREFERRED;
-    const preferredVoice = findPreferredVoice();
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    const selectedVoice = ttsVoices[ttsSelectedGender];
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onend = () => setTtsState(TTS_STATE_IDLE);
+    utterance.onerror = () => setTtsState(TTS_STATE_IDLE);
+    ttsUtteranceRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
+    setTtsState(TTS_STATE_PLAYING);
+  }
+
+  function handleTtsPause() {
+    window.speechSynthesis.pause();
+    setTtsState(TTS_STATE_PAUSED);
+  }
+
+  function handleTtsStop() {
+    window.speechSynthesis.cancel();
+    ttsUtteranceRef.current = null;
+    setTtsState(TTS_STATE_IDLE);
   }
 
   function startMultiPracticeBySelection() {
@@ -1028,12 +1067,33 @@ export default function HomePage() {
   }, [activeArticleId]);
 
   useEffect(() => {
+    function loadVoices() {
+      const all = window.speechSynthesis.getVoices();
+      if (all.length > 0) {
+        setTtsVoices(filterUkVoices(all));
+      }
+    }
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
+
+  useEffect(() => {
     window.speechSynthesis.cancel();
-    setIsSpeaking(false);
+    ttsUtteranceRef.current = null;
+    setTtsState(TTS_STATE_IDLE);
     return () => {
       window.speechSynthesis.cancel();
     };
   }, [activeArticleId]);
+
+  useEffect(() => {
+    if (!isTtsIdle) {
+      window.speechSynthesis.cancel();
+      ttsUtteranceRef.current = null;
+      setTtsState(TTS_STATE_IDLE);
+    }
+  }, [ttsSelectedGender]);
 
   useEffect(() => {
     if (isMultiPracticeTab && isMultiPracticeStarted) {
@@ -1158,6 +1218,43 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
+            <div className="tts-player-bar">
+              <button
+                className={`tts-player-btn ${isTtsPlaying ? "active" : EMPTY_STRING}`}
+                onClick={isTtsPlaying ? handleTtsPause : handleTtsPlay}
+                aria-label={isTtsPlaying ? t.ttsPlayerPause : t.ttsPlayerPlay}
+              >
+                {isTtsPlaying ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16" />
+                    <rect x="14" y="4" width="4" height="16" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                )}
+              </button>
+              <button
+                className="tts-player-btn"
+                onClick={handleTtsStop}
+                disabled={isTtsIdle}
+                aria-label={t.ttsPlayerStop}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                </svg>
+              </button>
+              <select
+                className="tts-player-voice-select"
+                value={ttsSelectedGender}
+                onChange={(e) => setTtsSelectedGender(e.target.value)}
+                aria-label={t.ttsVoiceSelectorLabel}
+              >
+                <option value={TTS_VOICE_GENDER_FEMALE}>{t.ttsVoiceFemale}</option>
+                <option value={TTS_VOICE_GENDER_MALE}>{t.ttsVoiceMale}</option>
+              </select>
+            </div>
             <div
               className={`article-text-collapse ${isArticleTextExpanded ? "expanded" : EMPTY_STRING}`}
             >
@@ -1179,27 +1276,6 @@ export default function HomePage() {
                       </button>
                     </>
                   )}
-                  <button
-                    className={`article-text-tts-btn ${isSpeaking ? "active" : EMPTY_STRING}`}
-                    onClick={toggleSpeech}
-                  >
-                    {isSpeaking ? (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <rect x="6" y="4" width="4" height="16" />
-                          <rect x="14" y="4" width="4" height="16" />
-                        </svg>
-                        {t.ttsStop}
-                      </>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                        {t.ttsPlay}
-                      </>
-                    )}
-                  </button>
                   <button
                     className="article-text-copy-btn"
                     onClick={copyArticleTextToClipboard}

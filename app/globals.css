@@ -870,6 +870,72 @@ textarea {
   font-weight: 600;
 }
 
+/* --- TTS 播放器控制列 --- */
+
+.tts-player-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.tts-player-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: color var(--duration-fast), background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.tts-player-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  background: var(--bg);
+}
+
+.tts-player-btn.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.tts-player-btn:disabled {
+  color: var(--disabled-text);
+  background: var(--disabled-bg);
+  border-color: var(--disabled-border);
+  cursor: not-allowed;
+}
+
+.tts-player-voice-select {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--duration-fast);
+}
+
+.tts-player-voice-select:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus-shadow);
+}
+
 mark.highlight-keyword {
   background: rgba(250, 204, 21, 0.38);
   color: inherit;
