@@ -16,7 +16,7 @@ export const UI_TEXTS = {
     articleReadyState: "可練習",
     articleLockedState: "尚未開放",
     articleButtonTitleEnabled: "載入這篇文章",
-    articleButtonTitleDisabled: "此範文內容尚未開放", //asdfjaksldfjas;ldkfjas;lkdfj
+    articleButtonTitleDisabled: "此範文內容尚未開放",
     questionImageTitle: "題目圖片",
     questionImageUnavailable: "這篇範文的題目圖片尚未放入，請將圖片放到 public/articles。",
     formatArticleImageAlt: (articleLabel) => `${articleLabel} 題目圖片`,
