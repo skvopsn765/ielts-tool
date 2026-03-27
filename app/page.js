@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { LANG_TW, LANG_EN, UI_TEXTS } from "./i18n";
 import AppHeader from "./components/AppHeader";
 import ArticleLibrary from "./components/ArticleLibrary";
@@ -599,6 +599,7 @@ function groupTokensIntoWordSegments(tokens) {
 
 export default function HomePage() {
   const [language, setLanguage] = useState(LANG_TW);
+  const [langInitialized, setLangInitialized] = useState(false);
   const t = UI_TEXTS[language];
   const [sentences, setSentences] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -1094,13 +1095,14 @@ export default function HomePage() {
     focusAnswerInput();
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const detected = (navigator.language ?? "").toLowerCase().startsWith("zh") ? LANG_TW : LANG_EN;
     if (detected !== LANG_TW) {
       setLanguage(detected);
       setSentenceStatus(UI_TEXTS[detected].selectArticleFirst);
       setMaskedSentence(UI_TEXTS[detected].idleMask);
     }
+    setLangInitialized(true);
   }, []);
 
   useEffect(() => {
@@ -1686,6 +1688,7 @@ export default function HomePage() {
         language={language}
         onLanguageChange={setLanguage}
         languageSwitchAria={t.languageSwitchAria}
+        langReady={langInitialized}
       />
       <section className="card">
         <ArticleLibrary
