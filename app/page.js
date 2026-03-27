@@ -887,8 +887,7 @@ export default function HomePage() {
     if (!activeArticleText || ttsSentences.length === 0) return;
 
     if (isTtsPaused) {
-      window.speechSynthesis.resume();
-      setTtsState(TTS_STATE_PLAYING);
+      playSentence(currentTtsSentenceIndex);
       return;
     }
 
@@ -896,12 +895,14 @@ export default function HomePage() {
   }
 
   function handleTtsPause() {
-    window.speechSynthesis.pause();
+    clearUtteranceHandlers();
+    window.speechSynthesis.cancel();
     setTtsState(TTS_STATE_PAUSED);
   }
 
   function handleTtsStop() {
     clearUtteranceHandlers();
+    window.speechSynthesis.resume();
     window.speechSynthesis.cancel();
     ttsUtteranceRef.current = null;
     setTtsState(TTS_STATE_IDLE);
