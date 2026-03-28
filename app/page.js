@@ -636,6 +636,7 @@ export default function HomePage() {
   const ttsUtteranceRef = useRef(null);
   const isTtsRepeatRef = useRef(false);
   const ttsSentencesRef = useRef([]);
+  const ttsHandlersRef = useRef({});
   const answerInputRef = useRef(null);
   const multiAnswerInputRef = useRef(null);
   const comparisonPanelRef = useRef(null);
@@ -926,6 +927,8 @@ export default function HomePage() {
       return next;
     });
   }
+
+  ttsHandlersRef.current = { handleTtsPlay, handleTtsPause, handleTtsStop, handleTtsPrev, handleTtsNext };
 
   function startMultiPracticeBySelection() {
     const selectedSentences = sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index]);
@@ -1252,6 +1255,26 @@ export default function HomePage() {
     currentIndex,
     t,
   ]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.setActionHandler("play", () => ttsHandlersRef.current.handleTtsPlay());
+    navigator.mediaSession.setActionHandler("pause", () => ttsHandlersRef.current.handleTtsPause());
+    navigator.mediaSession.setActionHandler("stop", () => ttsHandlersRef.current.handleTtsStop());
+    navigator.mediaSession.setActionHandler("previoustrack", () => ttsHandlersRef.current.handleTtsPrev());
+    navigator.mediaSession.setActionHandler("nexttrack", () => ttsHandlersRef.current.handleTtsNext());
+  }, []);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    if (isTtsPlaying) {
+      navigator.mediaSession.playbackState = "playing";
+    } else if (isTtsPaused) {
+      navigator.mediaSession.playbackState = "paused";
+    } else {
+      navigator.mediaSession.playbackState = "none";
+    }
+  }, [ttsState, isTtsPlaying, isTtsPaused]);
 
   const unifiedSegments = useMemo(
     () => groupTokensIntoWordSegments(comparisonTokens),
