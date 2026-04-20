@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/skvop/Project/_new/ielts-tool -name *essay* -o -name *sample* -o -name *data*)",
+      "Bash(git -C /c/Users/skvop/Project/_new/ielts-tool log --oneline --all)",
+      "Bash(grep -l \"template\\\\|essay\\\\|task2\\\\|prompt\" /c/Users/skvop/Project/_new/ielts-tool/app/components/*.js)"
+    ]
+  }
+}

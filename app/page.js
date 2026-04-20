@@ -65,6 +65,7 @@ const STATIC_COMPARISON_ARTICLE_ID = "static-comparison-table-bar-by-category-gr
 const MAP_STATIC_ARTICLE_ID = "map-static";
 const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
+const TASK2_CAUSES_SOLUTIONS_ARTICLE_ID = "task2-causes-solutions";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
@@ -116,26 +117,48 @@ Overall, the town centre will be significantly transformed, with the addition of
 At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
 
 In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
+const TASK2_CAUSES_SOLUTIONS_ARTICLE = `In modern society, T has become a subject of intense discussion.
+This trend could be attributed to C1 and C2, but it can be alleviated by S1 and S2.
+This essay will explore the primary reasons behind this phenomenon and suggest feasible measures to address it.
+One primary factor contributing to this phenomenon is C1.
+This is because E1.
+For example, Ex1.
+As a result, R1.
+Furthermore, this issue is also caused by C2.
+This means that E2.
+To tackle this problem, the most effective measure is S1.
+By doing this, HS1.
+For instance, ExS1.
+Moreover, S2 should also be implemented.
+This approach ensures that BS2.
+In conclusion, although T is primarily driven by C1 and C2, it is not an insurmountable problem.
+By collectively implementing S1 and S2, we can effectively mitigate its negative impacts.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
-    text: SAMPLE_ARTICLE,
+    essays: [SAMPLE_ARTICLE],
   },
   [DYNAMIC_DIFFERENT_TREND_ARTICLE_ID]: {
-    text: DYNAMIC_DIFFERENT_TREND_ARTICLE,
+    essays: [DYNAMIC_DIFFERENT_TREND_ARTICLE],
   },
   [PIE_CHART_STABLE_ARTICLE_ID]: {
-    text: PIE_CHART_STABLE_ARTICLE,
+    essays: [PIE_CHART_STABLE_ARTICLE],
   },
   [STATIC_COMPARISON_ARTICLE_ID]: {
-    text: STATIC_COMPARISON_ARTICLE,
+    essays: [STATIC_COMPARISON_ARTICLE],
   },
   [MAP_STATIC_ARTICLE_ID]: {
-    text: MAP_STATIC_ARTICLE,
+    essays: [MAP_STATIC_ARTICLE],
   },
   [MAP_DYNAMIC_ARTICLE_ID]: {
-    text: MAP_DYNAMIC_ARTICLE,
+    essays: [MAP_DYNAMIC_ARTICLE],
+  },
+  [TASK2_CAUSES_SOLUTIONS_ARTICLE_ID]: {
+    essays: [TASK2_CAUSES_SOLUTIONS_ARTICLE],
   },
 };
+const TASK2_ARTICLE_BUTTON_CONFIGS = [
+  { id: TASK2_CAUSES_SOLUTIONS_ARTICLE_ID, isEnabled: true },
+];
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
   { id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID, isEnabled: true },
@@ -619,6 +642,7 @@ export default function HomePage() {
   const [multiAnswerInput, setMultiAnswerInput] = useState(EMPTY_STRING);
   const [multiSelectionStatus, setMultiSelectionStatus] = useState(EMPTY_STRING);
   const [activeArticleId, setActiveArticleId] = useState(NO_ACTIVE_ARTICLE_ID);
+  const [activeEssayIndex, setActiveEssayIndex] = useState(0);
   const [isActiveArticleImageUnavailable, setIsActiveArticleImageUnavailable] = useState(false);
   const [isArticleTextExpanded, setIsArticleTextExpanded] = useState(true);
   const [isArticleImageExpanded, setIsArticleImageExpanded] = useState(true);
@@ -649,8 +673,8 @@ export default function HomePage() {
   );
   const activeArticleText = useMemo(() => {
     if (!activeArticleId) return EMPTY_STRING;
-    return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.text ?? EMPTY_STRING;
-  }, [activeArticleId]);
+    return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.essays[activeEssayIndex] ?? EMPTY_STRING;
+  }, [activeArticleId, activeEssayIndex]);
   const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
   const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
   ttsSentencesRef.current = ttsSentences;
@@ -775,16 +799,25 @@ export default function HomePage() {
     focusAnswerInput();
   }
 
-  function loadArticleAndStartPractice(articleId) {
+  function loadArticleAndStartPractice(articleId, essayIndex) {
     const targetArticle = PRACTICE_ARTICLE_LIBRARY[articleId];
     if (!targetArticle) return;
+    const index = essayIndex ?? 0;
+    const essayText = targetArticle.essays[index] ?? EMPTY_STRING;
+    if (!essayText) return;
 
     setActiveArticleId(articleId);
-    startPractice(targetArticle.text);
+    setActiveEssayIndex(index);
+    startPractice(essayText);
   }
 
   function handleArticleSelection(articleId) {
-    loadArticleAndStartPractice(articleId);
+    loadArticleAndStartPractice(articleId, 0);
+  }
+
+  function handleEssaySelection(essayIndex) {
+    if (!activeArticleId) return;
+    loadArticleAndStartPractice(activeArticleId, essayIndex);
   }
 
   function toggleSentenceSelection(index) {
@@ -1719,6 +1752,23 @@ export default function HomePage() {
           title={t.articleLibraryTitle}
           subtitle={t.articleLibrarySubtitle}
           articleConfigs={PRACTICE_ARTICLE_BUTTON_CONFIGS}
+          activeArticleId={activeArticleId}
+          getArticleLabel={getArticleLabel}
+          getArticleButtonTitle={(isEnabled) =>
+            isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
+          }
+          getArticleStateLabel={(isEnabled) =>
+            isEnabled ? t.articleReadyState : t.articleLockedState
+          }
+          onSelectArticle={handleArticleSelection}
+        />
+      </section>
+
+      <section className="card">
+        <ArticleLibrary
+          title={t.task2LibraryTitle}
+          subtitle={t.task2LibrarySubtitle}
+          articleConfigs={TASK2_ARTICLE_BUTTON_CONFIGS}
           activeArticleId={activeArticleId}
           getArticleLabel={getArticleLabel}
           getArticleButtonTitle={(isEnabled) =>

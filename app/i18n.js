@@ -13,6 +13,8 @@ export const UI_TEXTS = {
     introHint: "請直接點選下方範文，選定後立即開始練習。",
     articleLibraryTitle: "背誦文章（共 7 篇）",
     articleLibrarySubtitle: "全部 7 篇皆顯示，未開放的範文會先以停用狀態呈現。",
+    task2LibraryTitle: "Task 2 句型模板",
+    task2LibrarySubtitle: "選擇模板，逐句默寫。縮寫說明：T＝Topic、C1/C2＝Cause、S1/S2＝Solution、E1/E2＝Explanation、Ex1＝Example、R1＝Result、HS1＝How Solution 1 works、ExS1＝Example of S1、BS2＝Benefit of S2",
     articleReadyState: "可練習",
     articleLockedState: "尚未開放",
     articleButtonTitleEnabled: "載入這篇文章",
@@ -103,6 +105,7 @@ export const UI_TEXTS = {
       "map-static": "地圖（靜態）",
       "map-dynamic-before-after-now-future": "地圖（動態：before vs after / now vs future）",
       "process-diagram": "流程圖（Process）",
+      "task2-causes-solutions": "8. 原因與解決方案（Causes & Solutions）",
     },
   },
   [LANG_EN]: {
@@ -111,6 +114,8 @@ export const UI_TEXTS = {
     introHint: "Select one sample essay below. Practice starts immediately after selection.",
     articleLibraryTitle: "Practice Articles (7 total)",
     articleLibrarySubtitle: "All 7 essays are shown. Unavailable ones are currently disabled.",
+    task2LibraryTitle: "Task 2 Templates",
+    task2LibrarySubtitle: "Choose a template and practice sentence by sentence. Abbreviations: T=Topic, C1/C2=Cause, S1/S2=Solution, E1/E2=Explanation, Ex1=Example, R1=Result, HS1=How S1 works, ExS1=Example of S1, BS2=Benefit of S2",
     articleReadyState: "Ready",
     articleLockedState: "Locked",
     articleButtonTitleEnabled: "Load this article",
@@ -205,6 +210,7 @@ export const UI_TEXTS = {
       "map-static": "Map (static)",
       "map-dynamic-before-after-now-future": "Map (dynamic: before vs after / now vs future)",
       "process-diagram": "Process Diagram",
+      "task2-causes-solutions": "8. Causes & Solutions",
     },
   },
 };
