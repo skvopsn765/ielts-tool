@@ -71,6 +71,8 @@ const TASK2_TO_WHAT_EXTENT_ARTICLE_ID = "task2-to-what-extent";
 const TASK2_ADV_OUTWEIGH_ARTICLE_ID = "task2-adv-outweigh";
 const TASK2_POS_NEG_ARTICLE_ID = "task2-pos-neg";
 const TASK2_DISCUSS_BOTH_ARTICLE_ID = "task2-discuss-both";
+const TASK2_ADV_DISADV_ARTICLE_ID = "task2-adv-disadv";
+const TASK2_PROB_SOLUTIONS_ARTICLE_ID = "task2-prob-solutions";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
@@ -122,6 +124,38 @@ Overall, the town centre will be significantly transformed, with the addition of
 At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
 
 In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
+const TASK2_PROB_SOLUTIONS_ARTICLE = `In modern society, T has become a pivotal issue in society.
+This trend could result in Pr1 and Pr2, but it can be alleviated by S1 and S2.
+This essay will explore some issues brought by this trend and suggest feasible measures to address it.
+One primary concern brought by this phenomenon is Pr1.
+This is because E1.
+For example, Ex1.
+As a result, Res1.
+Apart from that, T also leads to Pr2.
+This means that E2.
+To mitigate these, one possible measure is S1.
+This can be done by H1, which can H2.
+For instance, ExS1.
+As a result, ResS1.
+Moreover, S2 can also be implemented.
+By doing this, BS2.
+In conclusion, although T brings about Ps, these issues can be effectively addressed through Ss.`;
+const TASK2_ADV_DISADV_ARTICLE = `In modern society, T has become a subject of considerable debate.
+This trend could bring A1 and A2; however, it may also lead to D1 and D2.
+This essay will illustrate both benefits and drawbacks of this trend.
+One significant benefit of T is A1.
+This is because E1.
+For example, Ex1.
+As a result, Res1.
+Apart from that, T also A2.
+This means that E2.
+However, a drawback of T is D1.
+This is because E3.
+For instance, Ex2.
+Consequently, Res2.
+Additionally, D2 is another drawback of T.
+This means that E4.
+In conclusion, while T offers benefits such as As, it also poses challenges including Ds.`;
 const TASK2_DISCUSS_BOTH_ARTICLE = `In modern society, T has become a subject of considerable debate.
 Some people believe that V1, while others think that V2.
 In my opinion, Op.
@@ -245,6 +279,12 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [TASK2_DISCUSS_BOTH_ARTICLE_ID]: {
     essays: [TASK2_DISCUSS_BOTH_ARTICLE],
   },
+  [TASK2_ADV_DISADV_ARTICLE_ID]: {
+    essays: [TASK2_ADV_DISADV_ARTICLE],
+  },
+  [TASK2_PROB_SOLUTIONS_ARTICLE_ID]: {
+    essays: [TASK2_PROB_SOLUTIONS_ARTICLE],
+  },
 };
 const TASK2_ARTICLE_BUTTON_CONFIGS = [
   { id: TASK2_TO_WHAT_EXTENT_ARTICLE_ID, isEnabled: true },
@@ -252,6 +292,8 @@ const TASK2_ARTICLE_BUTTON_CONFIGS = [
   { id: TASK2_POS_NEG_ARTICLE_ID, isEnabled: true },
   { id: TASK2_AGREE_DISAGREE_ARTICLE_ID, isEnabled: true },
   { id: TASK2_DISCUSS_BOTH_ARTICLE_ID, isEnabled: true },
+  { id: TASK2_ADV_DISADV_ARTICLE_ID, isEnabled: true },
+  { id: TASK2_PROB_SOLUTIONS_ARTICLE_ID, isEnabled: true },
   { id: TASK2_CAUSES_SOLUTIONS_ARTICLE_ID, isEnabled: true },
 ];
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
