@@ -67,6 +67,7 @@ const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
 const TASK2_CAUSES_SOLUTIONS_ARTICLE_ID = "task2-causes-solutions";
 const TASK2_AGREE_DISAGREE_ARTICLE_ID = "task2-agree-disagree";
+const TASK2_TO_WHAT_EXTENT_ARTICLE_ID = "task2-to-what-extent";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
@@ -118,6 +119,20 @@ Overall, the town centre will be significantly transformed, with the addition of
 At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
 
 In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
+const TASK2_TO_WHAT_EXTENT_ARTICLE = `In modern society, T has become a subject of considerable debate.
+Some people believe that V, while others hold the opposite opinion.
+From where I stand, I strongly adhere to / oppose the said notion above for the following reasons.
+To begin with, the first reason is that R1.
+This is because E1.
+For example, Ex1.
+As a result, Res1.
+However, H1.
+Another reason is that R2.
+This means that E2.
+For instance, Ex2.
+Consequently, Res2.
+Nevertheless, H2.
+In conclusion, T + B1 and B2.`;
 const TASK2_AGREE_DISAGREE_ARTICLE = `In modern society, T has become a subject of considerable debate.
 Some people believe that V.
 From where I stand, I completely adhere to / oppose the said notion above for the following reasons.
@@ -171,8 +186,12 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [TASK2_AGREE_DISAGREE_ARTICLE_ID]: {
     essays: [TASK2_AGREE_DISAGREE_ARTICLE],
   },
+  [TASK2_TO_WHAT_EXTENT_ARTICLE_ID]: {
+    essays: [TASK2_TO_WHAT_EXTENT_ARTICLE],
+  },
 };
 const TASK2_ARTICLE_BUTTON_CONFIGS = [
+  { id: TASK2_TO_WHAT_EXTENT_ARTICLE_ID, isEnabled: true },
   { id: TASK2_AGREE_DISAGREE_ARTICLE_ID, isEnabled: true },
   { id: TASK2_CAUSES_SOLUTIONS_ARTICLE_ID, isEnabled: true },
 ];
