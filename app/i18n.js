@@ -113,6 +113,7 @@ export const UI_TEXTS = {
       "task2-adv-disadv": "6. 優點與缺點（Adv & Disadv）",
       "task2-prob-solutions": "7. 問題與解決方案（Prob & Solutions）",
       "task2-causes-solutions": "8. 原因與解決方案（Causes & Solutions）",
+      "task2-causes-effects": "9. 原因與影響（Causes & Effects）",
     },
   },
   [LANG_EN]: {
@@ -225,6 +226,7 @@ export const UI_TEXTS = {
       "task2-adv-disadv": "6. Advantages & Disadvantages",
       "task2-prob-solutions": "7. Problems & Solutions",
       "task2-causes-solutions": "8. Causes & Solutions",
+      "task2-causes-effects": "9. Causes & Effects",
     },
   },
 };

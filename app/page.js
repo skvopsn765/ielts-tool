@@ -73,6 +73,7 @@ const TASK2_POS_NEG_ARTICLE_ID = "task2-pos-neg";
 const TASK2_DISCUSS_BOTH_ARTICLE_ID = "task2-discuss-both";
 const TASK2_ADV_DISADV_ARTICLE_ID = "task2-adv-disadv";
 const TASK2_PROB_SOLUTIONS_ARTICLE_ID = "task2-prob-solutions";
+const TASK2_CAUSES_EFFECTS_ARTICLE_ID = "task2-causes-effects";
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
@@ -124,6 +125,22 @@ Overall, the town centre will be significantly transformed, with the addition of
 At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
 
 In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
+const TASK2_CAUSES_EFFECTS_ARTICLE = `In modern society, T has become a subject of considerable debate.
+This trend could be attributed to C1 and C2, and can lead to Ef1 and Ef2.
+This essay will explore some reasons and possible results of this trend.
+One primary factor contributing to this phenomenon is C1.
+This is because E1.
+For example, Ex1.
+As a result, Res1.
+Apart from that, C2 also plays a significant role.
+This means that E2.
+One main impact of this phenomenon is Ef1.
+This is because E3.
+For instance, Ex2.
+Consequently, Res2.
+Moreover, T can also lead to Ef2.
+This means that E4.
+In conclusion, T is primarily caused by Cs, and it has led to significant consequences such as Es.`;
 const TASK2_PROB_SOLUTIONS_ARTICLE = `In modern society, T has become a pivotal issue in society.
 This trend could result in Pr1 and Pr2, but it can be alleviated by S1 and S2.
 This essay will explore some issues brought by this trend and suggest feasible measures to address it.
@@ -285,6 +302,9 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [TASK2_PROB_SOLUTIONS_ARTICLE_ID]: {
     essays: [TASK2_PROB_SOLUTIONS_ARTICLE],
   },
+  [TASK2_CAUSES_EFFECTS_ARTICLE_ID]: {
+    essays: [TASK2_CAUSES_EFFECTS_ARTICLE],
+  },
 };
 const TASK2_ARTICLE_BUTTON_CONFIGS = [
   { id: TASK2_TO_WHAT_EXTENT_ARTICLE_ID, isEnabled: true },
@@ -295,6 +315,7 @@ const TASK2_ARTICLE_BUTTON_CONFIGS = [
   { id: TASK2_ADV_DISADV_ARTICLE_ID, isEnabled: true },
   { id: TASK2_PROB_SOLUTIONS_ARTICLE_ID, isEnabled: true },
   { id: TASK2_CAUSES_SOLUTIONS_ARTICLE_ID, isEnabled: true },
+  { id: TASK2_CAUSES_EFFECTS_ARTICLE_ID, isEnabled: true },
 ];
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
