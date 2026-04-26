@@ -118,13 +118,20 @@ The main difference between the two sites is that S1 is outside the town, wherea
 Looking at the information in more detail, S1 is in the countryside to the northwest of Garlsdon, but it is close to the residential area of the town. S2 is also close to the housing area, which surrounds the town centre.
 
 There are main roads from Hindon, Bransdon and Cransdon to Garlsdon town centre, but this is a no traffic zone, so there would be no access to S2 by car. By contrast, S1 lies on the main road to Hindon, but it would be more difficult to reach from Bransdon and Cransdon. Both supermarket sites are close to the railway that runs through Garlsdon from Hindon to Cransdon.`;
-const MAP_DYNAMIC_ARTICLE = `The maps illustrate the current layout of Islip town centre and the proposed redevelopment.
+const MAP_DYNAMIC_ARTICLE = `The maps illustrate the current layout of [Place P1] and the proposed redevelopment in [Time T1].
 
-Overall, the town centre will be significantly transformed, with the addition of a ring road, the pedestrianisation of the central area, and the development of new facilities and housing.
+Overall, this [Place] will be dramatically transformed, with the addition of [New major facility], the [New facility], followed by the development of new facilities and housing.
 
-At present, the town centre consists of a main road lined with shops, with housing located to the south, a park to the east and countryside to the north, while a school is situated in the southwest.
+The center of the area consists of [Core facility] lined with [Surrounding items].
+[Facility] is located / situated / lies to the [Direction] of the [Reference point].
+Just next to / Opposite / Beside the [Facility], there is a [Facility].
+The [Direction] area is largely undeveloped, occupied only by [Trees / Farmland].
 
-In the proposed plan, the central road will become a pedestrian-only area, while a dual carriageway will be built around the town to divert traffic. The northern shops will be replaced by a bus station, a shopping centre and a car park, and new housing will be added to the east and south, while the park will be reduced in size.`;
+The original [Old facility] will be demolished to make way for / replaced by [New facility].
+The [Old facility] will be converted / transformed into [New facility].
+A new [New facility] will be built / constructed / added in the [Direction].
+The [Facility] will be expanded / extended / reduced in size.
+Interestingly, the [Facility] in the [Direction] will remain intact / unchanged.`;
 const TASK2_CAUSES_EFFECTS_ARTICLE = `In modern society, T has become a subject of considerable debate.
 This trend could be attributed to C1 and C2, and can lead to Ef1 and Ef2.
 This essay will explore some reasons and possible results of this trend.
