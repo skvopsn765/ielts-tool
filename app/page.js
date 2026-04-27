@@ -81,15 +81,13 @@ const PRACTICE_TAB_MULTI_BUTTON_ID = "practice-tab-multi-button";
 const PRACTICE_TAB_SINGLE_PANEL_ID = "practice-tab-single-panel";
 const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
 const SENTENCE_PREVIEW_MAX_LENGTH = 70;
-const SAMPLE_ARTICLE = `The line graph illustrates energy consumption in the United States by six different fuel sources between 1980 and 2030, measured in quadrillion units.
+const SAMPLE_ARTICLE = `The [chart type] illustrates [measurement] for [categories] between [Start Year] and [End Year].
 
-Overall, petrol and oil remain by far the dominant source throughout the period, and their usage is expected to continue rising. Coal and natural gas form the second tier, with coal projected to overtake natural gas after 2015. By contrast, nuclear, solar/wind, and hydropower contribute relatively small proportions and show only modest changes.
+Overall, [Top Category] remained the dominant feature throughout the period. Additionally, [Fast-growing Category] experienced the most dramatic growth, while [Lowest Category] had the lowest figures.
 
-In 1980, petrol and oil consumption stood at around 35 quadrillion units, significantly higher than other fuels. Although there was a slight decline in the mid-1980s, it then increased steadily, reaching approximately 40 units in 2005 and is forecast to climb to nearly 50 units by 2030.
+In [Start Year], [Top Category 1] stood at [Data 1], significantly higher than others. It then [trend verb, e.g., remained stable / increased steadily], reaching [Data 2] in [End Year]. Similarly, [Fast-growing Category] started at [Data 3] and surged to [Data 4].
 
-Coal and natural gas displayed similar levels at the beginning, at about 16 and 20 units respectively. Natural gas fluctuated over time and is predicted to stabilize at around 25 units from 2015 onwards. Meanwhile, coal consumption rose gradually and is expected to surpass natural gas, reaching roughly 30 units by 2030.
-
-The remaining energy sources were used far less. Nuclear energy increased slightly from about 4 to around 7 units, while solar and wind are projected to grow steadily to approximately 6 units. In contrast, hydropower remains relatively stable at just above 3 units throughout the period.`;
+By contrast, the remaining categories were used less frequently. [Lowest Category 1] increased slightly from [Data 5] to [Data 6]. Meanwhile, [Lowest Category 2] fluctuated/remained stable, ending at [Data 7] by the end of the period.`;
 const DYNAMIC_DIFFERENT_TREND_ARTICLE = `The line graph compares the proportion of people aged 65 and over in Japan, Sweden and the USA between 1940 and 2040.
 
 Overall, all three countries show an upward trend in the percentage of elderly people. However, Japan is expected to experience the most dramatic growth and will overtake both Sweden and the USA by 2040, despite having the lowest figures for much of the period.
