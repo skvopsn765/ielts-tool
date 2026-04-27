@@ -104,13 +104,13 @@ Total electricity production increased dramatically from 1980 to 2000 in both Au
 Coal was used to produce 50 of the total 100 units of electricity in Australia in 1980, rising to 130 out of 170 units in 2000. By contrast, nuclear power became the most important fuel source in France in 2000, producing almost 75% of the country's electricity.
 
 Australia depended on hydro power for just under 25% of its electricity in both years, but the amount of electricity produced using this type of power fell from 5 to only 2 units in France. Oil, on the other hand, remained a relatively important fuel source in France, but its use declined in Australia. Both countries relied on natural gas for electricity production significantly more in 1980 than in 2000.`;
-const STATIC_COMPARISON_ARTICLE = `The table shows percentages of consumer expenditure for three categories of products and services in five countries in 2002.
+const STATIC_COMPARISON_ARTICLE = `The [chart type] shows [measurement] for [categories] in [entities] in [year].
 
-It is clear that the largest proportion of consumer spending in each country went on food, drinks and tobacco. On the other hand, the leisure/education category has the lowest percentages in the table.
+It is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities]. On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
 
-Out of the five countries, consumer spending on food, drinks and tobacco was noticeably higher in Turkey, at 32.14%, and Ireland, at nearly 29%. The proportion of spending on leisure and education was also highest in Turkey, at 4.35%, while expenditure on clothing and footwear was significantly higher in Italy, at 9%, than in any of the other countries.
+Out of the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively. The proportion/number of [Category B] was also highest in [Top Entity 1/3], at [Data 4], while [Category C] was significantly higher in [Top Entity 4], at [Data 5], compared to the other [entities].
 
-It can be seen that Sweden had the lowest percentages of national consumer expenditure for food/drinks/tobacco and for clothing/footwear, at nearly 16% and just over 5% respectively. Spain had slightly higher figures for these categories, but the lowest figure for leisure/education, at only 1.98%.`;
+It can be seen that [Bottom Entity 1] had the lowest [measurement] for [Category A] and [Category B], at nearly [Data 6] and just over [Data 7] respectively. [Bottom Entity 2] had slightly higher figures for these categories, but the lowest figure for [Category C], at only [Data 8].`;
 const MAP_STATIC_ARTICLE = `The map shows two potential locations (S1 and S2) for a new supermarket in a town called Garlsdon.
 
 The main difference between the two sites is that S1 is outside the town, whereas S2 is in the town centre. The sites can also be compared in terms of access by road or rail, and their positions relative to three smaller towns.
