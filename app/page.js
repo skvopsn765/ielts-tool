@@ -123,7 +123,8 @@ Total electricity production increased dramatically from 1980 to 2000 in both Au
 Coal was used to produce 50 of the total 100 units of electricity in Australia in 1980, rising to 130 out of 170 units in 2000. By contrast, nuclear power became the most important fuel source in France in 2000, producing almost 75% of the country's electricity.
 
 Australia depended on hydro power for just under 25% of its electricity in both years, but the amount of electricity produced using this type of power fell from 5 to only 2 units in France. Oil, on the other hand, remained a relatively important fuel source in France, but its use declined in Australia. Both countries relied on natural gas for electricity production significantly more in 1980 than in 2000.`;
-const STATIC_COMPARISON_ARTICLE = `The [chart type] shows [measurement] for [categories] in [entities] in [year].
+const STATIC_COMPARISON_ARTICLE = `
+The [chart type] shows [measurement] for [categories] in [entities] in [year].
 
 Overall, it is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities].
 On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
