@@ -814,6 +814,21 @@ textarea {
   font-family: inherit;
 }
 
+.article-sentence {
+  display: block;
+  margin-bottom: 0.25em;
+}
+
+.article-sentence-paragraph-end {
+  margin-bottom: 1em;
+}
+
+.sentence-number {
+  color: #7ec8e3;
+  font-weight: 600;
+  user-select: none;
+}
+
 /* --- 範文 Highlight / 骨架模式 --- */
 
 .article-text-highlight-btn {

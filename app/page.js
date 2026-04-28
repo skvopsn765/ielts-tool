@@ -129,7 +129,7 @@ The [chart type] shows [measurement] for [categories] in [entities] in [year].
 Overall, it is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities].
 On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
 
-Out of the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively.
+Among the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively.
 The proportion/number of [Category B] was also highest in [Top Entity 1/3], at [Data 4], while [Category C] was significantly higher in [Top Entity 4], at [Data 5], compared to the other [entities].
 
 It can be seen that [Bottom Entity 1] had the lowest [measurement] for [Category A] and [Category B], at nearly [Data 6] and just over [Data 7] respectively.
@@ -893,7 +893,12 @@ export default function HomePage() {
 
     return ttsSentences.map((sentenceObj, sentenceIdx) => {
       const isActive = currentTtsSentenceIndex === sentenceIdx && isTtsPlaying;
-      const spanClass = isActive ? "tts-sentence-active" : EMPTY_STRING;
+      const isParagraphBreak = sentenceObj.separator.includes("\n");
+      const spanClass = [
+        "article-sentence",
+        isActive ? "tts-sentence-active" : EMPTY_STRING,
+        isParagraphBreak ? "article-sentence-paragraph-end" : EMPTY_STRING,
+      ].filter(Boolean).join(" ");
 
       let innerContent;
       if (needsKeywordHighlight) {
@@ -913,7 +918,7 @@ export default function HomePage() {
 
       return (
         <span key={sentenceIdx} data-sentence-index={sentenceIdx} className={spanClass}>
-          {innerContent}{sentenceObj.separator}
+          <span className="sentence-number">{sentenceIdx + 1}.</span>{" "}{innerContent}
         </span>
       );
     });

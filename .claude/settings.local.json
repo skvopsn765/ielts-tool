@@ -7,7 +7,8 @@
       "Bash(find C:UsersskvopProject_newielts-tool -type f -name *dynamic-chart*)",
       "Bash(find C:UsersskvopProject_newielts-tool -path */node_modules -prune -o -type f \\\\\\(-name *.md -o -name *.json -o -name *.js -o -name *.ts -o -name *.tsx \\\\\\) -print)",
       "Bash(find C:UsersskvopProject_newielts-toolapp -type f \\\\\\(-name *.js -o -name *.ts -o -name *.tsx \\\\\\))",
-      "Bash(grep -r \"articleConfigs\\\\|articleData\\\\|articles.*=\" C:UsersskvopProject_newielts-toolapp --include=*.js --include=*.ts --include=*.tsx)"
+      "Bash(grep -r \"articleConfigs\\\\|articleData\\\\|articles.*=\" C:UsersskvopProject_newielts-toolapp --include=*.js --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"preview\\\\|sentence\\\\|display.*text\" C:UsersskvopProject_newielts-tool/app --include=*.js --include=*.jsx --include=*.ts --include=*.tsx)"
     ]
   }
 }
