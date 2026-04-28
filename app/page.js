@@ -83,11 +83,29 @@ const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
 const SENTENCE_PREVIEW_MAX_LENGTH = 70;
 const SAMPLE_ARTICLE = `The [chart type] illustrates [measurement] for [categories] between [Start Year] and [End Year].
 
-Overall, [Top Category] remained the dominant feature throughout the period. Additionally, [Fast-growing Category] experienced the most dramatic growth, while [Lowest Category] had the lowest figures.
+Overall, [Top Category] remained the highest/dominant feature throughout the period. Additionally, [Fast-growing Category] experienced the most dramatic growth, while [Lowest Category] had the lowest figures.
 
-In [Start Year], [Top Category 1] stood at [Data 1], significantly higher than others. It then [trend verb, e.g., remained stable / increased steadily], reaching [Data 2] in [End Year]. Similarly, [Fast-growing Category] started at [Data 3] and surged to [Data 4].
+Focusing on the most prominent figures, it can be seen that... / Looking first at the categories with the most significant growth,... / Regarding the dominant features over the given period,...
+In [Start Year], [Category] stood at [Data 1], significantly higher than the others, and [trend verb] to [Data 2] in [End Year].
+[Category] started at [Data 1] and experienced a dramatic surge, reaching [Data 2] by [End Year].
+[Category] was not recorded / started at zero in [Start Year], but it saw an exponential rise to [Data] by [End Year].
+Following a similar pattern, [Category] climbed steadily from [Data 1] to [Data 2].
+This was followed closely by [Category], which showed a steady upward trend from [Data 1] to [Data 2].
+[Category A] and [Category B] displayed similar levels at the beginning, at about [Data 1] and [Data 2] respectively.
+Although [Category A] initially lagged behind, it eventually overtook / surpassed [Category B] to reach [Data] in [End Year].
+The figure for [Category] nearly doubled / tripled over the period, jumping from [Data 1] to [Data 2].
 
-By contrast, the remaining categories were used less frequently. [Lowest Category 1] increased slightly from [Data 5] to [Data 6]. Meanwhile, [Lowest Category 2] fluctuated/remained stable, ending at [Data 7] by the end of the period.`;
+Turning to the remaining categories, a different pattern emerged. / Moving on to the less popular features,... / By contrast, the figures for the other items were noticeably lower.
+Specifically, [Category] increased slightly from [Data 1] to [Data 2].
+The figure for [Category] grew significantly from [Data 1] to [Data 2], before leveling off / plateauing at [Data 3] in [End Year].
+[Category] rose steadily and peaked at [Data 1] in [Year], before experiencing a slight dip to [Data 2].
+The figure for [Category] fluctuated over the period, ending at [Data].
+Meanwhile, [Category] remained relatively stable at around [Data] throughout the years.
+Conversely, [Category] saw a gradual decline, dropping from [Data 1] to [Data 2].
+In stark contrast, the figure for [Category] plummeted / dropped sharply from [Data 1] to just [Data 2].
+There was a dramatic fall in the percentage of [Category], halving from [Data 1] to [Data 2] over the period.
+The figure for [Category] hit a low of [Data 1] in [Year], but later recovered slightly to [Data 2].
+Interestingly, [Category] accounted for roughly a third / a quarter of the total users at the beginning of the period.`;
 const DYNAMIC_DIFFERENT_TREND_ARTICLE = `The line graph compares the proportion of people aged 65 and over in Japan, Sweden and the USA between 1940 and 2040.
 
 Overall, all three countries show an upward trend in the percentage of elderly people. However, Japan is expected to experience the most dramatic growth and will overtake both Sweden and the USA by 2040, despite having the lowest figures for much of the period.
