@@ -83,7 +83,10 @@ const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
 const SENTENCE_PREVIEW_MAX_LENGTH = 70;
 const SAMPLE_ARTICLE = `The [chart type] illustrates [measurement] for [categories] between [Start Year] and [End Year].
 
-Overall, [Top Category] remained the highest/dominant feature throughout the period. Additionally, [Fast-growing Category] experienced the most dramatic growth, while [Lowest Category] had the lowest figures.
+Overall, [Top Category] remained the highest/dominant feature throughout the period.
+Additionally, [Fast-growing Category] experienced the most dramatic growth, while [Lowest Category] had the lowest figures.
+Meanwhile, [something] experienced the most dramatic [growth/decrease]. 
+By contrast, [something] contribute relatively small proportions and showed only modest changes.
 
 Focusing on the most prominent figures, it can be seen that... / Looking first at the categories with the most significant growth,... / Regarding the dominant features over the given period,...
 In [Start Year], [Category] stood at [Data 1], significantly higher than the others, and [trend verb] to [Data 2] in [End Year].
@@ -122,11 +125,14 @@ Coal was used to produce 50 of the total 100 units of electricity in Australia i
 Australia depended on hydro power for just under 25% of its electricity in both years, but the amount of electricity produced using this type of power fell from 5 to only 2 units in France. Oil, on the other hand, remained a relatively important fuel source in France, but its use declined in Australia. Both countries relied on natural gas for electricity production significantly more in 1980 than in 2000.`;
 const STATIC_COMPARISON_ARTICLE = `The [chart type] shows [measurement] for [categories] in [entities] in [year].
 
-Overall, it is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities]. On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
+Overall, it is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities].
+On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
 
-Out of the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively. The proportion/number of [Category B] was also highest in [Top Entity 1/3], at [Data 4], while [Category C] was significantly higher in [Top Entity 4], at [Data 5], compared to the other [entities].
+Out of the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively.
+The proportion/number of [Category B] was also highest in [Top Entity 1/3], at [Data 4], while [Category C] was significantly higher in [Top Entity 4], at [Data 5], compared to the other [entities].
 
-It can be seen that [Bottom Entity 1] had the lowest [measurement] for [Category A] and [Category B], at nearly [Data 6] and just over [Data 7] respectively. [Bottom Entity 2] had slightly higher figures for these categories, but the lowest figure for [Category C], at only [Data 8].`;
+It can be seen that [Bottom Entity 1] had the lowest [measurement] for [Category A] and [Category B], at nearly [Data 6] and just over [Data 7] respectively.
+[Bottom Entity 2] had slightly higher figures for these categories, but the lowest figure for [Category C], at only [Data 8].`;
 const MAP_STATIC_ARTICLE = `The map shows two potential locations (S1 and S2) for a new supermarket in a town called Garlsdon.
 
 The main difference between the two sites is that S1 is outside the town, whereas S2 is in the town centre. The sites can also be compared in terms of access by road or rail, and their positions relative to three smaller towns.
