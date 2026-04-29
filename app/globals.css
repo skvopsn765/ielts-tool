@@ -818,7 +818,7 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 0.5em;
-  margin-bottom: 0.25em;
+  margin-bottom: 0.15em;
 }
 
 .article-sentence-paragraph-end {
@@ -826,7 +826,7 @@ textarea {
 }
 
 .sentence-number {
-  color: #7ec8e3;
+  color: #3d5470;
   font-weight: 600;
   user-select: none;
   flex-shrink: 0;

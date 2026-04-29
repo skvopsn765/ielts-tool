@@ -123,16 +123,23 @@ Total electricity production increased dramatically from 1980 to 2000 in both Au
 Coal was used to produce 50 of the total 100 units of electricity in Australia in 1980, rising to 130 out of 170 units in 2000. By contrast, nuclear power became the most important fuel source in France in 2000, producing almost 75% of the country's electricity.
 
 Australia depended on hydro power for just under 25% of its electricity in both years, but the amount of electricity produced using this type of power fell from 5 to only 2 units in France. Oil, on the other hand, remained a relatively important fuel source in France, but its use declined in Australia. Both countries relied on natural gas for electricity production significantly more in 1980 than in 2000.`;
-const STATIC_COMPARISON_ARTICLE = `The [chart type] shows [measurement] for [categories] in [entities] in [year].
+const STATIC_COMPARISON_ARTICLE = `The [chart type] shows [number/percentage] for [items] in [subjects] in [year].
 
-Overall, it is clear that the largest [measurement] in each [entity] belonged to [Highest Category / Top Entities].
-On the other hand, the [Lowest Category / Bottom Entities] has the lowest figures in the chart.
+Overall, it is clear that the highest [number/percentage] in each [subject] belonged to [highest item/subject].
+On the other hand, the [lowest item/subject] has the lowest figures in the chart.
 
-Among the [number] [entities], [measurement] was noticeably higher in [Top Entity 1], at [Data 1], followed by [Top Entity 2] and [Top Entity 3], at [Data 2] and [Data 3] respectively.
-The proportion/number of [Category B] was also highest in [Top Entity 1/3], at [Data 4], while [Category C] was significantly higher in [Top Entity 4], at [Data 5], compared to the other [entities].
+Among the [total number] [subjects], [number/percentage] was noticeably higher in [1st place subject], at [value 1], followed by [2nd place subject] and [3rd place subject], at [value 2] and [value 3] respectively.
+The proportion/number of [item B] was also highest in [top subject], at [value 4], while [item C] was significantly higher in [another top subject], at [value 5], compared to the other [subjects].
+[1st place subject] dominated the chart, accounting for roughly [value 1], which was almost twice as much as / three times higher than that of [2nd place subject] ([value 2]).
+[1st place subject] took the lead with [value 1], closely followed by [2nd place subject] and [3rd place subject] at [value 2] and [value 3] respectively.
+A striking feature is that the figure for [item A] in [1st place subject] was exceptionally high ([value 1]), making it the most significant category among all.
 
-It can be seen that [Bottom Entity 1] had the lowest [measurement] for [Category A] and [Category B], at nearly [Data 6] and just over [Data 7] respectively.
-[Bottom Entity 2] had slightly higher figures for these categories, but the lowest figure for [Category C], at only [Data 8].`;
+Moving on to the rest of the data, [4th place subject] and [5th place subject] shared similar figures in terms of [item], standing at [value 4] and [value 5] respectively.
+Regarding the remaining categories, it can be seen that [last place subject] had the lowest [number/percentage] for [item A] and [item B], at nearly [value 6] and just over [value 7] respectively.
+[second-to-last subject] had slightly higher figures for these categories, but the lowest figure for [item C], at only [value 8].
+[last place subject] constituted a mere [value 6], which was marginally lower than [second-to-last subject] ([value 7]).
+At the other end of the scale, [last place subject] recorded the lowest [number/percentage], representing only a fraction of the top figure.`;
+
 const MAP_STATIC_ARTICLE = `The map shows two potential locations (S1 and S2) for a new supermarket in a town called Garlsdon.
 
 The main difference between the two sites is that S1 is outside the town, whereas S2 is in the town centre. The sites can also be compared in terms of access by road or rail, and their positions relative to three smaller towns.
@@ -892,7 +899,7 @@ export default function HomePage() {
 
     return ttsSentences.map((sentenceObj, sentenceIdx) => {
       const isActive = currentTtsSentenceIndex === sentenceIdx && isTtsPlaying;
-      const isParagraphBreak = sentenceObj.separator.includes("\n");
+      const isParagraphBreak = sentenceObj.separator.includes("\n\n");
       const spanClass = [
         "article-sentence",
         isActive ? "tts-sentence-active" : EMPTY_STRING,
