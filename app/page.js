@@ -161,6 +161,28 @@ The [Old facility] will be converted / transformed into [New facility].
 A new [New facility] will be built / constructed / added in the [Direction].
 The [Facility] will be expanded / extended / reduced in size.
 Interestingly, the [Facility] in the [Direction] will remain intact / unchanged.`;
+const PROCESS_DIAGRAM_ARTICLE = `The diagram illustrates the step-by-step process of how [A] is [produced / processed / manufactured].
+The flowchart highlights the various stages involved in the [production / development / life cycle] of [A].
+Overall, the process consists of [Number] main stages, beginning with [First Step] and culminating in [Last Step].
+Overall, it is a [linear / cyclical] process comprising [Number] distinct phases, starting from [First Step] and ending with [Last Step].
+Overall, the diagrams show that [A] can be used to produce [B] through a relatively simple process.
+Looking at the initial stages of the process,... / To begin with,... / At the first stage of the process,...
+Initially, [A] is [V-ed] in/by [B].
+First of all, [A] are produced by [B].
+It takes [Time] for each [A] to become [B] that [Active Verb].
+This stage lasts for up to [Time] until [A] produces / becomes [B].
+Following this, [A] is transferred to [Place], where it is [V-ed].
+After a period of about [Time], [A] eventually emerge from [B] and the life cycle begins again.
+After being [V-ed], the [A] is then [V-ed].
+Once this step is completed, [A] is ready for [N / V-ing].
+Once [V-ed / selected / gathered], they are [V-ed] in [Place].
+Moving on to the next stage, [A] undergoes a process of [N / V-ing].
+In the subsequent phase, [A] is further [V-ed] in order to [V].
+The next step involves [V-ing] the [A].
+Subsequently, the [A] is [V-ed] and then [V-ed].
+At this point, [A] can be [V-ed], [V-ed] and then used to produce [B].
+Eventually, the [A] is [V-ed] and ready for [use / sale / distribution].
+The entire process concludes with the [N] of [A].`;
 const TASK2_CAUSES_EFFECTS_ARTICLE = `In modern society, T has become a subject of considerable debate.
 This trend could be attributed to C1 and C2, and can lead to Ef1 and Ef2.
 This essay will explore some reasons and possible results of this trend.
@@ -314,6 +336,9 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [MAP_DYNAMIC_ARTICLE_ID]: {
     essays: [MAP_DYNAMIC_ARTICLE],
   },
+  [PROCESS_DIAGRAM_ARTICLE_ID]: {
+    essays: [PROCESS_DIAGRAM_ARTICLE],
+  },
   [TASK2_CAUSES_SOLUTIONS_ARTICLE_ID]: {
     essays: [TASK2_CAUSES_SOLUTIONS_ARTICLE],
   },
@@ -360,7 +385,7 @@ const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: STATIC_COMPARISON_ARTICLE_ID, isEnabled: true },
   { id: MAP_STATIC_ARTICLE_ID, isEnabled: true },
   { id: MAP_DYNAMIC_ARTICLE_ID, isEnabled: true },
-  { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: false },
+  { id: PROCESS_DIAGRAM_ARTICLE_ID, isEnabled: true },
 ];
 
 const HIGHLIGHT_DOT_CHAR = "\u00B7";
