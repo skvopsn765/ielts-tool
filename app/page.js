@@ -9,6 +9,15 @@ import ArticleImagePanel from "./components/ArticleImagePanel";
 import ComparisonPanel from "./components/ComparisonPanel";
 import ComparisonLegend from "./components/ComparisonLegend";
 import MultiSentenceChecklist from "./components/MultiSentenceChecklist";
+import { createClient, isSupabaseConfigured } from "../lib/supabase/client";
+import {
+  addFavoriteSentence,
+  createFavoriteKey,
+  fetchFavoriteSentenceKeys,
+  recordPracticeAttempt,
+  removeFavoriteSentence,
+  upsertSrsCardAfterAttempt,
+} from "../lib/practice-data";
 
 const KEY_ENTER = "Enter";
 const KEY_F2 = "F2";
@@ -78,6 +87,12 @@ const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
 const PRACTICE_TAB_MULTI_BUTTON_ID = "practice-tab-multi-button";
+const PRACTICE_MODE_SINGLE = "single";
+const PRACTICE_MODE_MULTI = "multi";
+const AUTH_QUERY_ERROR_PARAM = "authError";
+const AUTH_QUERY_ERROR_VALUE = "1";
+const ACCURACY_PERCENT_FULL = 100;
+const ACCURACY_PERCENT_ZERO = 0;
 const PRACTICE_TAB_SINGLE_PANEL_ID = "practice-tab-single-panel";
 const PRACTICE_TAB_MULTI_PANEL_ID = "practice-tab-multi-panel";
 const SENTENCE_PREVIEW_MAX_LENGTH = 70;
@@ -875,6 +890,15 @@ export default function HomePage() {
   const [ttsSelectedVoiceURI, setTtsSelectedVoiceURI] = useState(EMPTY_STRING);
   const [currentTtsSentenceIndex, setCurrentTtsSentenceIndex] = useState(TTS_SENTENCE_INDEX_START);
   const [isTtsRepeat, setIsTtsRepeat] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authMessage, setAuthMessage] = useState(EMPTY_STRING);
+  const [favoriteKeySet, setFavoriteKeySet] = useState(() => new Set());
+  const [isFavoriteBusy, setIsFavoriteBusy] = useState(false);
+  const [syncStatusMessage, setSyncStatusMessage] = useState(EMPTY_STRING);
+
+  const supabaseClient = useMemo(() => createClient(), []);
+  const isSupabaseReady = isSupabaseConfigured();
 
   const ttsUtteranceRef = useRef(null);
   const isTtsRepeatRef = useRef(false);
@@ -898,6 +922,13 @@ export default function HomePage() {
   const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
   ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
+  const currentFavoriteKey =
+    hasActiveArticle && hasSentence
+      ? createFavoriteKey(activeArticleId, activeEssayIndex, currentIndex)
+      : null;
+  const isCurrentSentenceFavorite = currentFavoriteKey
+    ? favoriteKeySet.has(currentFavoriteKey)
+    : false;
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
@@ -1276,14 +1307,16 @@ export default function HomePage() {
     const target = getCurrentSentence();
     const normalizedInput = normalizeSpaces(answerInput);
     const result = compareAnswer(target, normalizedInput);
+    const targetLength = Array.from(target).length;
+    const accuracyPercent = result.isCorrect
+      ? ACCURACY_PERCENT_FULL
+      : targetLength === 0
+        ? ACCURACY_PERCENT_ZERO
+        : Math.round(((targetLength - result.wrongCount) / targetLength) * 100);
 
     if (result.isCorrect) {
       setResultStatus(t.correctAndNextHint);
     } else {
-      const targetLength = Array.from(target).length;
-      const accuracyPercent = Math.round(
-        ((targetLength - result.wrongCount) / targetLength) * 100
-      );
       setResultStatus(t.formatSingleWrongResult(result.wrongCount, accuracyPercent));
     }
 
@@ -1292,6 +1325,12 @@ export default function HomePage() {
     setIsComparisonExpanded(true);
     blurAnswerInput();
     scrollToPracticeResultArea();
+    void syncSinglePracticeResult({
+      isCorrect: result.isCorrect,
+      accuracyPercent,
+      wrongCount: result.wrongCount,
+      sentenceText: target,
+    });
   }
 
   function checkMultiAnswer() {
@@ -1299,13 +1338,16 @@ export default function HomePage() {
 
     const normalizedInput = normalizeSpaces(multiAnswerInput);
     const result = compareAnswer(multiTargetText, normalizedInput);
+    const targetLength = Array.from(multiTargetText).length;
+    const accuracyPercent = result.isCorrect
+      ? ACCURACY_PERCENT_FULL
+      : targetLength === 0
+        ? ACCURACY_PERCENT_ZERO
+        : Math.round(((targetLength - result.wrongCount) / targetLength) * 100);
+
     if (result.isCorrect) {
       setResultStatus(t.multiPassed);
     } else {
-      const targetLength = Array.from(multiTargetText).length;
-      const accuracyPercent = Math.round(
-        ((targetLength - result.wrongCount) / targetLength) * 100
-      );
       setResultStatus(t.formatMultiWrongResult(result.wrongCount, accuracyPercent));
     }
 
@@ -1313,6 +1355,156 @@ export default function HomePage() {
     setPracticeStatus(STATUS_IDLE);
     setIsComparisonExpanded(true);
     scrollToPracticeResultArea();
+    void syncMultiPracticeResult({
+      isCorrect: result.isCorrect,
+      accuracyPercent,
+      wrongCount: result.wrongCount,
+    });
+  }
+
+  async function syncSinglePracticeResult({ isCorrect, accuracyPercent, wrongCount, sentenceText }) {
+    if (!supabaseClient || !authUser || !activeArticleId) {
+      return;
+    }
+
+    try {
+      await recordPracticeAttempt(supabaseClient, {
+        userId: authUser.id,
+        articleId: activeArticleId,
+        essayIndex: activeEssayIndex,
+        sentenceIndex: currentIndex,
+        practiceMode: PRACTICE_MODE_SINGLE,
+        isCorrect,
+        accuracyPercent,
+        wrongCount,
+      });
+      await upsertSrsCardAfterAttempt(supabaseClient, {
+        userId: authUser.id,
+        articleId: activeArticleId,
+        essayIndex: activeEssayIndex,
+        sentenceIndex: currentIndex,
+        sentenceText,
+        isCorrect,
+      });
+      setSyncStatusMessage(EMPTY_STRING);
+    } catch {
+      setSyncStatusMessage(t.practiceSyncFailed);
+    }
+  }
+
+  async function syncMultiPracticeResult({ isCorrect, accuracyPercent, wrongCount }) {
+    if (!supabaseClient || !authUser || !activeArticleId) {
+      return;
+    }
+
+    try {
+      await recordPracticeAttempt(supabaseClient, {
+        userId: authUser.id,
+        articleId: activeArticleId,
+        essayIndex: activeEssayIndex,
+        sentenceIndex: null,
+        practiceMode: PRACTICE_MODE_MULTI,
+        isCorrect,
+        accuracyPercent,
+        wrongCount,
+      });
+
+      const selectedIndexes = Object.keys(selectedSentenceMap)
+        .map((key) => Number(key))
+        .filter((index) => selectedSentenceMap[index] && sentences[index]);
+
+      await Promise.all(
+        selectedIndexes.map((sentenceIndex) =>
+          upsertSrsCardAfterAttempt(supabaseClient, {
+            userId: authUser.id,
+            articleId: activeArticleId,
+            essayIndex: activeEssayIndex,
+            sentenceIndex,
+            sentenceText: sentences[sentenceIndex],
+            isCorrect,
+          })
+        )
+      );
+      setSyncStatusMessage(EMPTY_STRING);
+    } catch {
+      setSyncStatusMessage(t.practiceSyncFailed);
+    }
+  }
+
+  async function toggleCurrentSentenceFavorite() {
+    if (!hasSentence || !activeArticleId) return;
+
+    if (!authUser || !supabaseClient) {
+      setSyncStatusMessage(t.authRequiredForFavorite);
+      return;
+    }
+
+    const sentenceText = getCurrentSentence();
+    const favoritePayload = {
+      userId: authUser.id,
+      articleId: activeArticleId,
+      essayIndex: activeEssayIndex,
+      sentenceIndex: currentIndex,
+      sentenceText,
+    };
+
+    setIsFavoriteBusy(true);
+    try {
+      if (isCurrentSentenceFavorite) {
+        await removeFavoriteSentence(supabaseClient, favoritePayload);
+        setFavoriteKeySet((previousSet) => {
+          const nextSet = new Set(previousSet);
+          nextSet.delete(currentFavoriteKey);
+          return nextSet;
+        });
+        setSyncStatusMessage(t.favoriteRemoved);
+      } else {
+        await addFavoriteSentence(supabaseClient, favoritePayload);
+        setFavoriteKeySet((previousSet) => {
+          const nextSet = new Set(previousSet);
+          nextSet.add(currentFavoriteKey);
+          return nextSet;
+        });
+        setSyncStatusMessage(t.favoriteSaved);
+      }
+    } catch {
+      setSyncStatusMessage(t.favoriteFailed);
+    } finally {
+      setIsFavoriteBusy(false);
+    }
+  }
+
+  async function handleSignInWithEmail(email) {
+    if (!supabaseClient) return;
+    setAuthMessage(EMPTY_STRING);
+
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    });
+
+    if (error) {
+      setAuthMessage(t.authMagicLinkFailed);
+      return;
+    }
+
+    setAuthMessage(t.authMagicLinkSent);
+  }
+
+  async function handleSignOut() {
+    if (!supabaseClient) return;
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+      setAuthMessage(t.authSignOutFailed);
+      return;
+    }
+    setAuthUser(null);
+    setFavoriteKeySet(new Set());
+    setAuthMessage(EMPTY_STRING);
+    setSyncStatusMessage(EMPTY_STRING);
   }
 
   function retryCurrentSentence() {
@@ -1366,6 +1558,79 @@ export default function HomePage() {
     }
     setLangInitialized(true);
   }, []);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get(AUTH_QUERY_ERROR_PARAM) === AUTH_QUERY_ERROR_VALUE) {
+      setAuthMessage(t.authCallbackError);
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.delete(AUTH_QUERY_ERROR_PARAM);
+      window.history.replaceState({}, EMPTY_STRING, nextUrl.pathname);
+    }
+  }, [t.authCallbackError]);
+
+  useEffect(() => {
+    if (!supabaseClient) {
+      setIsAuthLoading(false);
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    async function loadAuthSession() {
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (!isMounted) return;
+
+      if (error) {
+        setAuthUser(null);
+        setIsAuthLoading(false);
+        return;
+      }
+
+      setAuthUser(data.session?.user ?? null);
+      setIsAuthLoading(false);
+    }
+
+    loadAuthSession();
+
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setAuthUser(session?.user ?? null);
+      setIsAuthLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabaseClient]);
+
+  useEffect(() => {
+    if (!supabaseClient || !authUser) {
+      setFavoriteKeySet(new Set());
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    async function loadFavorites() {
+      try {
+        const nextFavoriteKeys = await fetchFavoriteSentenceKeys(supabaseClient, authUser.id);
+        if (isMounted) {
+          setFavoriteKeySet(nextFavoriteKeys);
+        }
+      } catch {
+        if (isMounted) {
+          setSyncStatusMessage(t.favoriteFailed);
+        }
+      }
+    }
+
+    loadFavorites();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabaseClient, authUser, t.favoriteFailed]);
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
@@ -1860,7 +2125,27 @@ export default function HomePage() {
                   {t.nextSentence}
                 </button>
               </div>
+              <div className="favorite-toggle-row">
+                <button
+                  className={`btn-ghost compact favorite-toggle-button ${
+                    isCurrentSentenceFavorite ? "active" : EMPTY_STRING
+                  }`}
+                  type="button"
+                  onClick={toggleCurrentSentenceFavorite}
+                  disabled={!hasSentence || isFavoriteBusy}
+                >
+                  {isFavoriteBusy
+                    ? t.favoriteSaving
+                    : isCurrentSentenceFavorite
+                      ? t.favoriteRemove
+                      : t.favoriteAdd}
+                </button>
+                {!authUser ? (
+                  <span className="status text-caption">{t.authRequiredForSync}</span>
+                ) : null}
+              </div>
               <div className="status">{resultStatus}</div>
+              {syncStatusMessage ? <div className="status text-caption">{syncStatusMessage}</div> : null}
               <div className="status text-caption">{t.singleShortcutHint}</div>
               {renderComparisonResult()}
             </>
@@ -1971,6 +2256,23 @@ export default function HomePage() {
         onLanguageChange={setLanguage}
         languageSwitchAria={t.languageSwitchAria}
         langReady={langInitialized}
+        authProps={{
+          supabase: supabaseClient,
+          isConfigured: isSupabaseReady,
+          user: authUser,
+          isAuthLoading,
+          authMessage,
+          onSignInWithEmail: handleSignInWithEmail,
+          onSignOut: handleSignOut,
+          labels: {
+            notConfigured: t.authNotConfigured,
+            loading: t.authLoading,
+            emailPlaceholder: t.authEmailPlaceholder,
+            signInWithEmail: t.authSignInWithEmail,
+            sendingMagicLink: t.authSendingMagicLink,
+            signOut: t.authSignOut,
+          },
+        }}
       />
       <section className="card">
         <ArticleLibrary

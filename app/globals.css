@@ -234,6 +234,79 @@ body {
   align-items: flex-start;
 }
 
+.app-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* ==============================
+   Auth Panel
+   ============================== */
+
+.auth-panel {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: end;
+  max-width: 320px;
+}
+
+.auth-panel-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.auth-panel-email-input {
+  min-width: 180px;
+  max-width: 220px;
+  min-height: 34px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font-size: var(--caption-size);
+}
+
+.auth-panel-email {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--caption-size);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.auth-panel-label,
+.auth-panel-message {
+  margin: 0;
+  font-size: var(--caption-size);
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.auth-panel-warning .auth-panel-label {
+  color: var(--accent);
+}
+
+.favorite-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.favorite-toggle-button.active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
 .app-title-group {
   display: grid;
   gap: var(--space-1);
