@@ -1,5 +1,6 @@
 import { Inter, Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
+import { LoadingProvider } from "../lib/loading-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +23,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-Hant" className={`${inter.variable} ${notoSansTC.variable}`}>
-      <body>{children}</body>
+      <body>
+        <LoadingProvider>{children}</LoadingProvider>
+      </body>
     </html>
   );
 }

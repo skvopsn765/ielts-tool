@@ -12,6 +12,7 @@ import MultiSentenceChecklist from "./components/MultiSentenceChecklist";
 import Task2SentenceContext from "./components/Task2SentenceContext";
 import Task2CheatSheet from "./components/Task2CheatSheet";
 import { createClient, isSupabaseConfigured } from "../lib/supabase/client";
+import { useLoading } from "../lib/loading-context";
 import {
   addFavoriteSentence,
   createFavoriteKey,
@@ -781,6 +782,7 @@ export default function HomePage() {
 
   const supabaseClient = useMemo(() => createClient(), []);
   const isSupabaseReady = isSupabaseConfigured();
+  const { withLoading } = useLoading();
 
   const ttsUtteranceRef = useRef(null);
   const isTtsRepeatRef = useRef(false);
@@ -1495,23 +1497,25 @@ export default function HomePage() {
     }
 
     try {
-      await recordPracticeAttempt(supabaseClient, {
-        userId: authUser.id,
-        articleId: activeArticleId,
-        essayIndex: activeEssayIndex,
-        sentenceIndex: currentIndex,
-        practiceMode: PRACTICE_MODE_SINGLE,
-        isCorrect,
-        accuracyPercent,
-        wrongCount,
-      });
-      await upsertSrsCardAfterAttempt(supabaseClient, {
-        userId: authUser.id,
-        articleId: activeArticleId,
-        essayIndex: activeEssayIndex,
-        sentenceIndex: currentIndex,
-        sentenceText,
-        isCorrect,
+      await withLoading(async () => {
+        await recordPracticeAttempt(supabaseClient, {
+          userId: authUser.id,
+          articleId: activeArticleId,
+          essayIndex: activeEssayIndex,
+          sentenceIndex: currentIndex,
+          practiceMode: PRACTICE_MODE_SINGLE,
+          isCorrect,
+          accuracyPercent,
+          wrongCount,
+        });
+        await upsertSrsCardAfterAttempt(supabaseClient, {
+          userId: authUser.id,
+          articleId: activeArticleId,
+          essayIndex: activeEssayIndex,
+          sentenceIndex: currentIndex,
+          sentenceText,
+          isCorrect,
+        });
       });
       setSyncStatusMessage(EMPTY_STRING);
     } catch {
@@ -1525,33 +1529,35 @@ export default function HomePage() {
     }
 
     try {
-      await recordPracticeAttempt(supabaseClient, {
-        userId: authUser.id,
-        articleId: activeArticleId,
-        essayIndex: activeEssayIndex,
-        sentenceIndex: null,
-        practiceMode: PRACTICE_MODE_MULTI,
-        isCorrect,
-        accuracyPercent,
-        wrongCount,
+      await withLoading(async () => {
+        await recordPracticeAttempt(supabaseClient, {
+          userId: authUser.id,
+          articleId: activeArticleId,
+          essayIndex: activeEssayIndex,
+          sentenceIndex: null,
+          practiceMode: PRACTICE_MODE_MULTI,
+          isCorrect,
+          accuracyPercent,
+          wrongCount,
+        });
+
+        const selectedIndexes = Object.keys(selectedSentenceMap)
+          .map((key) => Number(key))
+          .filter((index) => selectedSentenceMap[index] && sentences[index]);
+
+        await Promise.all(
+          selectedIndexes.map((sentenceIndex) =>
+            upsertSrsCardAfterAttempt(supabaseClient, {
+              userId: authUser.id,
+              articleId: activeArticleId,
+              essayIndex: activeEssayIndex,
+              sentenceIndex,
+              sentenceText: sentences[sentenceIndex],
+              isCorrect,
+            })
+          )
+        );
       });
-
-      const selectedIndexes = Object.keys(selectedSentenceMap)
-        .map((key) => Number(key))
-        .filter((index) => selectedSentenceMap[index] && sentences[index]);
-
-      await Promise.all(
-        selectedIndexes.map((sentenceIndex) =>
-          upsertSrsCardAfterAttempt(supabaseClient, {
-            userId: authUser.id,
-            articleId: activeArticleId,
-            essayIndex: activeEssayIndex,
-            sentenceIndex,
-            sentenceText: sentences[sentenceIndex],
-            isCorrect,
-          })
-        )
-      );
       setSyncStatusMessage(EMPTY_STRING);
     } catch {
       setSyncStatusMessage(t.practiceSyncFailed);
@@ -1581,23 +1587,25 @@ export default function HomePage() {
 
     setIsFavoriteBusy(true);
     try {
-      if (isSentenceFavorite) {
-        await removeFavoriteSentence(supabaseClient, favoritePayload);
-        setFavoriteKeySet((previousSet) => {
-          const nextSet = new Set(previousSet);
-          nextSet.delete(favoriteKey);
-          return nextSet;
-        });
-        setSyncStatusMessage(t.favoriteRemoved);
-      } else {
-        await addFavoriteSentence(supabaseClient, favoritePayload);
-        setFavoriteKeySet((previousSet) => {
-          const nextSet = new Set(previousSet);
-          nextSet.add(favoriteKey);
-          return nextSet;
-        });
-        setSyncStatusMessage(t.favoriteSaved);
-      }
+      await withLoading(async () => {
+        if (isSentenceFavorite) {
+          await removeFavoriteSentence(supabaseClient, favoritePayload);
+          setFavoriteKeySet((previousSet) => {
+            const nextSet = new Set(previousSet);
+            nextSet.delete(favoriteKey);
+            return nextSet;
+          });
+          setSyncStatusMessage(t.favoriteRemoved);
+        } else {
+          await addFavoriteSentence(supabaseClient, favoritePayload);
+          setFavoriteKeySet((previousSet) => {
+            const nextSet = new Set(previousSet);
+            nextSet.add(favoriteKey);
+            return nextSet;
+          });
+          setSyncStatusMessage(t.favoriteSaved);
+        }
+      });
     } catch {
       setSyncStatusMessage(t.favoriteFailed);
     } finally {
@@ -1610,12 +1618,14 @@ export default function HomePage() {
     setAuthMessage(EMPTY_STRING);
 
     const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
-    });
+    const { error } = await withLoading(() =>
+      supabaseClient.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      })
+    );
 
     if (error) {
       setAuthMessage(t.authMagicLinkFailed);
@@ -1627,7 +1637,7 @@ export default function HomePage() {
 
   async function handleSignOut() {
     if (!supabaseClient) return;
-    const { error } = await supabaseClient.auth.signOut();
+    const { error } = await withLoading(() => supabaseClient.auth.signOut());
     if (error) {
       setAuthMessage(t.authSignOutFailed);
       return;
@@ -1709,7 +1719,7 @@ export default function HomePage() {
     let isMounted = true;
 
     async function loadAuthSession() {
-      const { data, error } = await supabaseClient.auth.getSession();
+      const { data, error } = await withLoading(() => supabaseClient.auth.getSession());
       if (!isMounted) return;
 
       if (error) {
@@ -1745,7 +1755,9 @@ export default function HomePage() {
 
     async function loadFavorites() {
       try {
-        const nextFavoriteKeys = await fetchFavoriteSentenceKeys(supabaseClient, authUser.id);
+        const nextFavoriteKeys = await withLoading(() =>
+          fetchFavoriteSentenceKeys(supabaseClient, authUser.id)
+        );
         if (isMounted) {
           setFavoriteKeySet(nextFavoriteKeys);
         }
