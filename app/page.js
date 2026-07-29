@@ -28,6 +28,7 @@ const SENTENCE_SEPARATOR = ".";
 const MASK_CHAR = "_";
 const WHITESPACE_RE = /\s+/g;
 const LETTER_RE = /[A-Za-z]/;
+const FAVORITE_STAR_ICON_SIZE = 16;
 const STATUS_IDLE = "idle";
 const STATUS_READY_NEXT = "ready_next";
 const TAG_INPUT = "INPUT";
@@ -922,13 +923,6 @@ export default function HomePage() {
   const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
   ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
-  const currentFavoriteKey =
-    hasActiveArticle && hasSentence
-      ? createFavoriteKey(activeArticleId, activeEssayIndex, currentIndex)
-      : null;
-  const isCurrentSentenceFavorite = currentFavoriteKey
-    ? favoriteKeySet.has(currentFavoriteKey)
-    : false;
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
@@ -978,14 +972,67 @@ export default function HomePage() {
         innerContent = sentenceObj.text;
       }
 
+      const sentenceFavoriteKey = hasActiveArticle
+        ? createFavoriteKey(activeArticleId, activeEssayIndex, sentenceIdx)
+        : null;
+      const isSentenceFavorite = sentenceFavoriteKey
+        ? favoriteKeySet.has(sentenceFavoriteKey)
+        : false;
+
       return (
         <span key={sentenceIdx} data-sentence-index={sentenceIdx} className={spanClass}>
-          <span className="sentence-number">{sentenceIdx + 1}.</span>
+          <span className="sentence-prefix">
+            <button
+              type="button"
+              className={`sentence-favorite-star ${isSentenceFavorite ? "is-favorite" : EMPTY_STRING}`}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleSentenceFavorite(sentenceIdx);
+              }}
+              disabled={isFavoriteBusy || !hasActiveArticle}
+              aria-label={isSentenceFavorite ? t.favoriteRemove : t.favoriteAdd}
+              aria-pressed={isSentenceFavorite}
+              title={isSentenceFavorite ? t.favoriteRemove : t.favoriteAdd}
+            >
+              <svg
+                width={FAVORITE_STAR_ICON_SIZE}
+                height={FAVORITE_STAR_ICON_SIZE}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M12 2.5l2.9 5.88 6.49.94-4.7 4.58 1.11 6.47L12 17.27l-5.8 3.05 1.11-6.47-4.7-4.58 6.49-.94L12 2.5z"
+                  fill={isSentenceFavorite ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <span className="sentence-number">{sentenceIdx + 1}.</span>
+          </span>
           <span className="sentence-body">{innerContent}</span>
         </span>
       );
     });
-  }, [activeArticleText, ttsSentences, highlightPhrases, isHighlightActive, isSkeletonActive, currentTtsSentenceIndex, isTtsPlaying]);
+  }, [
+    activeArticleText,
+    ttsSentences,
+    highlightPhrases,
+    isHighlightActive,
+    isSkeletonActive,
+    currentTtsSentenceIndex,
+    isTtsPlaying,
+    hasActiveArticle,
+    activeArticleId,
+    activeEssayIndex,
+    favoriteKeySet,
+    isFavoriteBusy,
+    t.favoriteAdd,
+    t.favoriteRemove,
+  ]);
 
   const isSinglePracticeTab = activePracticeTab === PRACTICE_TAB_SINGLE;
   const isMultiPracticeTab = activePracticeTab === PRACTICE_TAB_MULTI;
@@ -1431,30 +1478,34 @@ export default function HomePage() {
     }
   }
 
-  async function toggleCurrentSentenceFavorite() {
-    if (!hasSentence || !activeArticleId) return;
+  async function toggleSentenceFavorite(sentenceIndex) {
+    if (!activeArticleId) return;
+
+    const sentenceObj = ttsSentences[sentenceIndex];
+    if (!sentenceObj) return;
 
     if (!authUser || !supabaseClient) {
       setSyncStatusMessage(t.authRequiredForFavorite);
       return;
     }
 
-    const sentenceText = getCurrentSentence();
+    const favoriteKey = createFavoriteKey(activeArticleId, activeEssayIndex, sentenceIndex);
+    const isSentenceFavorite = favoriteKeySet.has(favoriteKey);
     const favoritePayload = {
       userId: authUser.id,
       articleId: activeArticleId,
       essayIndex: activeEssayIndex,
-      sentenceIndex: currentIndex,
-      sentenceText,
+      sentenceIndex,
+      sentenceText: sentenceObj.text.trim(),
     };
 
     setIsFavoriteBusy(true);
     try {
-      if (isCurrentSentenceFavorite) {
+      if (isSentenceFavorite) {
         await removeFavoriteSentence(supabaseClient, favoritePayload);
         setFavoriteKeySet((previousSet) => {
           const nextSet = new Set(previousSet);
-          nextSet.delete(currentFavoriteKey);
+          nextSet.delete(favoriteKey);
           return nextSet;
         });
         setSyncStatusMessage(t.favoriteRemoved);
@@ -1462,7 +1513,7 @@ export default function HomePage() {
         await addFavoriteSentence(supabaseClient, favoritePayload);
         setFavoriteKeySet((previousSet) => {
           const nextSet = new Set(previousSet);
-          nextSet.add(currentFavoriteKey);
+          nextSet.add(favoriteKey);
           return nextSet;
         });
         setSyncStatusMessage(t.favoriteSaved);
@@ -2124,25 +2175,6 @@ export default function HomePage() {
                 <button className="btn-ghost" onClick={goToNextSentence} disabled={!hasSentence}>
                   {t.nextSentence}
                 </button>
-              </div>
-              <div className="favorite-toggle-row">
-                <button
-                  className={`btn-ghost compact favorite-toggle-button ${
-                    isCurrentSentenceFavorite ? "active" : EMPTY_STRING
-                  }`}
-                  type="button"
-                  onClick={toggleCurrentSentenceFavorite}
-                  disabled={!hasSentence || isFavoriteBusy}
-                >
-                  {isFavoriteBusy
-                    ? t.favoriteSaving
-                    : isCurrentSentenceFavorite
-                      ? t.favoriteRemove
-                      : t.favoriteAdd}
-                </button>
-                {!authUser ? (
-                  <span className="status text-caption">{t.authRequiredForSync}</span>
-                ) : null}
               </div>
               <div className="status">{resultStatus}</div>
               {syncStatusMessage ? <div className="status text-caption">{syncStatusMessage}</div> : null}
