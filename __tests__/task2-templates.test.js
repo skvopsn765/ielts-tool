@@ -19,6 +19,7 @@ import {
   resolveGlossaryText,
   getCheatSheetGroups,
   maskWithPlaceholders,
+  dedupeRowsByText,
 } from "../lib/task2-templates";
 
 const CSV_PATH = join(process.cwd(), "public", "data", "ielts-task2-templates-all.csv");
@@ -160,6 +161,33 @@ describe("task2-templates: cheat sheet", () => {
     expect(groups.length).toBeGreaterThan(0);
     expect(groups[0].typeId).toBe(0);
     expect(groups.every((group) => group.rows.length > 0)).toBe(true);
+  });
+});
+
+describe("task2-templates: dedupe by identical text", () => {
+  it("collapses the shared I1 background sentence across types 1-6 and 9 into one entry", () => {
+    const backgroundRows = selectByFunc(rows, "background").filter((row) => row.slot === "I1");
+    const deduped = dedupeRowsByText(backgroundRows);
+
+    expect(deduped).toHaveLength(2);
+    expect(deduped[0].text).toBe("In modern society, T has become a subject of considerable debate.");
+    expect(deduped[0].typeIds).toEqual([1, 2, 3, 4, 5, 6, 9]);
+    expect(deduped[1].text).toBe("In modern society, T has become a pressing issue.");
+    expect(deduped[1].typeIds).toEqual([7, 8]);
+  });
+
+  it("keeps a single-item typeIds array when the wording is unique to one type", () => {
+    const deduped = dedupeRowsByText(selectByType(rows, TYPE1_ID));
+    expect(deduped.every((row) => row.typeIds.length >= 1)).toBe(true);
+    expect(deduped[0].typeIds).toEqual([TYPE1_ID]);
+  });
+
+  it("is a no-op count-wise when every row already has distinct text", () => {
+    const uniqueRows = [
+      { ...rows[0], text: "Alpha." },
+      { ...rows[0], text: "Beta." },
+    ];
+    expect(dedupeRowsByText(uniqueRows)).toHaveLength(2);
   });
 });
 

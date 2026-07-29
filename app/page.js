@@ -37,6 +37,7 @@ import {
   resolveGlossaryText,
   getCheatSheetGroups,
   maskWithPlaceholders,
+  dedupeRowsByText,
   GLOBAL_TYPE_ID as TASK2_GLOBAL_TYPE_ID,
 } from "../lib/task2-templates";
 
@@ -96,6 +97,8 @@ const STATIC_COMPARISON_ARTICLE_ID = "static-comparison-table-bar-by-category-gr
 const MAP_STATIC_ARTICLE_ID = "map-static";
 const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
+const TYPE_ID_LIST_SEPARATOR = ",";
+const SINGLE_TYPE_ID_COUNT = 1;
 const TASK2_TYPE_ARTICLE_ID_PREFIX = "task2-type-";
 const TASK2_CORE_PATTERNS_ARTICLE_ID = "task2-core-patterns";
 const TASK2_SECTION_ARTICLE_ID_PREFIX = "task2-section-";
@@ -828,6 +831,8 @@ export default function HomePage() {
   const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
   ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
+  const isTask2ArticleActive = customArticleText !== null;
+  const isQuestionImagePanelVisible = hasActiveArticle && !isTask2ArticleActive;
   const isTtsPlaying = ttsState === TTS_STATE_PLAYING;
   const isTtsPaused = ttsState === TTS_STATE_PAUSED;
   const isTtsIdle = ttsState === TTS_STATE_IDLE;
@@ -960,6 +965,12 @@ export default function HomePage() {
     return typeInfo ? getTask2TypeLabel(typeInfo) : String(typeId);
   }
 
+  function getTask2TypeLabelByIds(typeIds) {
+    if (!typeIds || typeIds.length === 0) return EMPTY_STRING;
+    if (typeIds.length === SINGLE_TYPE_ID_COUNT) return getTask2TypeLabelById(typeIds[0]);
+    return typeIds.join(TYPE_ID_LIST_SEPARATOR);
+  }
+
   function getTask2SectionLabel(section) {
     return t.task2SectionLabelMap[section] ?? humanizeSlug(section);
   }
@@ -1078,16 +1089,17 @@ export default function HomePage() {
     if (!rows || rows.length === 0) return;
 
     const FIRST_INDEX = 0;
-    const rowTexts = rows.map((row) => row.text);
+    const dedupedRows = dedupeRowsByText(rows);
+    const rowTexts = dedupedRows.map((row) => row.text);
     const referenceText = rowTexts.join(" ");
     setCustomArticleText(referenceText);
     setActiveArticleId(articleId);
     setActiveEssayIndex(FIRST_INDEX);
-    setSentenceMeta(rows);
+    setSentenceMeta(dedupedRows);
     setSentences(rowTexts);
     setCurrentIndex(FIRST_INDEX);
     clearAnswerArea();
-    renderCurrentSentence(rowTexts, FIRST_INDEX, rows);
+    renderCurrentSentence(rowTexts, FIRST_INDEX, dedupedRows);
     focusAnswerInput();
   }
 
@@ -2248,7 +2260,7 @@ export default function HomePage() {
               </div>
               {sentenceMeta && sentenceMeta[currentIndex] ? (
                 <Task2SentenceContext
-                  typeLabel={getTask2TypeLabelById(sentenceMeta[currentIndex].type_id)}
+                  typeLabel={getTask2TypeLabelByIds(sentenceMeta[currentIndex].typeIds)}
                   sectionLabel={
                     sentenceMeta[currentIndex].section
                       ? getTask2SectionLabel(sentenceMeta[currentIndex].section)
@@ -2503,7 +2515,7 @@ export default function HomePage() {
       </section>
 
       <ArticleImagePanel
-        isVisible={hasActiveArticle}
+        isVisible={isQuestionImagePanelVisible}
         title={t.questionImageTitle}
         isImageUnavailable={isActiveArticleImageUnavailable}
         imageUnavailableText={t.questionImageUnavailable}
