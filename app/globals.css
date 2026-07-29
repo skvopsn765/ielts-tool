@@ -1455,6 +1455,189 @@ mark.highlight-keyword {
 }
 
 /* ==============================
+   Task 2: Mode Selector
+   ============================== */
+
+.task2-mode-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.task2-mode-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text-secondary);
+  font-size: var(--caption-size);
+  font-weight: 600;
+  transition:
+    border-color var(--duration-fast) var(--easing),
+    background-color var(--duration-fast) var(--easing),
+    color var(--duration-fast) var(--easing);
+}
+
+.task2-mode-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent-hover);
+}
+
+.task2-mode-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
+
+/* ==============================
+   Task 2: Sentence Context (above practice input)
+   ============================== */
+
+.task2-sentence-context {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.task2-context-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.task2-context-badge {
+  font-size: var(--caption-size);
+  font-weight: 600;
+  color: var(--accent-hover);
+  background: var(--accent-bg);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+}
+
+.task2-context-badge--muted {
+  color: var(--text-secondary);
+  background: var(--disabled-bg);
+}
+
+.task2-context-slot {
+  font-size: var(--caption-size);
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.task2-context-note {
+  margin-top: var(--space-1);
+  font-size: var(--caption-size);
+  color: var(--text-secondary);
+}
+
+.task2-blank-chip-row {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.task2-blank-chip-label {
+  font-size: var(--caption-size);
+  color: var(--text-muted);
+  margin-right: var(--space-1);
+}
+
+.task2-blank-chip {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  border: 1px dashed var(--accent-border);
+  background: white;
+  color: var(--accent-hover);
+  font-family: var(--font-mono);
+  font-size: var(--caption-size);
+  font-weight: 600;
+}
+
+.task2-blank-chip:hover {
+  background: var(--accent-bg);
+}
+
+.task2-blank-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.task2-glossary-popover {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+  background: var(--accent-bg);
+  color: var(--text-primary);
+  font-size: var(--caption-size);
+}
+
+/* ==============================
+   Task 2: Cheat Sheet
+   ============================== */
+
+.task2-cheat-sheet {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+}
+
+.task2-cheat-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.task2-cheat-sheet-title {
+  font-size: var(--heading-size);
+  font-weight: var(--heading-weight);
+  color: var(--text-primary);
+}
+
+.task2-cheat-sheet-group {
+  margin-bottom: var(--space-3);
+}
+
+.task2-cheat-sheet-group-title {
+  font-size: var(--body-size);
+  font-weight: 600;
+  color: var(--accent-hover);
+  margin-bottom: var(--space-1);
+}
+
+.task2-cheat-sheet-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.task2-cheat-sheet-item {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--body-size);
+  color: var(--text-secondary);
+}
+
+.task2-cheat-sheet-slot {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--caption-size);
+  color: var(--text-muted);
+  min-width: 3ch;
+}
+
+/* ==============================
    Responsive — tablet (48rem / 768px)
    ============================== */
 
@@ -1552,5 +1735,35 @@ mark.highlight-keyword {
 
   .container {
     padding: 0 var(--space-3);
+  }
+}
+
+/* ==============================
+   Global Loading Overlay
+   ============================== */
+
+.global-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 46, 0.35);
+  cursor: wait;
+}
+
+.global-loading-spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  border: 4px solid rgba(255, 255, 255, 0.4);
+  border-top-color: var(--accent);
+  animation: global-loading-spin 0.8s linear infinite;
+}
+
+@keyframes global-loading-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -1,0 +1,181 @@
+﻿record_type,type_id,type_name_zh,type_name_en,dimension,section,seq,slot,func,variant_no,is_default,optional,sentence_key,text,blanks,note_zh
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,intro,20,I2,paraphrase,1,1,0,i2_believe_v_opposite,"Some people believe that V, while others hold the opposite opinion.",V,改寫兩方觀點
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,intro,30,I3,thesis,1,1,0,i3_strongly_adhere,"From where I stand, I strongly adhere to / oppose the said notion above for the following reasons.",,表態（strongly＝部分同意語氣）
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body1,40,B1-1,topic_sentence,1,1,0,b_first_reason,"To begin with, the first reason is that R1.",R1,理由一
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body1,80,B1-5,concession,1,1,1,conc_however_h,"However, H1.",H1,讓步（可省略，先背骨架時可跳過）
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body2,100,B2-1,topic_sentence,1,1,0,b_another_reason,Another reason is that R2.,R2,理由二
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body2,110,B2-2,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,body2,140,B2-5,concession,1,1,1,conc_nevertheless_h,"Nevertheless, H2.",H2,讓步（可省略）
+sentence,1,1. 同意程度（To What Extent）,to_what_extent,single,conclusion,160,C,summary,1,1,0,c_in_conclusion_t_b1_b2,"In conclusion, T + B1 and B2.",T;B1;B2,總結兩個理由（B1/B2＝兩段的理由，非段落代號）
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,intro,20,I2,paraphrase,1,1,0,i2_beneficial_vs_harm,"Some people assert that this trend is beneficial, while others claim it brings more harm.",,改寫兩方觀點
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,intro,30,I3,thesis,1,1,0,i3_benefits_dominate,"From where I stand, the benefits of this trend dominate its drawbacks.",,表態：利大於弊
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_benefit_of_t,One main benefit of T is A1.,T;A1,好處一
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body1,80,B1-5,concession,1,1,1,conc_however_h,"However, H1.",H1,讓步（可省略）
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body2,100,B2-1,topic_sentence,1,1,0,b_another_merit,Another merit is A2.,A2,好處二
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body2,110,B2-2,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,body2,140,B2-5,concession,1,1,1,conc_nevertheless_h,"Nevertheless, H2.",H2,讓步（可省略）
+sentence,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,conclusion,160,C,summary,1,1,0,c_although_drawbacks_adv_significant,"In conclusion, although T has certain drawbacks, its advantages in B1 and B2 are far more significant.",T;B1;B2,總結：讓步＋重申利大於弊
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,intro,20,I2,paraphrase,1,1,0,i2_positive_vs_detrimental,"Some people regard this trend as positive, while others view it as detrimental.",,改寫兩方觀點
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,intro,30,I3,thesis,1,1,0,i3_more_beneficial,"From where I stand, I believe this trend could be regarded as more beneficial to society than disadvantageous.",,表態：正面發展
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_adv_effect,One main advantageous effect of T is P1.,T;P1,正面影響一（P＝positive point）
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body1,80,B1-5,concession,1,1,1,conc_however_h,"However, H1.",H1,讓步（可省略）
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body2,100,B2-1,topic_sentence,1,1,0,b_another_positive_impact,Another positive impact of this trend is P2.,P2,正面影響二
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body2,110,B2-2,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,body2,140,B2-5,concession,1,1,1,conc_nevertheless_h,"Nevertheless, H2.",H2,讓步（可省略）
+sentence,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,conclusion,160,C,summary,1,1,0,c_despite_drawbacks_positive,"In conclusion, despite certain drawbacks, T is largely a positive development due to B1 and B2.",T;B1;B2,總結：讓步＋重申正面
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,intro,20,I2,paraphrase,1,1,0,i2_believe_v_opposite,"Some people believe that V, while others hold the opposite opinion.",V,改寫兩方觀點（與第1型同句）
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,intro,30,I3,thesis,1,1,0,i3_completely_adhere,"From where I stand, I completely adhere to / oppose the said notion above for the following reasons.",,表態（completely＝完全同意／反對）
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body1,40,B1-1,topic_sentence,1,1,0,b_first_reason,"To begin with, the first reason is that R1.",R1,理由一
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body2,100,B2-1,topic_sentence,1,1,0,b_another_reason,Another reason is that R2.,R2,理由二
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body2,110,B2-2,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,conclusion,160,C,summary,1,1,0,c_in_conclusion_t_b1_b2,"In conclusion, T + B1 and B2.",T;B1;B2,總結兩個理由
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,intro,20,I2,paraphrase,1,1,0,i2_v1_vs_v2,"Some people believe that V1, while others think that V2.",V1;V2,改寫兩個互斥觀點
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,intro,30,I3,thesis,1,1,0,i3_opinion_elucidate_both,"In my opinion, Op. This essay will elucidate both sides and present my perspective.",Op,先表態＋說明文章走向
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body1,40,B1-1,topic_sentence,1,1,0,b_on_the_one_hand,"On the one hand, V1.",V1,支持觀點一的理由
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body2,100,B2-1,topic_sentence,1,1,0,b_on_the_other_hand,"On the other hand, V2.",V2,支持觀點二的理由
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body2,110,B2-2,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,conclusion,160,C,summary,1,1,0,c_m1_however_m2_personally,"In conclusion, M1; however, M2. Personally, I believe Op.",M1;M2;Op,總結兩方＋重申立場
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,intro,20,I2,paraphrase,1,1,0,i2_bring_about_but_lead_to,"This phenomenon could bring about A1 and A2, but it could also lead to D1 and D2.",A1;A2;D1;D2,兩個維度一次講完：好處＋壞處
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,intro,30,I3,thesis,1,1,0,i3_both_aspects,This essay will discuss both of these aspects in detail.,,文章走向：6-9 型共用
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_noun_is_that,One main benefit is that A1.,A1,好處一
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,80,B1-5,second_point,1,1,0,b_apart_another_noun_is_that,"Apart from that, another benefit is that A2.",A2,好處二
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body1,90,B1-6,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,100,B2-1,topic_sentence,1,1,0,b2_however_one_main,"However, one main drawback is that D1.",D1,壞處一（換維度，開場詞是唯一要記的差異）
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,110,B2-2,explain,1,1,0,expl_this_is_because,This is because E3.,E3,解釋：為什麼
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,140,B2-5,second_point,1,1,0,b_moreover_another_noun_is_that,"Moreover, another drawback is that D2.",D2,壞處二
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,body2,150,B2-6,explain,1,1,0,expl_this_means_that,This means that E4.,E4,解釋：所以
+sentence,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,conclusion,160,C,summary,1,1,0,c_although_bring_about_also_lead_to,"In conclusion, although this phenomenon can bring about A1 and A2, it can also lead to D1 and D2.",A1;A2;D1;D2,總結＝把 I2 換頭再講一次
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,intro,10,I1,background,1,1,0,i1_pressing_issue,"In modern society, T has become a pressing issue.",T,背景：T 是負面現象時用這句
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,intro,20,I2,paraphrase,1,1,0,i2_bring_about_but_alleviated,"This phenomenon could bring about P1 and P2, but these problems can be alleviated by S1 and S2.",P1;P2;S1;S2,兩個維度一次講完：問題＋解法
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,intro,30,I3,thesis,1,1,0,i3_both_aspects,This essay will discuss both of these aspects in detail.,,文章走向：6-9 型共用
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_noun_is_that,One main problem is that P1.,P1,問題一
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,80,B1-5,second_point,1,1,0,b_apart_another_noun_is_that,"Apart from that, another problem is that P2.",P2,問題二
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body1,90,B1-6,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,100,B2-1,topic_sentence,1,1,0,b2_to_alleviate_one_main,"To alleviate these problems, one main solution is that S1.",S1,解法一（換維度，開場詞是唯一要記的差異）
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,110,B2-2,explain,1,1,0,expl_this_is_because,This is because E3.,E3,解釋：為什麼
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,140,B2-5,second_point,1,1,0,b_moreover_another_noun_is_that,"Moreover, another solution is that S2.",S2,解法二
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,body2,150,B2-6,explain,1,1,0,expl_this_means_that,This means that E4.,E4,解釋：所以
+sentence,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,conclusion,160,C,summary,1,1,0,c_although_bring_about_alleviated,"In conclusion, although this phenomenon can bring about P1 and P2, these problems can be alleviated by S1 and S2.",P1;P2;S1;S2,總結＝把 I2 換頭再講一次
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,intro,10,I1,background,1,1,0,i1_pressing_issue,"In modern society, T has become a pressing issue.",T,背景：T 是負面現象時用這句
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,intro,20,I2,paraphrase,1,1,0,i2_attributed_but_alleviated,"This phenomenon could be attributed to C1 and C2, but it can be alleviated by S1 and S2.",C1;C2;S1;S2,兩個維度一次講完：原因＋解法
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,intro,30,I3,thesis,1,1,0,i3_both_aspects,This essay will discuss both of these aspects in detail.,,文章走向：6-9 型共用
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_noun_is_that,One main cause is that C1.,C1,原因一
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,80,B1-5,second_point,1,1,0,b_apart_another_noun_is_that,"Apart from that, another cause is that C2.",C2,原因二
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body1,90,B1-6,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,100,B2-1,topic_sentence,1,1,0,b2_to_alleviate_one_main,"To alleviate this problem, one main solution is that S1.",S1,解法一（換維度，開場詞是唯一要記的差異）
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,110,B2-2,explain,1,1,0,expl_this_is_because,This is because E3.,E3,解釋：為什麼
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,140,B2-5,second_point,1,1,0,b_moreover_another_noun_is_that,"Moreover, another solution is that S2.",S2,解法二
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,body2,150,B2-6,explain,1,1,0,expl_this_means_that,This means that E4.,E4,解釋：所以
+sentence,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,conclusion,160,C,summary,1,1,0,c_although_attributed_alleviated,"In conclusion, although this phenomenon can be attributed to C1 and C2, it can be alleviated by S1 and S2.",C1;C2;S1;S2,總結＝把 I2 換頭再講一次
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,intro,10,I1,background,1,1,0,i1_debate,"In modern society, T has become a subject of considerable debate.",T,背景：中性議題用這句
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,intro,20,I2,paraphrase,1,1,0,i2_attributed_and_lead_to,"This phenomenon could be attributed to C1 and C2, and it could lead to Ef1 and Ef2.",C1;C2;Ef1;Ef2,兩個維度一次講完：原因＋影響
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,intro,30,I3,thesis,1,1,0,i3_both_aspects,This essay will discuss both of these aspects in detail.,,文章走向：6-9 型共用
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,40,B1-1,topic_sentence,1,1,0,b_one_main_noun_is_that,One main cause is that C1.,C1,原因一
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,50,B1-2,explain,1,1,0,expl_this_is_because,This is because E1.,E1,解釋：為什麼
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,60,B1-3,example,1,1,0,eg_for_example,"For example, Ex1.",Ex1,舉例
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,70,B1-4,result,1,1,0,res_as_a_result,"As a result, Res1.",Res1,結果
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,80,B1-5,second_point,1,1,0,b_apart_another_noun_is_that,"Apart from that, another cause is that C2.",C2,原因二
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body1,90,B1-6,explain,1,1,0,expl_this_means_that,This means that E2.,E2,解釋：所以
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,100,B2-1,topic_sentence,1,1,0,b2_as_for_the_effects_one_main,"As for the effects, one main impact is that Ef1.",Ef1,影響一（換維度，開場詞是唯一要記的差異）
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,110,B2-2,explain,1,1,0,expl_this_is_because,This is because E3.,E3,解釋：為什麼
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,120,B2-3,example,1,1,0,eg_for_instance,"For instance, Ex2.",Ex2,舉例
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,130,B2-4,result,1,1,0,res_consequently,"Consequently, Res2.",Res2,結果
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,140,B2-5,second_point,1,1,0,b_moreover_another_noun_is_that,"Moreover, another impact is that Ef2.",Ef2,影響二
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,body2,150,B2-6,explain,1,1,0,expl_this_means_that,This means that E4.,E4,解釋：所以
+sentence,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,conclusion,160,C,summary,1,1,0,c_attributed_and_lead_to,"In conclusion, this phenomenon can be attributed to C1 and C2, and it can lead to Ef1 and Ef2.",C1;C2;Ef1;Ef2,總結＝把 I2 換頭再講一次
+hint,0,（通用）,common,,,0,B1,glossary,1,1,0,,結論中：body1 的重點（非段落代號）,,
+hint,0,（通用）,common,,,0,B2,glossary,1,1,0,,結論中：body2 的重點（非段落代號）,,
+hint,0,（通用）,common,,,0,E1,glossary,1,1,0,,解釋 B1 論點：為什麼會這樣,,
+hint,0,（通用）,common,,,0,E2,glossary,1,1,0,,延伸 B1 論點：所以會怎樣,,
+hint,0,（通用）,common,,,0,E3,glossary,1,1,0,,解釋 B2 論點：為什麼會這樣,,
+hint,0,（通用）,common,,,0,E4,glossary,1,1,0,,延伸 B2 論點：所以會怎樣,,
+hint,0,（通用）,common,,,0,Ex1,glossary,1,1,0,,B1 的例子,,
+hint,0,（通用）,common,,,0,Ex2,glossary,1,1,0,,B2 的例子,,
+hint,0,（通用）,common,,,0,H1,glossary,1,1,0,,B1 的讓步（雖然…但影響有限）,,
+hint,0,（通用）,common,,,0,H2,glossary,1,1,0,,B2 的讓步,,
+hint,0,（通用）,common,,,0,M1,glossary,1,1,0,,結論：第一方觀點摘要,,
+hint,0,（通用）,common,,,0,M2,glossary,1,1,0,,結論：第二方觀點摘要,,
+hint,0,（通用）,common,,,0,Op,glossary,1,1,0,,你自己的立場,,
+hint,0,（通用）,common,,,0,Res1,glossary,1,1,0,,B1 的最終結果／好處,,
+hint,0,（通用）,common,,,0,Res2,glossary,1,1,0,,B2 的最終結果／好處,,
+hint,0,（通用）,common,,,0,T,glossary,1,1,0,,題目的主題／現象（改寫題目關鍵字，不要照抄）,,
+hint,0,（通用）,common,,,0,V,glossary,1,1,0,,題目的觀點（V1／V2＝兩個互斥觀點）,,
+hint,0,（通用）,common,,,10,I1,rule,1,1,0,,I1 只有兩版：中性議題→a subject of considerable debate；負面現象（塞車、肥胖、污染）→a pressing issue。7、8 型固定用 pressing issue。,,
+hint,0,（通用）,common,,,20,I2,rule,1,1,0,,6-9 型 I2 的關係片語只有四個：好處/問題→bring about；壞處/影響→lead to；原因→be attributed to；解法→be alleviated by。,,
+hint,0,（通用）,common,,,40,B1-1,rule,1,1,0,,6-9 型主句一律 One main + 名詞 + is that + 完整句子；名詞就是題型本身：benefit／drawback、problem／solution、cause／impact。,,
+hint,0,（通用）,common,,,100,B2-1,rule,1,1,0,,"6-9 型換維度的開場只有三個：6→However,／7、8→To alleviate these(this) problem(s),／9→As for the effects,。",,
+hint,0,（通用）,common,,,160,C,rule,1,1,0,,6-9 型的結論＝把 I2 再講一次：could 改成 can，6/7/8 前面加 although。不用另外背。,,
+hint,1,1. 同意程度（To What Extent）,to_what_extent,single,,0,R1,glossary,1,1,0,,支持你立場的理由一,,
+hint,1,1. 同意程度（To What Extent）,to_what_extent,single,,0,R2,glossary,1,1,0,,理由二,,
+hint,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,,0,A1,glossary,1,1,0,,好處一,,
+hint,2,2. 優點大於缺點（Adv Outweigh）,adv_outweigh,single,,0,A2,glossary,1,1,0,,好處二,,
+hint,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,,0,P1,glossary,1,1,0,,正面影響一（positive point）,,
+hint,3,3. 正面或負面發展（Pos or Neg）,positive_or_negative,single,,0,P2,glossary,1,1,0,,正面影響二,,
+hint,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,,0,R1,glossary,1,1,0,,理由一,,
+hint,4,4. 同意或不同意（Agree or Disagree）,agree_or_disagree,single,,0,R2,glossary,1,1,0,,理由二,,
+hint,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,,0,V1,glossary,1,1,0,,觀點一,,
+hint,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,,0,V2,glossary,1,1,0,,觀點二,,
+hint,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,,80,B1-5,rule,1,1,0,,若你支持觀點一，在此表明立場（可省略，先背骨架時跳過）,,
+hint,5,5. 討論兩方觀點（Discuss Both Views）,discuss_both_views,single,,140,B2-5,rule,1,1,0,,若你支持觀點二，在此表明立場（可省略）,,
+hint,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,,0,A1,glossary,1,1,0,,好處一,,
+hint,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,,0,A2,glossary,1,1,0,,好處二,,
+hint,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,,0,D1,glossary,1,1,0,,壞處一,,
+hint,6,6. 優點與缺點（Adv & Disadv）,adv_and_disadv,dual,,0,D2,glossary,1,1,0,,壞處二,,
+hint,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,,0,P1,glossary,1,1,0,,問題一（problem）,,
+hint,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,,0,P2,glossary,1,1,0,,問題二,,
+hint,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,,0,S1,glossary,1,1,0,,解法一,,
+hint,7,7. 問題與解決方案（Prob & Solutions）,problems_and_solutions,dual,,0,S2,glossary,1,1,0,,解法二,,
+hint,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,,0,C1,glossary,1,1,0,,原因一,,
+hint,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,,0,C2,glossary,1,1,0,,原因二,,
+hint,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,,0,S1,glossary,1,1,0,,解法一,,
+hint,8,8. 原因與解決方案（Causes & Solutions）,causes_and_solutions,dual,,0,S2,glossary,1,1,0,,解法二,,
+hint,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,,0,C1,glossary,1,1,0,,原因一,,
+hint,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,,0,C2,glossary,1,1,0,,原因二,,
+hint,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,,0,Ef1,glossary,1,1,0,,影響一,,
+hint,9,9. 原因與影響（Causes & Effects）,causes_and_effects,dual,,0,Ef2,glossary,1,1,0,,影響二,,

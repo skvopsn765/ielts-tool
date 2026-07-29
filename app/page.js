@@ -9,6 +9,8 @@ import ArticleImagePanel from "./components/ArticleImagePanel";
 import ComparisonPanel from "./components/ComparisonPanel";
 import ComparisonLegend from "./components/ComparisonLegend";
 import MultiSentenceChecklist from "./components/MultiSentenceChecklist";
+import Task2SentenceContext from "./components/Task2SentenceContext";
+import Task2CheatSheet from "./components/Task2CheatSheet";
 import { createClient, isSupabaseConfigured } from "../lib/supabase/client";
 import {
   addFavoriteSentence,
@@ -18,6 +20,24 @@ import {
   removeFavoriteSentence,
   upsertSrsCardAfterAttempt,
 } from "../lib/practice-data";
+import {
+  loadTask2Rows,
+  getEssayTypeList,
+  getDistinctSections,
+  getDistinctFuncs,
+  getDistinctDimensions,
+  selectByType,
+  selectMinimalSkeleton,
+  selectCorePatterns,
+  selectByParagraph,
+  selectByFunc,
+  selectByDimension,
+  getVariantGroup,
+  resolveGlossaryText,
+  getCheatSheetGroups,
+  maskWithPlaceholders,
+  GLOBAL_TYPE_ID as TASK2_GLOBAL_TYPE_ID,
+} from "../lib/task2-templates";
 
 const KEY_ENTER = "Enter";
 const KEY_F2 = "F2";
@@ -75,15 +95,26 @@ const STATIC_COMPARISON_ARTICLE_ID = "static-comparison-table-bar-by-category-gr
 const MAP_STATIC_ARTICLE_ID = "map-static";
 const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
-const TASK2_CAUSES_SOLUTIONS_ARTICLE_ID = "task2-causes-solutions";
-const TASK2_AGREE_DISAGREE_ARTICLE_ID = "task2-agree-disagree";
-const TASK2_TO_WHAT_EXTENT_ARTICLE_ID = "task2-to-what-extent";
-const TASK2_ADV_OUTWEIGH_ARTICLE_ID = "task2-adv-outweigh";
-const TASK2_POS_NEG_ARTICLE_ID = "task2-pos-neg";
-const TASK2_DISCUSS_BOTH_ARTICLE_ID = "task2-discuss-both";
-const TASK2_ADV_DISADV_ARTICLE_ID = "task2-adv-disadv";
-const TASK2_PROB_SOLUTIONS_ARTICLE_ID = "task2-prob-solutions";
-const TASK2_CAUSES_EFFECTS_ARTICLE_ID = "task2-causes-effects";
+const TASK2_TYPE_ARTICLE_ID_PREFIX = "task2-type-";
+const TASK2_CORE_PATTERNS_ARTICLE_ID = "task2-core-patterns";
+const TASK2_SECTION_ARTICLE_ID_PREFIX = "task2-section-";
+const TASK2_FUNC_ARTICLE_ID_PREFIX = "task2-func-";
+const TASK2_DIMENSION_ARTICLE_ID_PREFIX = "task2-dimension-";
+const TASK2_MODE_BY_TYPE = "by_type";
+const TASK2_MODE_MINIMAL_SKELETON = "minimal_skeleton";
+const TASK2_MODE_CORE_PATTERNS = "core_patterns";
+const TASK2_MODE_BY_PARAGRAPH = "by_paragraph";
+const TASK2_MODE_BY_FUNC = "by_func";
+const TASK2_MODE_BY_DIMENSION = "by_dimension";
+const TASK2_MODE_OPTIONS = [
+  TASK2_MODE_BY_TYPE,
+  TASK2_MODE_MINIMAL_SKELETON,
+  TASK2_MODE_CORE_PATTERNS,
+  TASK2_MODE_BY_PARAGRAPH,
+  TASK2_MODE_BY_FUNC,
+  TASK2_MODE_BY_DIMENSION,
+];
+const SLUG_WORD_SEPARATOR_RE = /[_-]+/g;
 const PRACTICE_TAB_SINGLE = "single";
 const PRACTICE_TAB_MULTI = "multi";
 const PRACTICE_TAB_SINGLE_BUTTON_ID = "practice-tab-single-button";
@@ -199,140 +230,6 @@ Subsequently, the [A] is [V-ed] and then [V-ed].
 At this point, [A] can be [V-ed], [V-ed] and then used to produce [B].
 Eventually, the [A] is [V-ed] and ready for [use / sale / distribution].
 The entire process concludes with the [N] of [A].`;
-const TASK2_CAUSES_EFFECTS_ARTICLE = `In modern society, T has become a subject of considerable debate.
-This trend could be attributed to C1 and C2, and can lead to Ef1 and Ef2.
-This essay will explore some reasons and possible results of this trend.
-One primary factor contributing to this phenomenon is C1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-Apart from that, C2 also plays a significant role.
-This means that E2.
-One main impact of this phenomenon is Ef1.
-This is because E3.
-For instance, Ex2.
-Consequently, Res2.
-Moreover, T can also lead to Ef2.
-This means that E4.
-In conclusion, T is primarily caused by Cs, and it has led to significant consequences such as Es.`;
-const TASK2_PROB_SOLUTIONS_ARTICLE = `In modern society, T has become a pivotal issue in society.
-This trend could result in Pr1 and Pr2, but it can be alleviated by S1 and S2.
-This essay will explore some issues brought by this trend and suggest feasible measures to address it.
-One primary concern brought by this phenomenon is Pr1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-Apart from that, T also leads to Pr2.
-This means that E2.
-To mitigate these, one possible measure is S1.
-This can be done by H1, which can H2.
-For instance, ExS1.
-As a result, ResS1.
-Moreover, S2 can also be implemented.
-By doing this, BS2.
-In conclusion, although T brings about Ps, these issues can be effectively addressed through Ss.`;
-const TASK2_ADV_DISADV_ARTICLE = `In modern society, T has become a subject of considerable debate.
-This trend could bring A1 and A2; however, it may also lead to D1 and D2.
-This essay will illustrate both benefits and drawbacks of this trend.
-One significant benefit of T is A1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-Apart from that, T also A2.
-This means that E2.
-However, a drawback of T is D1.
-This is because E3.
-For instance, Ex2.
-Consequently, Res2.
-Additionally, D2 is another drawback of T.
-This means that E4.
-In conclusion, while T offers benefits such as As, it also poses challenges including Ds.`;
-const TASK2_DISCUSS_BOTH_ARTICLE = `In modern society, T has become a subject of considerable debate.
-Some people believe that V1, while others think that V2.
-In my opinion, Op.
-This essay will elucidate both sides and present my perspective.
-On the one hand, V1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-(If you agree with View 1, state your opinion here.)
-On the other hand, V2.
-This means that E2.
-For instance, Ex2.
-Consequently, Res2.
-(If you agree with View 2, state your opinion here.)
-In conclusion, M1; however, M2.
-Personally, I believe Op.`;
-const TASK2_POS_NEG_ARTICLE = `In modern society, T has become a subject of considerable debate.
-Some people regard this trend as positive, while others view it as detrimental.
-From where I stand, I believe this trend could be regarded as more beneficial to society than disadvantageous.
-One main advantageous effect of T is P1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-However, H1.
-Another positive impact of this trend is P2.
-This means that E2.
-For instance, Ex2.
-Consequently, Res2.
-Nevertheless, H2.
-In conclusion, despite certain drawbacks, T is largely a positive development due to B1 and B2.`;
-const TASK2_ADV_OUTWEIGH_ARTICLE = `In modern society, T has become a subject of considerable debate.
-Some people assert that this trend is beneficial, while others claim it brings more harm.
-From where I stand, the benefits of this trend dominate its drawbacks.
-One main benefit of T is A1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-However, H1.
-Another merit is A2.
-This means that E2.
-For instance, Ex2.
-Consequently, Res2.
-Nevertheless, H2.
-In conclusion, although T has certain drawbacks, its advantages in B1 and B2 are far more significant.`;
-const TASK2_TO_WHAT_EXTENT_ARTICLE = `In modern society, T has become a subject of considerable debate.
-Some people believe that V, while others hold the opposite opinion.
-From where I stand, I strongly adhere to / oppose the said notion above for the following reasons.
-To begin with, the first reason is that R1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-However, H1.
-Another reason is that R2.
-This means that E2.
-For instance, Ex2.
-Consequently, Res2.
-Nevertheless, H2.
-In conclusion, T + B1 and B2.`;
-const TASK2_AGREE_DISAGREE_ARTICLE = `In modern society, T has become a subject of considerable debate.
-Some people believe that V.
-From where I stand, I completely adhere to / oppose the said notion above for the following reasons.
-To begin with, the first reason is that R1.
-This is because E1.
-For example, Ex1.
-As a result, Res1.
-Another reason is that R2.
-This means that E2.
-For instance, Ex2.
-Consequently, Res2.
-In conclusion, T + B1 and B2.`;
-const TASK2_CAUSES_SOLUTIONS_ARTICLE = `In modern society, T has become a subject of intense discussion.
-This trend could be attributed to C1 and C2, but it can be alleviated by S1 and S2.
-This essay will explore the primary reasons behind this phenomenon and suggest feasible measures to address it.
-One primary factor contributing to this phenomenon is C1.
-This is because E1.
-For example, Ex1.
-As a result, R1.
-Furthermore, this issue is also caused by C2.
-This means that E2.
-To tackle this problem, the most effective measure is S1.
-By doing this, HS1.
-For instance, ExS1.
-Moreover, S2 should also be implemented.
-This approach ensures that BS2.
-In conclusion, although T is primarily driven by C1 and C2, it is not an insurmountable problem.
-By collectively implementing S1 and S2, we can effectively mitigate its negative impacts.`;
 const PRACTICE_ARTICLE_LIBRARY = {
   [SAMPLE_ARTICLE_ID]: {
     essays: [SAMPLE_ARTICLE],
@@ -355,45 +252,7 @@ const PRACTICE_ARTICLE_LIBRARY = {
   [PROCESS_DIAGRAM_ARTICLE_ID]: {
     essays: [PROCESS_DIAGRAM_ARTICLE],
   },
-  [TASK2_CAUSES_SOLUTIONS_ARTICLE_ID]: {
-    essays: [TASK2_CAUSES_SOLUTIONS_ARTICLE],
-  },
-  [TASK2_AGREE_DISAGREE_ARTICLE_ID]: {
-    essays: [TASK2_AGREE_DISAGREE_ARTICLE],
-  },
-  [TASK2_TO_WHAT_EXTENT_ARTICLE_ID]: {
-    essays: [TASK2_TO_WHAT_EXTENT_ARTICLE],
-  },
-  [TASK2_ADV_OUTWEIGH_ARTICLE_ID]: {
-    essays: [TASK2_ADV_OUTWEIGH_ARTICLE],
-  },
-  [TASK2_POS_NEG_ARTICLE_ID]: {
-    essays: [TASK2_POS_NEG_ARTICLE],
-  },
-  [TASK2_DISCUSS_BOTH_ARTICLE_ID]: {
-    essays: [TASK2_DISCUSS_BOTH_ARTICLE],
-  },
-  [TASK2_ADV_DISADV_ARTICLE_ID]: {
-    essays: [TASK2_ADV_DISADV_ARTICLE],
-  },
-  [TASK2_PROB_SOLUTIONS_ARTICLE_ID]: {
-    essays: [TASK2_PROB_SOLUTIONS_ARTICLE],
-  },
-  [TASK2_CAUSES_EFFECTS_ARTICLE_ID]: {
-    essays: [TASK2_CAUSES_EFFECTS_ARTICLE],
-  },
 };
-const TASK2_ARTICLE_BUTTON_CONFIGS = [
-  { id: TASK2_TO_WHAT_EXTENT_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_ADV_OUTWEIGH_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_POS_NEG_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_AGREE_DISAGREE_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_DISCUSS_BOTH_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_ADV_DISADV_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_PROB_SOLUTIONS_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_CAUSES_SOLUTIONS_ARTICLE_ID, isEnabled: true },
-  { id: TASK2_CAUSES_EFFECTS_ARTICLE_ID, isEnabled: true },
-];
 const PRACTICE_ARTICLE_BUTTON_CONFIGS = [
   { id: SAMPLE_ARTICLE_ID, isEnabled: true },
   { id: DYNAMIC_DIFFERENT_TREND_ARTICLE_ID, isEnabled: true },
@@ -438,6 +297,19 @@ const ARTICLE_HIGHLIGHT_PHRASES = {
     "making it",
   ],
 };
+
+function humanizeSlug(slug) {
+  if (!slug) return EMPTY_STRING;
+  return slug
+    .split(SLUG_WORD_SEPARATOR_RE)
+    .filter((word) => word.length > 0)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getTask2TypeArticleId(typeInfo) {
+  return `${TASK2_TYPE_ARTICLE_ID_PREFIX}${typeInfo.typeNameEn}`;
+}
 
 function filterUkVoiceList(voices) {
   const gbVoices = voices.filter((v) => v.lang.toLowerCase().startsWith(TTS_LANG_PREFERRED.toLowerCase()));
@@ -897,6 +769,15 @@ export default function HomePage() {
   const [favoriteKeySet, setFavoriteKeySet] = useState(() => new Set());
   const [isFavoriteBusy, setIsFavoriteBusy] = useState(false);
   const [syncStatusMessage, setSyncStatusMessage] = useState(EMPTY_STRING);
+  const [task2Rows, setTask2Rows] = useState([]);
+  const [isTask2LoadError, setIsTask2LoadError] = useState(false);
+  const [task2Mode, setTask2Mode] = useState(TASK2_MODE_CORE_PATTERNS);
+  const [sentenceMeta, setSentenceMeta] = useState(null);
+  const [customArticleText, setCustomArticleText] = useState(null);
+  const [activeGlossaryToken, setActiveGlossaryToken] = useState(EMPTY_STRING);
+  const [variantMatchNote, setVariantMatchNote] = useState(EMPTY_STRING);
+  const [multiTargetBlanks, setMultiTargetBlanks] = useState([]);
+  const [isTask2CheatSheetOpen, setIsTask2CheatSheetOpen] = useState(false);
 
   const supabaseClient = useMemo(() => createClient(), []);
   const isSupabaseReady = isSupabaseConfigured();
@@ -911,15 +792,37 @@ export default function HomePage() {
   const singleSelectorToggleButtonRef = useRef(null);
   const multiSelectorToggleButtonRef = useRef(null);
 
+  useEffect(() => {
+    let isMounted = true;
+    loadTask2Rows()
+      .then((rows) => {
+        if (isMounted) setTask2Rows(rows);
+      })
+      .catch(() => {
+        if (isMounted) setIsTask2LoadError(true);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const task2EssayTypes = useMemo(() => getEssayTypeList(task2Rows), [task2Rows]);
+  const task2Sections = useMemo(() => getDistinctSections(task2Rows), [task2Rows]);
+  const task2Funcs = useMemo(() => getDistinctFuncs(task2Rows), [task2Rows]);
+  const task2Dimensions = useMemo(() => getDistinctDimensions(task2Rows), [task2Rows]);
+  const task2CorePatternRows = useMemo(() => selectCorePatterns(task2Rows), [task2Rows]);
+  const task2CheatSheetGroups = useMemo(() => getCheatSheetGroups(task2Rows), [task2Rows]);
+
   const hasSentence = useMemo(
     () => (sentences[currentIndex] ?? EMPTY_STRING).length > 0,
     [currentIndex, sentences]
   );
   const activeArticleText = useMemo(() => {
+    if (customArticleText !== null) return customArticleText;
     if (!activeArticleId) return EMPTY_STRING;
     return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.essays[activeEssayIndex] ?? EMPTY_STRING;
-  }, [activeArticleId, activeEssayIndex]);
-  const sourceSentenceList = useMemo(() => splitSentences(activeArticleText), [activeArticleText]);
+  }, [activeArticleId, activeEssayIndex, customArticleText]);
+  const sourceSentenceList = sentences;
   const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
   ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
@@ -1045,7 +948,47 @@ export default function HomePage() {
     return truncatePreview(sentence, SENTENCE_PREVIEW_MAX_LENGTH);
   }, [sentences, currentIndex, isReferenceCollapsed, t]);
 
+  function getTask2TypeLabel(typeInfo) {
+    if (language === LANG_TW) return typeInfo.typeNameZh;
+    return `${typeInfo.typeId}. ${humanizeSlug(typeInfo.typeNameEn)}`;
+  }
+
+  function getTask2TypeLabelById(typeId) {
+    const typeInfo = task2EssayTypes.find((info) => info.typeId === typeId);
+    return typeInfo ? getTask2TypeLabel(typeInfo) : String(typeId);
+  }
+
+  function getTask2SectionLabel(section) {
+    return t.task2SectionLabelMap[section] ?? humanizeSlug(section);
+  }
+
+  function getTask2FuncLabel(func) {
+    return t.task2FuncLabelMap[func] ?? humanizeSlug(func);
+  }
+
+  function getTask2DimensionLabel(dimension) {
+    return t.task2DimensionLabelMap[dimension] ?? humanizeSlug(dimension);
+  }
+
   function getArticleLabel(articleId) {
+    if (!articleId) return EMPTY_STRING;
+
+    const task2TypeMatch = task2EssayTypes.find((info) => getTask2TypeArticleId(info) === articleId);
+    if (task2TypeMatch) return getTask2TypeLabel(task2TypeMatch);
+
+    if (articleId === TASK2_CORE_PATTERNS_ARTICLE_ID) {
+      return t.formatTask2CoreLabel(task2CorePatternRows.length);
+    }
+    if (articleId.startsWith(TASK2_SECTION_ARTICLE_ID_PREFIX)) {
+      return getTask2SectionLabel(articleId.slice(TASK2_SECTION_ARTICLE_ID_PREFIX.length));
+    }
+    if (articleId.startsWith(TASK2_FUNC_ARTICLE_ID_PREFIX)) {
+      return getTask2FuncLabel(articleId.slice(TASK2_FUNC_ARTICLE_ID_PREFIX.length));
+    }
+    if (articleId.startsWith(TASK2_DIMENSION_ARTICLE_ID_PREFIX)) {
+      return getTask2DimensionLabel(articleId.slice(TASK2_DIMENSION_ARTICLE_ID_PREFIX.length));
+    }
+
     return t.articleLabelMap[articleId] ?? articleId;
   }
 
@@ -1059,6 +1002,8 @@ export default function HomePage() {
     setComparisonTokens([]);
     setPracticeStatus(STATUS_IDLE);
     setIsComparisonExpanded(false);
+    setActiveGlossaryToken(EMPTY_STRING);
+    setVariantMatchNote(EMPTY_STRING);
   }
 
   function focusAnswerInput() {
@@ -1071,7 +1016,7 @@ export default function HomePage() {
     answerInputRef.current?.blur();
   }
 
-  function renderCurrentSentence(nextSentences, nextIndex) {
+  function renderCurrentSentence(nextSentences, nextIndex, explicitMeta) {
     const sentence = nextSentences[nextIndex] ?? EMPTY_STRING;
     const sentenceCount = nextSentences.length;
 
@@ -1083,7 +1028,9 @@ export default function HomePage() {
 
     const displayIndex = nextIndex + 1;
     setSentenceStatus(t.formatSentenceProgress(displayIndex, sentenceCount));
-    setMaskedSentence(maskSentence(sentence));
+    const metaRows = explicitMeta !== undefined ? explicitMeta : sentenceMeta;
+    const metaRow = metaRows ? metaRows[nextIndex] : null;
+    setMaskedSentence(metaRow ? maskWithPlaceholders(sentence, metaRow.blanks) : maskSentence(sentence));
   }
 
   function startPractice(articleText) {
@@ -1095,10 +1042,11 @@ export default function HomePage() {
     }
 
     const FIRST_INDEX = 0;
+    setSentenceMeta(null);
     setSentences(nextSentences);
     setCurrentIndex(FIRST_INDEX);
     clearAnswerArea();
-    renderCurrentSentence(nextSentences, FIRST_INDEX);
+    renderCurrentSentence(nextSentences, FIRST_INDEX, null);
     focusAnswerInput();
   }
 
@@ -1109,6 +1057,7 @@ export default function HomePage() {
     const essayText = targetArticle.essays[index] ?? EMPTY_STRING;
     if (!essayText) return;
 
+    setCustomArticleText(null);
     setActiveArticleId(articleId);
     setActiveEssayIndex(index);
     startPractice(essayText);
@@ -1121,6 +1070,101 @@ export default function HomePage() {
   function handleEssaySelection(essayIndex) {
     if (!activeArticleId) return;
     loadArticleAndStartPractice(activeArticleId, essayIndex);
+  }
+
+  function startTask2Practice(rows, articleId) {
+    if (!rows || rows.length === 0) return;
+
+    const FIRST_INDEX = 0;
+    const rowTexts = rows.map((row) => row.text);
+    const referenceText = rowTexts.join(" ");
+    setCustomArticleText(referenceText);
+    setActiveArticleId(articleId);
+    setActiveEssayIndex(FIRST_INDEX);
+    setSentenceMeta(rows);
+    setSentences(rowTexts);
+    setCurrentIndex(FIRST_INDEX);
+    clearAnswerArea();
+    renderCurrentSentence(rowTexts, FIRST_INDEX, rows);
+    focusAnswerInput();
+  }
+
+  function handleTask2TypeSelect(articleId) {
+    const typeInfo = task2EssayTypes.find((info) => getTask2TypeArticleId(info) === articleId);
+    if (!typeInfo) return;
+    const rows =
+      task2Mode === TASK2_MODE_MINIMAL_SKELETON
+        ? selectMinimalSkeleton(task2Rows, typeInfo.typeId)
+        : selectByType(task2Rows, typeInfo.typeId);
+    startTask2Practice(rows, articleId);
+  }
+
+  function handleTask2CoreStart() {
+    startTask2Practice(task2CorePatternRows, TASK2_CORE_PATTERNS_ARTICLE_ID);
+  }
+
+  function handleTask2SectionSelect(articleId) {
+    const section = articleId.slice(TASK2_SECTION_ARTICLE_ID_PREFIX.length);
+    startTask2Practice(selectByParagraph(task2Rows, section), articleId);
+  }
+
+  function handleTask2FuncSelect(articleId) {
+    const func = articleId.slice(TASK2_FUNC_ARTICLE_ID_PREFIX.length);
+    startTask2Practice(selectByFunc(task2Rows, func), articleId);
+  }
+
+  function handleTask2DimensionSelect(articleId) {
+    const dimension = articleId.slice(TASK2_DIMENSION_ARTICLE_ID_PREFIX.length);
+    startTask2Practice(selectByDimension(task2Rows, dimension), articleId);
+  }
+
+  function handleTask2ArticleSelection(articleId) {
+    if (task2Mode === TASK2_MODE_BY_TYPE || task2Mode === TASK2_MODE_MINIMAL_SKELETON) {
+      handleTask2TypeSelect(articleId);
+      return;
+    }
+    if (task2Mode === TASK2_MODE_CORE_PATTERNS) {
+      handleTask2CoreStart();
+      return;
+    }
+    if (task2Mode === TASK2_MODE_BY_PARAGRAPH) {
+      handleTask2SectionSelect(articleId);
+      return;
+    }
+    if (task2Mode === TASK2_MODE_BY_FUNC) {
+      handleTask2FuncSelect(articleId);
+      return;
+    }
+    if (task2Mode === TASK2_MODE_BY_DIMENSION) {
+      handleTask2DimensionSelect(articleId);
+    }
+  }
+
+  function getTask2ModeArticleConfigs() {
+    if (task2Mode === TASK2_MODE_BY_TYPE || task2Mode === TASK2_MODE_MINIMAL_SKELETON) {
+      return task2EssayTypes.map((info) => ({ id: getTask2TypeArticleId(info), isEnabled: true }));
+    }
+    if (task2Mode === TASK2_MODE_CORE_PATTERNS) {
+      return task2CorePatternRows.length > 0
+        ? [{ id: TASK2_CORE_PATTERNS_ARTICLE_ID, isEnabled: true }]
+        : [];
+    }
+    if (task2Mode === TASK2_MODE_BY_PARAGRAPH) {
+      return task2Sections.map((section) => ({
+        id: `${TASK2_SECTION_ARTICLE_ID_PREFIX}${section}`,
+        isEnabled: true,
+      }));
+    }
+    if (task2Mode === TASK2_MODE_BY_FUNC) {
+      return task2Funcs.map((func) => ({ id: `${TASK2_FUNC_ARTICLE_ID_PREFIX}${func}`, isEnabled: true }));
+    }
+    if (task2Mode === TASK2_MODE_BY_DIMENSION) {
+      return task2Dimensions.map((dimension) => ({
+        id: `${TASK2_DIMENSION_ARTICLE_ID_PREFIX}${dimension}`,
+        isEnabled: true,
+      }));
+    }
+    return [];
   }
 
   function toggleSentenceSelection(index) {
@@ -1267,17 +1311,28 @@ export default function HomePage() {
   ttsHandlersRef.current = { handleTtsPlay, handleTtsPause, handleTtsStop, handleTtsPrev, handleTtsNext };
 
   function startMultiPracticeBySelection() {
-    const selectedSentences = sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index]);
-    if (selectedSentences.length === 0) {
+    const selectedIndexes = sourceSentenceList
+      .map((_sentence, index) => index)
+      .filter((index) => selectedSentenceMap[index]);
+    if (selectedIndexes.length === 0) {
       setMultiSelectionStatus(t.selectSentenceFirst);
       return;
     }
 
+    const selectedSentences = selectedIndexes.map((index) => sourceSentenceList[index]);
     const combinedSentenceText = normalizeSpaces(selectedSentences.join(" "));
+    const combinedBlanks = sentenceMeta
+      ? selectedIndexes.flatMap((index) => sentenceMeta[index]?.blanks ?? [])
+      : [];
     setMultiTargetText(combinedSentenceText);
+    setMultiTargetBlanks(combinedBlanks);
     setMultiAnswerInput(EMPTY_STRING);
     setSentenceStatus(t.formatMultiSentenceProgress(selectedSentences.length));
-    setMaskedSentence(maskSentence(combinedSentenceText));
+    setMaskedSentence(
+      combinedBlanks.length > 0
+        ? maskWithPlaceholders(combinedSentenceText, combinedBlanks)
+        : maskSentence(combinedSentenceText)
+    );
     setResultStatus(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
     setComparisonTokens([]);
@@ -1348,13 +1403,35 @@ export default function HomePage() {
     });
   }
 
+  /**
+   * Pick the best-matching variant among a group of alternative wordings for
+   * the same (type_id, slot). Any variant may be accepted as correct; we
+   * report back which target text was actually matched.
+   */
+  function evaluateAgainstVariants(defaultTarget, input, variantGroup) {
+    const candidateTexts = variantGroup.length > 0 ? variantGroup.map((row) => row.text) : [defaultTarget];
+    let best = null;
+
+    for (const candidateText of candidateTexts) {
+      const candidateResult = compareAnswer(candidateText, input);
+      if (!best || candidateResult.wrongCount < best.result.wrongCount) {
+        best = { target: candidateText, result: candidateResult };
+      }
+      if (candidateResult.isCorrect) break;
+    }
+
+    return best ?? { target: defaultTarget, result: compareAnswer(defaultTarget, input) };
+  }
+
   function checkCurrentAnswer() {
     if (!hasSentence) return;
 
     const target = getCurrentSentence();
     const normalizedInput = normalizeSpaces(answerInput);
-    const result = compareAnswer(target, normalizedInput);
-    const targetLength = Array.from(target).length;
+    const currentMetaRow = sentenceMeta ? sentenceMeta[currentIndex] : null;
+    const variantGroup = currentMetaRow ? getVariantGroup(task2Rows, currentMetaRow) : [];
+    const { target: matchedTarget, result } = evaluateAgainstVariants(target, normalizedInput, variantGroup);
+    const targetLength = Array.from(matchedTarget).length;
     const accuracyPercent = result.isCorrect
       ? ACCURACY_PERCENT_FULL
       : targetLength === 0
@@ -1366,6 +1443,9 @@ export default function HomePage() {
     } else {
       setResultStatus(t.formatSingleWrongResult(result.wrongCount, accuracyPercent));
     }
+    setVariantMatchNote(
+      result.isCorrect && matchedTarget !== target ? t.formatVariantMatchNote(matchedTarget) : EMPTY_STRING
+    );
 
     setComparisonTokens(result.tokens);
     setPracticeStatus(STATUS_READY_NEXT);
@@ -1735,12 +1815,15 @@ export default function HomePage() {
     setIsMultiSelectorExpanded(true);
     setIsSingleSelectorExpanded(true);
     setMultiTargetText(EMPTY_STRING);
+    setMultiTargetBlanks([]);
     setMultiAnswerInput(EMPTY_STRING);
     setMultiSelectionStatus(EMPTY_STRING);
     setIsActiveArticleImageUnavailable(false);
     setIsArticleTextExpanded(true);
     setIsArticleImageExpanded(true);
     setIsComparisonExpanded(false);
+    setActiveGlossaryToken(EMPTY_STRING);
+    setVariantMatchNote(EMPTY_STRING);
   }, [activeArticleId]);
 
   useEffect(() => {
@@ -1799,7 +1882,11 @@ export default function HomePage() {
       ).length;
       setSentenceStatus(t.formatMultiSentenceProgress(selectedSentenceCount));
       if (multiTargetText) {
-        setMaskedSentence(maskSentence(multiTargetText));
+        setMaskedSentence(
+          multiTargetBlanks.length > 0
+            ? maskWithPlaceholders(multiTargetText, multiTargetBlanks)
+            : maskSentence(multiTargetText)
+        );
       }
       return;
     }
@@ -1825,6 +1912,7 @@ export default function HomePage() {
     sourceSentenceList,
     selectedSentenceMap,
     multiTargetText,
+    multiTargetBlanks,
     sentences,
     currentIndex,
     t,
@@ -2146,7 +2234,31 @@ export default function HomePage() {
                   renderSentencePills()
                 )}
               </div>
+              {sentenceMeta && sentenceMeta[currentIndex] ? (
+                <Task2SentenceContext
+                  typeLabel={getTask2TypeLabelById(sentenceMeta[currentIndex].type_id)}
+                  sectionLabel={
+                    sentenceMeta[currentIndex].section
+                      ? getTask2SectionLabel(sentenceMeta[currentIndex].section)
+                      : EMPTY_STRING
+                  }
+                  slot={sentenceMeta[currentIndex].slot}
+                  noteZh={sentenceMeta[currentIndex].note_zh}
+                  blanks={sentenceMeta[currentIndex].blanks}
+                  activeToken={activeGlossaryToken}
+                  glossaryText={
+                    activeGlossaryToken
+                      ? resolveGlossaryText(task2Rows, sentenceMeta[currentIndex].type_id, activeGlossaryToken)
+                      : EMPTY_STRING
+                  }
+                  onToggleToken={(token) =>
+                    setActiveGlossaryToken((prev) => (prev === token ? EMPTY_STRING : token))
+                  }
+                  labels={{ blanksLabel: t.task2BlanksLabel, glossaryEmpty: t.task2GlossaryEmpty }}
+                />
+              ) : null}
               {showHintMask && <div className="masked">{maskedSentence}</div>}
+              {variantMatchNote ? <div className="status text-caption">{variantMatchNote}</div> : null}
               <div className="btn-row">
                 <input
                   ref={answerInputRef}
@@ -2324,20 +2436,58 @@ export default function HomePage() {
       </section>
 
       <section className="card">
-        <ArticleLibrary
-          title={t.task2LibraryTitle}
-          subtitle={t.task2LibrarySubtitle}
-          articleConfigs={TASK2_ARTICLE_BUTTON_CONFIGS}
-          activeArticleId={activeArticleId}
-          getArticleLabel={getArticleLabel}
-          getArticleButtonTitle={(isEnabled) =>
-            isEnabled ? t.articleButtonTitleEnabled : t.articleButtonTitleDisabled
-          }
-          getArticleStateLabel={(isEnabled) =>
-            isEnabled ? t.articleReadyState : t.articleLockedState
-          }
-          onSelectArticle={handleArticleSelection}
-        />
+        {isTask2LoadError ? (
+          <div className="article-library-header">
+            <h2 className="article-library-title">{t.task2LibraryTitle}</h2>
+            <div className="comparison-empty-state">{t.task2LoadErrorMessage}</div>
+          </div>
+        ) : (
+          <>
+            <div className="task2-mode-bar" role="tablist" aria-label={t.task2ModeSelectorAriaLabel}>
+              {TASK2_MODE_OPTIONS.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`task2-mode-btn ${task2Mode === mode ? "active" : EMPTY_STRING}`}
+                  onClick={() => setTask2Mode(mode)}
+                  aria-pressed={task2Mode === mode}
+                >
+                  {t.task2ModeLabelMap[mode]}
+                </button>
+              ))}
+            </div>
+            <ArticleLibrary
+              title={t.task2LibraryTitle}
+              subtitle={t.task2LibrarySubtitle}
+              articleConfigs={getTask2ModeArticleConfigs()}
+              activeArticleId={activeArticleId}
+              getArticleLabel={getArticleLabel}
+              getArticleButtonTitle={() => t.articleButtonTitleEnabled}
+              getArticleStateLabel={() => t.articleReadyState}
+              onSelectArticle={handleTask2ArticleSelection}
+            />
+            <div className="btn-row">
+              <button
+                type="button"
+                className="btn-ghost compact"
+                onClick={() => setIsTask2CheatSheetOpen((prev) => !prev)}
+              >
+                {isTask2CheatSheetOpen ? t.task2CheatSheetHide : t.task2CheatSheetShow}
+              </button>
+            </div>
+            {isTask2CheatSheetOpen ? (
+              <Task2CheatSheet
+                groups={task2CheatSheetGroups}
+                getGroupLabel={(typeId) =>
+                  typeId === TASK2_GLOBAL_TYPE_ID ? t.task2CheatSheetAllTypes : getTask2TypeLabelById(typeId)
+                }
+                title={t.task2CheatSheetTitle}
+                closeLabel={t.task2CheatSheetHide}
+                onClose={() => setIsTask2CheatSheetOpen(false)}
+              />
+            ) : null}
+          </>
+        )}
       </section>
 
       <ArticleImagePanel
