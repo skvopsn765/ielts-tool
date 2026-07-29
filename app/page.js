@@ -11,12 +11,16 @@ import ComparisonLegend from "./components/ComparisonLegend";
 import MultiSentenceChecklist from "./components/MultiSentenceChecklist";
 import Task2SentenceContext from "./components/Task2SentenceContext";
 import Task2CheatSheet from "./components/Task2CheatSheet";
+import AccuracyTrendChart from "./components/AccuracyTrendChart";
 import { createClient, isSupabaseConfigured } from "../lib/supabase/client";
 import { useLoading } from "../lib/loading-context";
 import {
   addFavoriteSentence,
+  computeAccuracyRatePercent,
   createFavoriteKey,
   fetchFavoriteSentenceKeys,
+  fetchPracticeAttemptsForSentence,
+  fetchSrsStatsMap,
   recordPracticeAttempt,
   removeFavoriteSentence,
   upsertSrsCardAfterAttempt,
@@ -795,6 +799,8 @@ export default function HomePage() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authMessage, setAuthMessage] = useState(EMPTY_STRING);
   const [favoriteKeySet, setFavoriteKeySet] = useState(() => new Set());
+  const [srsStatsMap, setSrsStatsMap] = useState(() => new Map());
+  const [sentenceAccuracyAttempts, setSentenceAccuracyAttempts] = useState([]);
   const [isFavoriteBusy, setIsFavoriteBusy] = useState(false);
   const [syncStatusMessage, setSyncStatusMessage] = useState(EMPTY_STRING);
   const [task2Rows, setTask2Rows] = useState([]);
@@ -1527,6 +1533,67 @@ export default function HomePage() {
     });
   }
 
+  function applySrsStateToStatsMap(nextSrsState) {
+    setSrsStatsMap((previousMap) => {
+      const nextMap = new Map(previousMap);
+      nextMap.set(createFavoriteKey(nextSrsState.sentence_text), {
+        successCount: nextSrsState.success_count,
+        failCount: nextSrsState.fail_count,
+      });
+      return nextMap;
+    });
+  }
+
+  function appendSentenceAccuracyAttempt(accuracyPercent) {
+    setSentenceAccuracyAttempts((previousAttempts) => [
+      ...previousAttempts,
+      { accuracyPercent, createdAt: new Date().toISOString() },
+    ]);
+  }
+
+  /**
+   * Simple aggregate accuracy rate (successCount / totalAttempts) across the
+   * given sentences' historical SRS stats. Returns null when none of them
+   * have been attempted yet, so the caller can hide the hint instead of
+   * showing a meaningless 0%.
+   */
+  function getAccuracyRateInfo(sentenceTextList) {
+    let totalSuccessCount = 0;
+    let totalFailCount = 0;
+
+    sentenceTextList.forEach((sentenceText) => {
+      const stats = srsStatsMap.get(createFavoriteKey(sentenceText));
+      if (!stats) return;
+      totalSuccessCount += stats.successCount;
+      totalFailCount += stats.failCount;
+    });
+
+    const accuracyPercent = computeAccuracyRatePercent(totalSuccessCount, totalFailCount);
+    if (accuracyPercent === null) return null;
+    return {
+      accuracyPercent,
+      successCount: totalSuccessCount,
+      attemptCount: totalSuccessCount + totalFailCount,
+    };
+  }
+
+  function renderSentenceAccuracyRateHint(sentenceTextList) {
+    if (!authUser) return null;
+
+    const accuracyRateInfo = getAccuracyRateInfo(sentenceTextList);
+    return (
+      <div className="status text-caption sentence-accuracy-rate">
+        {accuracyRateInfo
+          ? t.formatSentenceAccuracyRate(
+              accuracyRateInfo.accuracyPercent,
+              accuracyRateInfo.successCount,
+              accuracyRateInfo.attemptCount
+            )
+          : t.sentenceAccuracyRateNoData}
+      </div>
+    );
+  }
+
   async function syncSinglePracticeResult({ isCorrect, accuracyPercent, wrongCount, sentenceText }) {
     if (!supabaseClient || !authUser || !activeArticleId) {
       return;
@@ -1542,11 +1609,13 @@ export default function HomePage() {
           accuracyPercent,
           wrongCount,
         });
-        await upsertSrsCardAfterAttempt(supabaseClient, {
+        const nextSrsState = await upsertSrsCardAfterAttempt(supabaseClient, {
           userId: authUser.id,
           sentenceText,
           isCorrect,
         });
+        applySrsStateToStatsMap(nextSrsState);
+        appendSentenceAccuracyAttempt(accuracyPercent);
       });
       setSyncStatusMessage(EMPTY_STRING);
     } catch {
@@ -1574,7 +1643,7 @@ export default function HomePage() {
           .map((key) => Number(key))
           .filter((index) => selectedSentenceMap[index] && sentences[index]);
 
-        await Promise.all(
+        const nextSrsStates = await Promise.all(
           selectedIndexes.map((sentenceIndex) =>
             upsertSrsCardAfterAttempt(supabaseClient, {
               userId: authUser.id,
@@ -1583,6 +1652,7 @@ export default function HomePage() {
             })
           )
         );
+        nextSrsStates.forEach(applySrsStateToStatsMap);
       });
       setSyncStatusMessage(EMPTY_STRING);
     } catch {
@@ -1798,6 +1868,65 @@ export default function HomePage() {
       isMounted = false;
     };
   }, [supabaseClient, authUser, t.favoriteFailed]);
+
+  useEffect(() => {
+    if (!supabaseClient || !authUser) {
+      setSrsStatsMap(new Map());
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    async function loadSrsStats() {
+      try {
+        const nextStatsMap = await withLoading(() => fetchSrsStatsMap(supabaseClient, authUser.id));
+        if (isMounted) {
+          setSrsStatsMap(nextStatsMap);
+        }
+      } catch {
+        // Non-critical: the error rate hint simply stays hidden if this fails.
+      }
+    }
+
+    loadSrsStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabaseClient, authUser]);
+
+  useEffect(() => {
+    const currentSentenceText = sentences[currentIndex];
+    if (!supabaseClient || !authUser || !currentSentenceText) {
+      setSentenceAccuracyAttempts([]);
+      return undefined;
+    }
+
+    let isMounted = true;
+
+    async function loadSentenceAttempts() {
+      try {
+        const attempts = await fetchPracticeAttemptsForSentence(
+          supabaseClient,
+          authUser.id,
+          currentSentenceText
+        );
+        if (isMounted) {
+          setSentenceAccuracyAttempts(attempts);
+        }
+      } catch {
+        if (isMounted) {
+          setSentenceAccuracyAttempts([]);
+        }
+      }
+    }
+
+    loadSentenceAttempts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabaseClient, authUser, sentences, currentIndex]);
 
   useEffect(() => {
     function onGlobalKeyDown(event) {
@@ -2250,6 +2379,7 @@ export default function HomePage() {
                     {t.nextSentence}
                   </button>
                 </div>
+                {hasSentence && renderSentenceAccuracyRateHint([getCurrentSentence()])}
                 <label className="hint-toggle">
                   <input
                     type="checkbox"
@@ -2291,6 +2421,16 @@ export default function HomePage() {
                     setActiveGlossaryToken((prev) => (prev === token ? EMPTY_STRING : token))
                   }
                   labels={{ blanksLabel: t.task2BlanksLabel, glossaryEmpty: t.task2GlossaryEmpty }}
+                />
+              ) : null}
+              {authUser && hasSentence ? (
+                <AccuracyTrendChart
+                  overallAccuracyPercent={
+                    getAccuracyRateInfo([getCurrentSentence()])?.accuracyPercent ?? null
+                  }
+                  attempts={sentenceAccuracyAttempts}
+                  title={t.accuracyTrendTitle}
+                  noDataText={t.accuracyTrendNoData}
                 />
               ) : null}
               {showHintMask && <div className="masked">{maskedSentence}</div>}
@@ -2342,6 +2482,9 @@ export default function HomePage() {
                     {isMultiSelectorExpanded ? t.multiSelectorOpen : t.multiSelectorClosed}
                   </button>
                 </div>
+                {renderSentenceAccuracyRateHint(
+                  sourceSentenceList.filter((sentence, index) => selectedSentenceMap[index] && sentence)
+                )}
                 <label className="hint-toggle">
                   <input
                     type="checkbox"

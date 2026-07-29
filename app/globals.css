@@ -39,6 +39,7 @@
   --border: #d8e0ef;
   --border-subtle: #cbd5e1;
   --ok: #1f7a4c;
+  --warning: #b45309;
   --error: #ab2f45;
   --disabled-bg: #f1f5f9;
   --disabled-border: #dbe2ea;
@@ -1577,6 +1578,71 @@ mark.highlight-keyword {
   background: var(--accent-bg);
   color: var(--text-primary);
   font-size: var(--caption-size);
+}
+
+/* ==============================
+   Accuracy Trend Chart
+   ============================== */
+
+.accuracy-trend-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+}
+
+.accuracy-trend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.accuracy-trend-title {
+  font-size: var(--caption-size);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.accuracy-trend-overall {
+  font-size: var(--heading-size);
+  font-weight: 700;
+}
+
+.accuracy-level-good {
+  color: var(--ok);
+}
+
+.accuracy-level-fair {
+  color: var(--warning);
+}
+
+.accuracy-level-poor {
+  color: var(--error);
+}
+
+.accuracy-trend-svg {
+  display: block;
+  width: 100%;
+  height: 72px;
+  margin-top: var(--space-2);
+}
+
+.accuracy-trend-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.accuracy-trend-dot {
+  fill: var(--accent);
+}
+
+.accuracy-trend-empty {
+  margin-top: var(--space-2);
+  font-size: var(--caption-size);
+  color: var(--text-muted);
 }
 
 /* ==============================

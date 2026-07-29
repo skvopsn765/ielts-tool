@@ -116,6 +116,11 @@ export const UI_TEXTS = {
       `有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%（再按 Enter 可下一句，按 1 可重練）`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `尚未全對：有 ${wrongCount} 個字元錯誤，正確率 ${accuracyPercent}%`,
+    formatSentenceAccuracyRate: (accuracyPercent, successCount, attemptCount) =>
+      `歷史正確率 ${accuracyPercent}%（${successCount} 次答對 / 共 ${attemptCount} 次作答）`,
+    sentenceAccuracyRateNoData: "尚無歷史練習紀錄",
+    accuracyTrendTitle: "正確率趨勢（全部紀錄）",
+    accuracyTrendNoData: "尚無練習紀錄",
     highlightKeywords: "標記關鍵字",
     removeHighlight: "取消標記",
     showSkeleton: "骨架模式",
@@ -278,6 +283,11 @@ export const UI_TEXTS = {
       `${wrongCount} characters are incorrect. Accuracy ${accuracyPercent}% (Press Enter for next sentence, or 1 to retry)`,
     formatMultiWrongResult: (wrongCount, accuracyPercent) =>
       `Not fully correct yet: ${wrongCount} incorrect characters, accuracy ${accuracyPercent}%`,
+    formatSentenceAccuracyRate: (accuracyPercent, successCount, attemptCount) =>
+      `Historical accuracy ${accuracyPercent}% (${successCount} correct / ${attemptCount} attempts)`,
+    sentenceAccuracyRateNoData: "No practice history yet",
+    accuracyTrendTitle: "Accuracy Trend (all attempts)",
+    accuracyTrendNoData: "No practice history yet",
     highlightKeywords: "Highlight",
     removeHighlight: "Unhighlight",
     showSkeleton: "Skeleton",
