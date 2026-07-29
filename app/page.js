@@ -74,7 +74,7 @@ const TTS_STATE_IDLE = "idle_tts";
 const TTS_STATE_PLAYING = "playing";
 const TTS_STATE_PAUSED = "paused";
 const TTS_SENTENCE_INDEX_START = 0;
-const TTS_SENTENCE_SPLIT_CAPTURE_RE = /((?<=[.!?])\s+)/;
+const SENTENCE_ALIGN_SEPARATOR_FALLBACK = " ";
 const COPY_FEEDBACK_DURATION_MS = 2000;
 const SCROLL_BLOCK_START = "start";
 const SCROLL_OFFSET_NONE = 0;
@@ -97,8 +97,6 @@ const STATIC_COMPARISON_ARTICLE_ID = "static-comparison-table-bar-by-category-gr
 const MAP_STATIC_ARTICLE_ID = "map-static";
 const MAP_DYNAMIC_ARTICLE_ID = "map-dynamic-before-after-now-future";
 const PROCESS_DIAGRAM_ARTICLE_ID = "process-diagram";
-const TYPE_ID_LIST_SEPARATOR = ",";
-const SINGLE_TYPE_ID_COUNT = 1;
 const TASK2_TYPE_ARTICLE_ID_PREFIX = "task2-type-";
 const TASK2_CORE_PATTERNS_ARTICLE_ID = "task2-core-patterns";
 const TASK2_SECTION_ARTICLE_ID_PREFIX = "task2-section-";
@@ -340,15 +338,41 @@ function splitSentences(text) {
     .map((part) => part + SENTENCE_SEPARATOR);
 }
 
-function splitIntoSentences(text) {
-  if (!text) return [];
-  const parts = text.split(TTS_SENTENCE_SPLIT_CAPTURE_RE);
+/**
+ * Build the { text, separator } list used for TTS playback and the Essay
+ * Content display by locating each already-segmented sentence (from
+ * `sentences`, the same array driving practice/favoriting) inside the full
+ * article text, rather than re-splitting the joined text on punctuation.
+ *
+ * Trap this fixes: naively re-splitting on `.`/`!`/`?` breaks apart a single
+ * template sentence that legitimately contains a mid-sentence period (e.g.
+ * "In my opinion, Op. This essay will elucidate both sides..." is one CSV
+ * row/one sentence), which both displays it as two lines AND assigns two
+ * different favorite keys to what should be a single favoritable sentence.
+ */
+function alignSentencesWithSeparators(fullText, sentenceList) {
+  if (!fullText || sentenceList.length === 0) return [];
+
   const result = [];
-  for (let i = 0; i < parts.length; i += 2) {
-    const content = parts[i];
-    if (content.length === 0) continue;
-    const separator = i + 1 < parts.length ? parts[i + 1] : EMPTY_STRING;
-    result.push({ text: content, separator });
+  let cursor = 0;
+  for (let i = 0; i < sentenceList.length; i += 1) {
+    const sentenceText = sentenceList[i];
+    const foundIndex = fullText.indexOf(sentenceText, cursor);
+    const startIndex = foundIndex === -1 ? cursor : foundIndex;
+    const endIndex = startIndex + sentenceText.length;
+
+    const nextSentenceText = sentenceList[i + 1];
+    let separator = EMPTY_STRING;
+    if (nextSentenceText !== undefined) {
+      const nextFoundIndex = fullText.indexOf(nextSentenceText, endIndex);
+      separator =
+        nextFoundIndex === -1
+          ? SENTENCE_ALIGN_SEPARATOR_FALLBACK
+          : fullText.slice(endIndex, nextFoundIndex);
+    }
+
+    result.push({ text: sentenceText, separator });
+    cursor = endIndex;
   }
   return result;
 }
@@ -828,7 +852,10 @@ export default function HomePage() {
     return PRACTICE_ARTICLE_LIBRARY[activeArticleId]?.essays[activeEssayIndex] ?? EMPTY_STRING;
   }, [activeArticleId, activeEssayIndex, customArticleText]);
   const sourceSentenceList = sentences;
-  const ttsSentences = useMemo(() => splitIntoSentences(activeArticleText), [activeArticleText]);
+  const ttsSentences = useMemo(
+    () => alignSentencesWithSeparators(activeArticleText, sentences),
+    [activeArticleText, sentences]
+  );
   ttsSentencesRef.current = ttsSentences;
   const hasActiveArticle = activeArticleId !== NO_ACTIVE_ARTICLE_ID;
   const isTask2ArticleActive = customArticleText !== null;
@@ -883,7 +910,7 @@ export default function HomePage() {
       }
 
       const sentenceFavoriteKey = hasActiveArticle
-        ? createFavoriteKey(activeArticleId, activeEssayIndex, sentenceIdx)
+        ? createFavoriteKey(sentenceObj.text)
         : null;
       const isSentenceFavorite = sentenceFavoriteKey
         ? favoriteKeySet.has(sentenceFavoriteKey)
@@ -936,8 +963,6 @@ export default function HomePage() {
     currentTtsSentenceIndex,
     isTtsPlaying,
     hasActiveArticle,
-    activeArticleId,
-    activeEssayIndex,
     favoriteKeySet,
     isFavoriteBusy,
     t.favoriteAdd,
@@ -965,10 +990,9 @@ export default function HomePage() {
     return typeInfo ? getTask2TypeLabel(typeInfo) : String(typeId);
   }
 
-  function getTask2TypeLabelByIds(typeIds) {
-    if (!typeIds || typeIds.length === 0) return EMPTY_STRING;
-    if (typeIds.length === SINGLE_TYPE_ID_COUNT) return getTask2TypeLabelById(typeIds[0]);
-    return typeIds.join(TYPE_ID_LIST_SEPARATOR);
+  function getTask2TypeLabelsByIds(typeIds) {
+    if (!typeIds || typeIds.length === 0) return [];
+    return typeIds.map((typeId) => getTask2TypeLabelById(typeId));
   }
 
   function getTask2SectionLabel(section) {
@@ -1512,9 +1536,7 @@ export default function HomePage() {
       await withLoading(async () => {
         await recordPracticeAttempt(supabaseClient, {
           userId: authUser.id,
-          articleId: activeArticleId,
-          essayIndex: activeEssayIndex,
-          sentenceIndex: currentIndex,
+          sentenceText,
           practiceMode: PRACTICE_MODE_SINGLE,
           isCorrect,
           accuracyPercent,
@@ -1522,9 +1544,6 @@ export default function HomePage() {
         });
         await upsertSrsCardAfterAttempt(supabaseClient, {
           userId: authUser.id,
-          articleId: activeArticleId,
-          essayIndex: activeEssayIndex,
-          sentenceIndex: currentIndex,
           sentenceText,
           isCorrect,
         });
@@ -1544,9 +1563,7 @@ export default function HomePage() {
       await withLoading(async () => {
         await recordPracticeAttempt(supabaseClient, {
           userId: authUser.id,
-          articleId: activeArticleId,
-          essayIndex: activeEssayIndex,
-          sentenceIndex: null,
+          sentenceText: multiTargetText,
           practiceMode: PRACTICE_MODE_MULTI,
           isCorrect,
           accuracyPercent,
@@ -1561,9 +1578,6 @@ export default function HomePage() {
           selectedIndexes.map((sentenceIndex) =>
             upsertSrsCardAfterAttempt(supabaseClient, {
               userId: authUser.id,
-              articleId: activeArticleId,
-              essayIndex: activeEssayIndex,
-              sentenceIndex,
               sentenceText: sentences[sentenceIndex],
               isCorrect,
             })
@@ -1587,14 +1601,12 @@ export default function HomePage() {
       return;
     }
 
-    const favoriteKey = createFavoriteKey(activeArticleId, activeEssayIndex, sentenceIndex);
+    const sentenceText = sentenceObj.text.trim();
+    const favoriteKey = createFavoriteKey(sentenceText);
     const isSentenceFavorite = favoriteKeySet.has(favoriteKey);
     const favoritePayload = {
       userId: authUser.id,
-      articleId: activeArticleId,
-      essayIndex: activeEssayIndex,
-      sentenceIndex,
-      sentenceText: sentenceObj.text.trim(),
+      sentenceText,
     };
 
     setIsFavoriteBusy(true);
@@ -2260,7 +2272,7 @@ export default function HomePage() {
               </div>
               {sentenceMeta && sentenceMeta[currentIndex] ? (
                 <Task2SentenceContext
-                  typeLabel={getTask2TypeLabelByIds(sentenceMeta[currentIndex].typeIds)}
+                  typeLabels={getTask2TypeLabelsByIds(sentenceMeta[currentIndex].typeIds)}
                   sectionLabel={
                     sentenceMeta[currentIndex].section
                       ? getTask2SectionLabel(sentenceMeta[currentIndex].section)

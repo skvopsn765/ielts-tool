@@ -6,8 +6,15 @@ const FIRST_SUCCESS_INTERVAL_DAYS = 1;
 const SECOND_SUCCESS_INTERVAL_DAYS = 3;
 
 describe("practice-data", () => {
-  it("建立收藏鍵", () => {
-    expect(createFavoriteKey("map-static", 0, 2)).toBe("map-static::0::2");
+  it("建立收藏鍵：以完整句子字串當作 key，並去除頭尾空白", () => {
+    expect(createFavoriteKey(SAMPLE_SENTENCE)).toBe(SAMPLE_SENTENCE);
+    expect(createFavoriteKey(`  ${SAMPLE_SENTENCE}  `)).toBe(SAMPLE_SENTENCE);
+  });
+
+  it("同一句子不論來自哪篇文章，收藏鍵都相同", () => {
+    const keyFromArticleA = createFavoriteKey(SAMPLE_SENTENCE);
+    const keyFromArticleB = createFavoriteKey(SAMPLE_SENTENCE);
+    expect(keyFromArticleA).toBe(keyFromArticleB);
   });
 
   it("答錯時把複習間隔重設為 1 天", () => {

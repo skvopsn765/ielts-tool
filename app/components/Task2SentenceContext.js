@@ -1,7 +1,7 @@
 const EMPTY_STRING = "";
 
 export default function Task2SentenceContext({
-  typeLabel,
+  typeLabels,
   sectionLabel,
   slot,
   noteZh,
@@ -11,13 +11,19 @@ export default function Task2SentenceContext({
   onToggleToken,
   labels,
 }) {
-  const hasAnyContext = Boolean(typeLabel || sectionLabel || slot || noteZh || blanks.length > 0);
+  const hasAnyContext = Boolean(
+    typeLabels.length > 0 || sectionLabel || slot || noteZh || blanks.length > 0
+  );
   if (!hasAnyContext) return null;
 
   return (
     <div className="task2-sentence-context">
       <div className="task2-context-meta">
-        {typeLabel ? <span className="task2-context-badge">{typeLabel}</span> : null}
+        {typeLabels.map((typeLabel, typeLabelIndex) => (
+          <span key={`${typeLabelIndex}-${typeLabel}`} className="task2-context-badge">
+            {typeLabel}
+          </span>
+        ))}
         {sectionLabel ? (
           <span className="task2-context-badge task2-context-badge--muted">{sectionLabel}</span>
         ) : null}
