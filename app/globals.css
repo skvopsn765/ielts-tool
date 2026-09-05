@@ -1078,6 +1078,119 @@ textarea {
   white-space: nowrap;
 }
 
+.tts-player-speed {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+
+.tts-player-speed-label,
+.tts-player-speed-value {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.tts-player-speed-value {
+  min-width: 3.2ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.tts-player-speed-slider {
+  flex: 1 1 auto;
+  min-width: 80px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.app-nav {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.app-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: var(--caption-size);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--easing),
+    background-color var(--duration-fast) var(--easing),
+    border-color var(--duration-fast) var(--easing);
+}
+
+.app-nav-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  background: var(--bg);
+}
+
+.app-nav-link.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.read-aloud-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.read-aloud-input-label {
+  font-size: var(--caption-size);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.read-aloud-input {
+  min-height: 240px;
+}
+
+.read-aloud-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.read-aloud-stats {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.read-aloud-player-sticky {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 2;
+  background: var(--card);
+}
+
+.read-aloud-preview {
+  margin-top: 0;
+}
+
+.read-aloud-sentence {
+  cursor: pointer;
+  border-radius: var(--radius-control);
+}
+
+.read-aloud-sentence:hover {
+  background: var(--accent-bg);
+}
+
 .tts-sentence-active {
   background: rgba(250, 204, 21, 0.3);
   border-radius: 3px;
