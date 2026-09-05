@@ -2579,6 +2579,11 @@ export default function HomePage() {
         onLanguageChange={setLanguage}
         languageSwitchAria={t.languageSwitchAria}
         langReady={langInitialized}
+        navItems={[
+          { href: "/", label: t.navPractice },
+          { href: "/read-aloud", label: t.navReadAloud },
+        ]}
+        navAriaLabel={t.navAriaLabel}
         authProps={{
           supabase: supabaseClient,
           isConfigured: isSupabaseReady,

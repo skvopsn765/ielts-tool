@@ -1,5 +1,12 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LANGUAGES } from "../i18n";
 import AuthPanel from "./AuthPanel";
+
+const DEFAULT_KICKER = "IELTS Writing Task 1";
+const EMPTY_NAV_ITEMS = [];
 
 export default function AppHeader({
   title,
@@ -9,15 +16,36 @@ export default function AppHeader({
   languageSwitchAria,
   langReady,
   authProps = null,
+  kicker = DEFAULT_KICKER,
+  navItems = EMPTY_NAV_ITEMS,
+  navAriaLabel,
 }) {
   const hasAuthPanel = authProps !== null;
+  const pathname = usePathname();
 
   return (
     <header className="card app-header-card">
       <div className="card-header app-header-top">
         <div className="app-title-group">
-          <p className="app-kicker">IELTS Writing Task 1</p>
+          <p className="app-kicker">{kicker}</p>
           <h1 className="app-title">{title}</h1>
+          {navItems.length > 0 && (
+            <nav className="app-nav" aria-label={navAriaLabel}>
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`app-nav-link ${isActive ? "active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
         <div className="app-header-actions">
           {hasAuthPanel ? (
